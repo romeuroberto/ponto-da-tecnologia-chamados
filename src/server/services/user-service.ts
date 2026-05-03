@@ -1,0 +1,42 @@
+import bcrypt from "bcryptjs";
+
+import type { UserInput } from "@/lib/validations/user";
+import { isDatabaseConfigured } from "@/server/db-support";
+import { userRepository } from "@/server/repositories/user-repository";
+import type { UserSearchInput } from "@/server/repositories/user-repository";
+
+export const userService = {
+  async listUsers() {
+    return userRepository.list();
+  },
+  async searchUsers(filters: UserSearchInput) {
+    return userRepository.search(filters);
+  },
+  async getUser(id: string) {
+    return userRepository.findById(id);
+  },
+  async createUser(input: UserInput) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de gravar usuarios reais.");
+    }
+
+    return userRepository.create({
+      name: input.name,
+      email: input.email,
+      passwordHash: await bcrypt.hash(input.password || "change-me", 10),
+      role: input.role
+    });
+  },
+  async updateUser(id: string, input: UserInput) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar usuarios reais.");
+    }
+
+    return userRepository.update(id, {
+      name: input.name,
+      email: input.email,
+      passwordHash: input.password ? await bcrypt.hash(input.password, 10) : undefined,
+      role: input.role
+    });
+  }
+};

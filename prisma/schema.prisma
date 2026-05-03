@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ATTENDANT
+  TECHNICIAN
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_CUSTOMER
+  RESOLVED
+  CLOSED
+  CANCELED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum HistoryEventType {
+  COMMENT
+  STATUS_CHANGE
+  PRIORITY_CHANGE
+  ASSIGNEE_CHANGE
+  CREATED
+  CLOSED
+  REOPENED
+}
+
+model User {
+  id           String          @id @default(cuid())
+  name         String
+  email        String          @unique
+  passwordHash String
+  role         UserRole
+  active       Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  assigned     Ticket[]        @relation("TicketAssignee")
+  opened       Ticket[]        @relation("TicketCreator")
+  history      TicketHistory[]
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  name           String
+  document       String?
+  contactName    String
+  email          String?
+  phone          String?
+  notes          String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  tickets        Ticket[]
+}
+
+model Ticket {
+  id              String          @id @default(cuid())
+  number          String          @unique
+  title           String
+  description     String
+  category        String?
+  priority        TicketPriority
+  status          TicketStatus    @default(OPEN)
+  requesterName   String
+  requesterEmail  String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  closingReason   String?
+  clientId        String
+  assigneeId      String?
+  openedById      String
+  client          Client          @relation(fields: [clientId], references: [id])
+  assignee        User?           @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  openedBy        User            @relation("TicketCreator", fields: [openedById], references: [id])
+  history         TicketHistory[]
+  attachments     Attachment[]
+}
+
+model TicketHistory {
+  id                String           @id @default(cuid())
+  ticketId          String
+  authorId          String
+  eventType         HistoryEventType
+  message           String
+  previousStatus    TicketStatus?
+  nextStatus        TicketStatus?
+  previousPriority  TicketPriority?
+  nextPriority      TicketPriority?
+  createdAt         DateTime         @default(now())
+  ticket            Ticket           @relation(fields: [ticketId], references: [id])
+  author            User             @relation(fields: [authorId], references: [id])
+}
+
+model Attachment {
+  id         String   @id @default(cuid())
+  ticketId   String
+  fileName   String
+  filePath   String
+  mimeType   String
+  sizeBytes  Int
+  createdAt  DateTime @default(now())
+  ticket     Ticket   @relation(fields: [ticketId], references: [id])
+}
+

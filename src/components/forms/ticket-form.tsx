@@ -1,0 +1,148 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { AppUser, Client } from "@/types";
+import { FormMessage } from "./form-message";
+
+export function TicketForm({ clients, users }: { clients: Client[]; users: AppUser[] }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [formData, setFormData] = useState({
+    clientId: "",
+    title: "",
+    description: "",
+    category: "",
+    priority: "MEDIUM",
+    requesterName: "",
+    requesterEmail: "",
+    assigneeId: ""
+  });
+
+  function updateField(field: keyof typeof formData, value: string) {
+    setFormData((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+
+    startTransition(async () => {
+      const response = await fetch("/api/tickets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage({
+          type: "error",
+          text: result.message ?? "Nao foi possivel salvar o chamado."
+        });
+        return;
+      }
+
+      setMessage({
+        type: "success",
+        text: `Chamado ${result.data.number} criado com sucesso.`
+      });
+
+      setFormData({
+        clientId: "",
+        title: "",
+        description: "",
+        category: "",
+        priority: "MEDIUM",
+        requesterName: "",
+        requesterEmail: "",
+        assigneeId: ""
+      });
+
+      router.refresh();
+    });
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <form className="grid gap-5" onSubmit={handleSubmit}>
+          {message ? <FormMessage type={message.type} message={message.text} /> : null}
+          <div className="grid gap-2">
+            <Label htmlFor="client">Cliente</Label>
+            <Select id="client" value={formData.clientId} onChange={(event) => updateField("clientId", event.target.value)}>
+              <option value="" disabled>
+                Selecione um cliente
+              </option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="title">Titulo</Label>
+            <Input id="title" value={formData.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Resumo curto do problema" />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Descricao</Label>
+            <Textarea id="description" value={formData.description} onChange={(event) => updateField("description", event.target.value)} placeholder="Descreva o problema com o maximo de contexto util" />
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="category">Categoria</Label>
+              <Input id="category" value={formData.category} onChange={(event) => updateField("category", event.target.value)} placeholder="Ex.: Infraestrutura, E-mail, Sistema" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Prioridade</Label>
+              <Select id="priority" value={formData.priority} onChange={(event) => updateField("priority", event.target.value)}>
+                <option value="LOW">Baixa</option>
+                <option value="MEDIUM">Media</option>
+                <option value="HIGH">Alta</option>
+                <option value="CRITICAL">Critica</option>
+              </Select>
+            </div>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="requesterName">Solicitante</Label>
+              <Input id="requesterName" value={formData.requesterName} onChange={(event) => updateField("requesterName", event.target.value)} placeholder="Nome do solicitante" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="requesterEmail">E-mail do solicitante</Label>
+              <Input id="requesterEmail" value={formData.requesterEmail} onChange={(event) => updateField("requesterEmail", event.target.value)} placeholder="contato@cliente.com" />
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="assignee">Responsavel</Label>
+            <Select id="assignee" value={formData.assigneeId} onChange={(event) => updateField("assigneeId", event.target.value)}>
+              <option value="">Definir depois</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Salvando..." : "Salvar chamado"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config *)",
+      "Bash(gh auth *)",
+      "Bash(winget --version)",
+      "Bash(winget install *)",
+      "PowerShell($env:PATH = \"$env:PATH;C:\\\\Program Files\\\\GitHub CLI\"; gh auth login --web --git-protocol https 2>&1)",
+      "PowerShell($env:PATH = \"$env:PATH;C:\\\\Program Files\\\\GitHub CLI\"; gh repo create ponto-da-tecnologia-chamados --private --description \"Central de Chamados - Ponto da Tecnologia\" 2>&1)"
+    ]
+  }
+}
