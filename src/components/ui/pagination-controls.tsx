@@ -33,14 +33,14 @@ export function PaginationControls({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between">
       <p className="text-sm text-slate-600">
-        Pagina {page} de {totalPages}
+        Página {page} de {totalPages}
       </p>
       <div className="flex gap-2">
         <Link href={previousHref} aria-disabled={page <= 1} className={page <= 1 ? "pointer-events-none opacity-50" : ""}>
           <Button variant="outline">Anterior</Button>
         </Link>
         <Link href={nextHref} aria-disabled={page >= totalPages} className={page >= totalPages ? "pointer-events-none opacity-50" : ""}>
-          <Button variant="outline">Proxima</Button>
+          <Button variant="outline">Próxima</Button>
         </Link>
       </div>
     </div>

@@ -3,22 +3,28 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { TicketDetailActions } from "@/components/tickets/ticket-detail-actions";
 import { TicketAttachments } from "@/components/tickets/ticket-attachments";
+import { TicketBillingPanel } from "@/components/tickets/ticket-billing-panel";
+import { TicketFlowOverview } from "@/components/tickets/ticket-flow-overview";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
 import { formatDate } from "@/lib/utils";
 import { requireUser } from "@/server/auth/session";
+import { clientService } from "@/server/services/client-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
 
 export default async function TicketDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const currentUser = await requireUser();
   const { id } = await params;
-  const [ticket, users] = await Promise.all([ticketService.getTicket(id), userService.listUsers()]);
+  const [ticket, users] = await Promise.all([ticketService.getTicket(id), userService.listAssignableUsers()]);
 
   if (!ticket) {
     notFound();
   }
+
+  const client = await clientService.getClient(ticket.clientId);
 
   return (
     <div className="space-y-6">
@@ -32,6 +38,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
           </div>
         }
       />
+      <TicketFlowOverview ticket={ticket} />
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
           <Card>
@@ -46,6 +53,10 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Solicitante</p>
                 <p className="mt-1 text-sm text-slate-900">{ticket.requesterName}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de atendimento</p>
+                <p className="mt-1 text-sm text-slate-900">{getAttendanceTypeLabel(ticket.attendanceType)}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{"Respons\u00e1vel"}</p>
@@ -98,7 +109,13 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
           <TicketAttachments attachments={ticket.attachments} />
         </div>
         <div className="space-y-6">
-          <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} />
+          <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
+          <TicketBillingPanel
+            ticketId={ticket.id}
+            initialBilling={ticket.billing}
+            clientBillingProfile={client?.billingProfile}
+            role={currentUser.role}
+          />
         </div>
       </div>
     </div>

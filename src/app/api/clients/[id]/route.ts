@@ -18,7 +18,7 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     return NextResponse.json(
       {
         success: false,
-        message: "Cliente nao encontrado."
+        message: "Cliente não encontrado."
       },
       { status: 404 }
     );

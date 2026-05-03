@@ -6,7 +6,7 @@ import { userService } from "@/server/services/user-service";
 
 export default async function NewTicketPage() {
   await requireRole(["ADMIN", "ATTENDANT"]);
-  const [clients, users] = await Promise.all([clientService.listClients(), userService.listUsers()]);
+  const [clients, users] = await Promise.all([clientService.listClients(), userService.listAssignableUsers()]);
 
   return (
     <div className="space-y-6">

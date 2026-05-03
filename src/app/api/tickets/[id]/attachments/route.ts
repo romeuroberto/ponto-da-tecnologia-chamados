@@ -82,7 +82,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json(
         {
           success: false,
-          message: "Chamado nao encontrado."
+          message: "Chamado não encontrado."
         },
         { status: 404 }
       );

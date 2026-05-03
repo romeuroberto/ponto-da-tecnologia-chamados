@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import type { AppUser, Client } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { AppUser, Client } from "@/types";
+import { formatUserWithRole, groupAssignableUsers } from "@/lib/users";
 import { FormMessage } from "./form-message";
 
 export function TicketForm({ clients, users }: { clients: Client[]; users: AppUser[] }) {
@@ -26,6 +27,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
     requesterEmail: "",
     assigneeId: ""
   });
+  const groupedUsers = groupAssignableUsers(users, formData.category);
 
   function updateField(field: keyof typeof formData, value: string) {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -129,12 +131,26 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
             <Label htmlFor="assignee">Responsavel</Label>
             <Select id="assignee" value={formData.assigneeId} onChange={(event) => updateField("assigneeId", event.target.value)}>
               <option value="">Definir depois</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
+              {groupedUsers.suggestedUsers.length > 0 ? (
+                <optgroup label={groupedUsers.suggestion.label}>
+                  {groupedUsers.suggestedUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {formatUserWithRole(user)}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
+              {groupedUsers.otherUsers.length > 0 ? (
+                <optgroup label="Outros perfis operacionais">
+                  {groupedUsers.otherUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {formatUserWithRole(user)}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </Select>
+            <p className="text-xs text-slate-500">{groupedUsers.suggestion.description}</p>
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>

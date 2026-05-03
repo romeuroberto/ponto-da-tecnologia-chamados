@@ -52,8 +52,21 @@ export const ticketService = {
       throw new Error("Sua sessao nao corresponde mais a um usuario ativo. Entre novamente.");
     }
 
+    const currentTicket = await ticketRepository.findById(id);
+
+    if (!currentTicket) {
+      return null;
+    }
+
+    const shouldStartTechnicalExecutionAutomatically =
+      currentTicket.status === "OPEN" &&
+      input.status === "OPEN" &&
+      Boolean(input.assigneeId) &&
+      currentTicket.assigneeId !== input.assigneeId;
+
     return ticketRepository.updateFields(id, {
       ...input,
+      status: shouldStartTechnicalExecutionAutomatically ? "IN_PROGRESS" : input.status,
       assigneeId: input.assigneeId || undefined,
       authorId
     });

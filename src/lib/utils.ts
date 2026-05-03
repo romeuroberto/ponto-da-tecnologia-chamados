@@ -15,3 +15,20 @@ export function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+export function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  }).format(value);
+}
+
+export function formatCurrencyInput(value: number | string) {
+  const numeric = typeof value === "number" ? value : parseCurrencyInput(value);
+  return formatCurrency(numeric).replace(/\s/g, " ");
+}
+
+export function parseCurrencyInput(value: string) {
+  const normalized = value.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}

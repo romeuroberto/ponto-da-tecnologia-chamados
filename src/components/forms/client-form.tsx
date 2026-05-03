@@ -3,28 +3,51 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import type { Client } from "@/types";
+import { formatCurrencyInput, parseCurrencyInput } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { Client } from "@/types";
 import { FormMessage } from "./form-message";
+
+type ClientFormState = {
+  name: string;
+  document: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  notes: string;
+  defaultBillingType: "AVULSO" | "CONTRATO" | "GARANTIA" | "CORTESIA";
+  hourlyRate: string;
+  travelRate: string;
+  defaultDiscountPercent: string;
+  hasActiveContract: boolean;
+  contractNotes: string;
+};
 
 export function ClientForm({ client }: { client?: Client }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ClientFormState>({
     name: client?.name ?? "",
     document: client?.document ?? "",
     contactName: client?.contactName ?? "",
     email: client?.email ?? "",
     phone: client?.phone ?? "",
-    notes: client?.notes ?? ""
+    notes: client?.notes ?? "",
+    defaultBillingType: client?.billingProfile?.defaultBillingType ?? "AVULSO",
+    hourlyRate: formatCurrencyInput(client?.billingProfile?.hourlyRate ?? 0),
+    travelRate: formatCurrencyInput(client?.billingProfile?.travelRate ?? 0),
+    defaultDiscountPercent: client?.billingProfile?.defaultDiscountPercent !== undefined ? String(client.billingProfile.defaultDiscountPercent) : "",
+    hasActiveContract: client?.billingProfile?.hasActiveContract ?? false,
+    contractNotes: client?.billingProfile?.contractNotes ?? ""
   });
 
-  function handleChange(field: keyof typeof formData, value: string) {
+  function handleChange(field: keyof ClientFormState, value: string) {
     setFormData((current) => ({ ...current, [field]: value }));
   }
 
@@ -33,12 +56,29 @@ export function ClientForm({ client }: { client?: Client }) {
     setMessage(null);
 
     startTransition(async () => {
+      const payload = {
+        name: formData.name,
+        document: formData.document,
+        contactName: formData.contactName,
+        email: formData.email,
+        phone: formData.phone,
+        notes: formData.notes,
+        billingProfile: {
+          defaultBillingType: formData.defaultBillingType,
+          hourlyRate: parseCurrencyInput(formData.hourlyRate),
+          travelRate: parseCurrencyInput(formData.travelRate),
+          defaultDiscountPercent: formData.defaultDiscountPercent ? Number(formData.defaultDiscountPercent) : undefined,
+          hasActiveContract: formData.hasActiveContract,
+          contractNotes: formData.contractNotes
+        }
+      };
+
       const response = await fetch(client ? `/api/clients/${client.id}` : "/api/clients", {
         method: client ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       const result = await response.json();
@@ -46,7 +86,7 @@ export function ClientForm({ client }: { client?: Client }) {
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel salvar o cliente."
+          text: result.message ?? "Não foi possível salvar o cliente."
         });
         return;
       }
@@ -63,7 +103,13 @@ export function ClientForm({ client }: { client?: Client }) {
           contactName: "",
           email: "",
           phone: "",
-          notes: ""
+          notes: "",
+          defaultBillingType: "AVULSO",
+          hourlyRate: formatCurrencyInput(0),
+          travelRate: formatCurrencyInput(0),
+          defaultDiscountPercent: "",
+          hasActiveContract: false,
+          contractNotes: ""
         });
       }
 
@@ -83,7 +129,7 @@ export function ClientForm({ client }: { client?: Client }) {
           <div className="grid gap-2 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="document">Documento</Label>
-              <Input id="document" value={formData.document} onChange={(event) => handleChange("document", event.target.value)} placeholder="CNPJ ou identificacao" />
+              <Input id="document" value={formData.document} onChange={(event) => handleChange("document", event.target.value)} placeholder="CNPJ ou identificação" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="contactName">Contato principal</Label>
@@ -101,8 +147,76 @@ export function ClientForm({ client }: { client?: Client }) {
             </div>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="notes">Observacoes</Label>
-            <Textarea id="notes" value={formData.notes} onChange={(event) => handleChange("notes", event.target.value)} placeholder="Informacoes relevantes do atendimento" />
+            <Label htmlFor="notes">Observações</Label>
+            <Textarea id="notes" value={formData.notes} onChange={(event) => handleChange("notes", event.target.value)} placeholder="Informações relevantes do atendimento" />
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <h3 className="text-base font-semibold text-slate-950">Perfil financeiro</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="defaultBillingType">Tipo de cobrança padrão</Label>
+                <Select id="defaultBillingType" value={formData.defaultBillingType} onChange={(event) => handleChange("defaultBillingType", event.target.value)}>
+                  <option value="AVULSO">Avulso</option>
+                  <option value="CONTRATO">Contrato</option>
+                  <option value="GARANTIA">Garantia</option>
+                  <option value="CORTESIA">Cortesia</option>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.hasActiveContract}
+                    onChange={(event) => setFormData((current) => ({ ...current, hasActiveContract: event.target.checked }))}
+                  />
+                  Cliente com contrato ativo
+                </label>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <div className="grid gap-2">
+                <Label htmlFor="hourlyRate">Valor/hora</Label>
+                <Input
+                  id="hourlyRate"
+                  value={formData.hourlyRate}
+                  onChange={(event) => handleChange("hourlyRate", event.target.value)}
+                  onBlur={() => handleChange("hourlyRate", formatCurrencyInput(parseCurrencyInput(formData.hourlyRate)))}
+                  placeholder="R$ 0,00"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="travelRate">Valor deslocamento</Label>
+                <Input
+                  id="travelRate"
+                  value={formData.travelRate}
+                  onChange={(event) => handleChange("travelRate", event.target.value)}
+                  onBlur={() => handleChange("travelRate", formatCurrencyInput(parseCurrencyInput(formData.travelRate)))}
+                  placeholder="R$ 0,00"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="defaultDiscountPercent">Desconto padrão (%)</Label>
+                <Input
+                  id="defaultDiscountPercent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={formData.defaultDiscountPercent}
+                  onChange={(event) => handleChange("defaultDiscountPercent", event.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <Label htmlFor="contractNotes">Observações financeiras</Label>
+              <Textarea
+                id="contractNotes"
+                value={formData.contractNotes}
+                onChange={(event) => handleChange("contractNotes", event.target.value)}
+                placeholder="Regras contratuais, condições especiais ou observações de faturamento"
+              />
+            </div>
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>

@@ -10,6 +10,21 @@ export type TicketStatus =
 
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
+export type TicketAttendanceType = "REMOTE" | "INTERNAL" | "IN_STORE_EQUIPMENT" | "FIELD_VISIT";
+
+export type BillingType = "AVULSO" | "CONTRATO" | "GARANTIA" | "CORTESIA";
+
+export type FinancialStatus = "PENDENTE" | "EM_ANALISE" | "APROVADO" | "FATURADO" | "PAGO" | "CANCELADO";
+
+export type BillingEntryType = "LABOR" | "PART" | "TRAVEL" | "EXTRA";
+
+export type BillingHistoryEventType =
+  | "SUMMARY_UPDATED"
+  | "ENTRY_CREATED"
+  | "ENTRY_UPDATED"
+  | "ENTRY_DELETED"
+  | "STATUS_UPDATED";
+
 export type HistoryEventType =
   | "COMMENT"
   | "STATUS_CHANGE"
@@ -37,6 +52,7 @@ export interface Client {
   notes?: string;
   active: boolean;
   ticketCount: number;
+  billingProfile?: ClientBillingProfile;
 }
 
 export interface TicketHistoryItem {
@@ -57,12 +73,68 @@ export interface TicketAttachment {
   createdAt: string;
 }
 
+export interface BillingEntry {
+  id: string;
+  ticketBillingId: string;
+  entryType: BillingEntryType;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  billable: boolean;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingHistoryItem {
+  id: string;
+  ticketBillingId: string;
+  authorName: string;
+  eventType: BillingHistoryEventType;
+  message: string;
+  createdAt: string;
+}
+
+export interface TicketBilling {
+  id: string;
+  ticketId: string;
+  billingType: BillingType;
+  financialStatus: FinancialStatus;
+  subtotalAmount: number;
+  discountAmount: number;
+  totalAmount: number;
+  internalNotes?: string;
+  approvedAt?: string;
+  invoicedAt?: string;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  entries: BillingEntry[];
+  history: BillingHistoryItem[];
+}
+
+export interface ClientBillingProfile {
+  id: string;
+  clientId: string;
+  defaultBillingType: BillingType;
+  hourlyRate?: number;
+  travelRate?: number;
+  defaultDiscountPercent?: number;
+  hasActiveContract: boolean;
+  contractNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Ticket {
   id: string;
   number: string;
   title: string;
   description: string;
   category?: string;
+  attendanceType: TicketAttendanceType;
   priority: TicketPriority;
   status: TicketStatus;
   requesterName: string;
@@ -79,6 +151,7 @@ export interface Ticket {
   closingReason?: string;
   history: TicketHistoryItem[];
   attachments: TicketAttachment[];
+  billing?: TicketBilling;
 }
 
 export interface DashboardSummary {

@@ -15,22 +15,40 @@ export const clientService = {
   },
   async createClient(input: ClientInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de gravar clientes reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de gravar clientes reais.");
     }
 
     return clientRepository.create({
       ...input,
-      email: input.email || undefined
+      email: input.email || undefined,
+      billingProfile: input.billingProfile
+        ? {
+            ...input.billingProfile,
+            hourlyRate: input.billingProfile.hourlyRate,
+            travelRate: input.billingProfile.travelRate,
+            defaultDiscountPercent: input.billingProfile.defaultDiscountPercent,
+            contractNotes: input.billingProfile.contractNotes || undefined
+          }
+        : undefined
     });
   },
   async updateClient(id: string, input: ClientInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar clientes reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de atualizar clientes reais.");
     }
 
     return clientRepository.update(id, {
       ...input,
-      email: input.email || undefined
+      email: input.email || undefined,
+      billingProfile: input.billingProfile
+        ? {
+            ...input.billingProfile,
+            hourlyRate: input.billingProfile.hourlyRate,
+            travelRate: input.billingProfile.travelRate,
+            defaultDiscountPercent: input.billingProfile.defaultDiscountPercent,
+            contractNotes: input.billingProfile.contractNotes || undefined
+          }
+        : undefined
     });
   }
 };

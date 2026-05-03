@@ -1,13 +1,13 @@
 import type { Route } from "next";
 import Link from "next/link";
 
-import { buttonVariants } from "@/components/ui/button";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { PageHeader } from "@/components/layout/page-header";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
-import { TicketSlaBadge } from "@/components/tickets/ticket-sla-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { TicketSlaBadge } from "@/components/tickets/ticket-sla-badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatDate } from "@/lib/utils";
@@ -19,6 +19,9 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const {
     summary,
+    myAssignedTickets,
+    myAssignedCount,
+    myActiveAssignedCount,
     recentTickets,
     criticalCount,
     unassignedCount,
@@ -34,12 +37,13 @@ export default async function DashboardPage() {
     slaWarningCount,
     slaBreachedTickets,
     slaWarningTickets
-  } = await dashboardService.getSummary();
+  } = await dashboardService.getSummary(user.id);
+
   const quickActions = [
     canCreateTicket(user.role)
       ? {
           title: "Novo chamado",
-          description: "Registrar uma nova solicitação de suporte.",
+          description: "Registrar uma nova solicitacao de suporte.",
           href: "/chamados/novo" as Route,
           variant: "default" as const
         }
@@ -51,7 +55,7 @@ export default async function DashboardPage() {
       variant: "outline" as const
     },
     {
-      title: "Críticos",
+      title: "Criticos",
       description: "Ir direto para os chamados mais urgentes.",
       href: "/chamados?priority=CRITICAL&sort=priority_desc" as Route,
       variant: "outline" as const
@@ -67,7 +71,7 @@ export default async function DashboardPage() {
     canViewUsersModule(user.role)
       ? {
           title: "Equipe",
-          description: "Ajustar usuários e perfis de acesso.",
+          description: "Ajustar usuarios e perfis de acesso.",
           href: "/usuarios" as Route,
           variant: "outline" as const
         }
@@ -80,7 +84,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Visão resumida da operação de suporte."
+        description="Visao resumida da operacao de suporte."
         action={
           canCreateTicket(user.role) ? (
             <Link href="/chamados/novo" className={cn(buttonVariants({ variant: "default" }))}>
@@ -89,15 +93,70 @@ export default async function DashboardPage() {
           ) : null
         }
       />
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
         <SummaryCard title="Abertos" value={summary.open} tone="blue" />
         <SummaryCard title="Em atendimento" value={summary.inProgress} tone="orange" />
         <SummaryCard title="Aguardando cliente" value={summary.waitingCustomer} tone="yellow" />
         <SummaryCard title="Encerrados" value={summary.closed} tone="slate" />
-        <SummaryCard title="Críticos" value={criticalCount} tone="red" />
-        <SummaryCard title="Sem responsável" value={unassignedCount} tone="violet" />
+        <SummaryCard title="Criticos" value={criticalCount} tone="red" />
+        <SummaryCard title="Sem responsavel" value={unassignedCount} tone="violet" />
         <SummaryCard title="Resolvidos hoje" value={resolvedTodayCount} tone="green" />
       </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="border-sky-200 bg-sky-50/50">
+          <CardHeader>
+            <CardTitle>Meus chamados</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-sky-200 bg-white px-4 py-4">
+                <p className="text-sm font-medium text-sky-700">Atribuidos a mim</p>
+                <p className="mt-2 text-3xl font-semibold text-sky-950">{myAssignedCount}</p>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-white px-4 py-4">
+                <p className="text-sm font-medium text-amber-700">Ativos na minha fila</p>
+                <p className="mt-2 text-3xl font-semibold text-amber-950">{myActiveAssignedCount}</p>
+              </div>
+            </div>
+            {myAssignedTickets.length > 0 ? (
+              myAssignedTickets.map((ticket) => (
+                <div key={ticket.id} className="rounded-xl border border-sky-200 bg-white p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <PriorityBadge priority={ticket.priority} />
+                    <StatusBadge status={ticket.status} />
+                    <TicketSlaBadge ticket={ticket} />
+                  </div>
+                  <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
+                  <p className="mt-2 text-xs text-slate-500">Atualizado em {formatDate(ticket.updatedAt)}</p>
+                </div>
+              ))
+            ) : (
+              <EmptyState title="Nenhum chamado atribuido a voce" description="Assim que houver chamados na sua fila, eles aparecerao primeiro aqui." />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Como usar o dia</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-slate-700">
+            <div className="rounded-xl border border-slate-200 px-4 py-3">
+              Comece pela secao <span className="font-semibold text-slate-950">Meus chamados</span> para ver tudo que ja esta na sua fila.
+            </div>
+            <div className="rounded-xl border border-slate-200 px-4 py-3">
+              Depois acompanhe <span className="font-semibold text-slate-950">SLA vencido</span> e <span className="font-semibold text-slate-950">SLA em risco</span> para priorizar urgencias.
+            </div>
+            <div className="rounded-xl border border-slate-200 px-4 py-3">
+              Na atribuicao, o sistema agora sugere primeiro <span className="font-semibold text-slate-950">atendentes</span> ou <span className="font-semibold text-slate-950">tecnicos</span> conforme a categoria do chamado.
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-2">
         <Card className="border-rose-200 bg-rose-50/60">
           <CardHeader>
@@ -146,10 +205,11 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </section>
+
       <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Ações rápidas</CardTitle>
+            <CardTitle>Acoes rapidas</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             {quickActions.map((action) => (
@@ -181,32 +241,34 @@ export default async function DashboardPage() {
               <p className="mt-2 text-3xl font-semibold text-emerald-950">{resolvedLast7Days}</p>
             </div>
             <div className="rounded-2xl bg-slate-100 p-4">
-              <p className="text-sm font-medium text-slate-700">Saldo do período</p>
+              <p className="text-sm font-medium text-slate-700">Saldo do periodo</p>
               <p className="mt-2 text-3xl font-semibold text-slate-950">{openedLast7Days - resolvedLast7Days}</p>
             </div>
           </CardContent>
         </Card>
       </section>
+
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
-          title="Tendência de abertura"
-          description="Quantidade diária de chamados abertos."
+          title="Tendencia de abertura"
+          description="Quantidade diaria de chamados abertos."
           total={openedLast7Days}
           data={trend.map((item) => ({ label: item.label, value: item.opened }))}
           tone="blue"
         />
         <TrendChart
-          title="Tendência de resolução"
-          description="Quantidade diária de chamados resolvidos ou encerrados."
+          title="Tendencia de resolucao"
+          description="Quantidade diaria de chamados resolvidos ou encerrados."
           total={resolvedLast7Days}
           data={trend.map((item) => ({ label: item.label, value: item.resolved }))}
           tone="green"
         />
       </section>
+
       <section className="grid gap-6 xl:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Chamados críticos</CardTitle>
+            <CardTitle>Chamados criticos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {criticalTickets.length > 0 ? (
@@ -221,13 +283,13 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <EmptyState title="Nenhum chamado crítico" description="Ótimo sinal: não há chamados críticos neste momento." />
+              <EmptyState title="Nenhum chamado critico" description="Otimo sinal: nao ha chamados criticos neste momento." />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Sem responsável</CardTitle>
+            <CardTitle>Sem responsavel</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {unassignedTickets.length > 0 ? (
@@ -239,7 +301,7 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <EmptyState title="Nenhum chamado sem responsável" description="Todos os chamados atuais já possuem responsável definido." />
+              <EmptyState title="Nenhum chamado sem responsavel" description="Todos os chamados atuais ja possuem responsavel definido." />
             )}
           </CardContent>
         </Card>
@@ -259,15 +321,16 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <EmptyState title="Sem pendências com cliente" description="Não há chamados aguardando retorno do cliente agora." />
+              <EmptyState title="Sem pendencias com cliente" description="Nao ha chamados aguardando retorno do cliente agora." />
             )}
           </CardContent>
         </Card>
       </section>
+
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Atualizações recentes</CardTitle>
+            <CardTitle>Atualizacoes recentes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentTickets.length > 0 ? (
@@ -279,13 +342,13 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <EmptyState title="Sem atualizações recentes" description="Quando os chamados forem movimentados, eles aparecerão aqui." />
+              <EmptyState title="Sem atualizacoes recentes" description="Quando os chamados forem movimentados, eles aparecerao aqui." />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Carga por responsável</CardTitle>
+            <CardTitle>Carga por responsavel</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {workload.length > 0 ? (
@@ -296,7 +359,7 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <EmptyState title="Sem distribuição de carga" description="Atribua chamados aos usuários para acompanhar a carga da equipe." />
+              <EmptyState title="Sem distribuicao de carga" description="Atribua chamados aos usuarios para acompanhar a carga da equipe." />
             )}
           </CardContent>
         </Card>

@@ -3,12 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import type { AppUser } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import type { AppUser } from "@/types";
 import { FormMessage } from "./form-message";
 
 export function UserForm({ user }: { user?: AppUser }) {
@@ -40,14 +40,14 @@ export function UserForm({ user }: { user?: AppUser }) {
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel salvar o usuario."
+          text: result.message ?? "Não foi possível salvar o usuário."
         });
         return;
       }
 
       setMessage({
         type: "success",
-        text: user ? "Usuario atualizado com sucesso." : "Usuario criado com sucesso."
+        text: user ? "Usuário atualizado com sucesso." : "Usuário criado com sucesso."
       });
 
       if (!user) {
@@ -94,13 +94,13 @@ export function UserForm({ user }: { user?: AppUser }) {
               <Select id="role" value={formData.role} onChange={(event) => setFormData((current) => ({ ...current, role: event.target.value as AppUser["role"] }))}>
                 <option value="ADMIN">Administrador</option>
                 <option value="ATTENDANT">Atendente</option>
-                <option value="TECHNICIAN">Tecnico</option>
+                <option value="TECHNICIAN">Técnico</option>
               </Select>
             </div>
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isPending}>
-              {isPending ? "Salvando..." : "Salvar usuario"}
+              {isPending ? "Salvando..." : "Salvar usuário"}
             </Button>
           </div>
         </form>

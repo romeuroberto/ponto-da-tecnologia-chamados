@@ -55,8 +55,13 @@ function buildTrend(records: Array<{ createdAt: string | Date; updatedAt: string
 }
 
 export const dashboardService = {
-  async getSummary() {
+  async getSummary(currentUserId?: string) {
     if (!isDatabaseConfigured()) {
+      const myAssignedTickets = currentUserId
+        ? [...tickets]
+            .filter((ticket) => ticket.assigneeId === currentUserId)
+            .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
+        : [];
       const criticalTickets = tickets.filter((ticket) => ticket.priority === "CRITICAL").slice(0, 5);
       const unassignedTickets = tickets.filter((ticket) => !ticket.assigneeId).slice(0, 5);
       const waitingCustomerTickets = tickets.filter((ticket) => ticket.status === "WAITING_CUSTOMER").slice(0, 5);
@@ -70,7 +75,7 @@ export const dashboardService = {
       const workload = Array.from(
         tickets.reduce(
           (map, ticket) => {
-            const key = ticket.assigneeName ?? "Nao atribuido";
+            const key = ticket.assigneeName ?? "Não atribuído";
             map.set(key, (map.get(key) ?? 0) + 1);
             return map;
           },
@@ -81,6 +86,9 @@ export const dashboardService = {
 
       return {
         summary: dashboardSummary,
+        myAssignedTickets,
+        myAssignedCount: myAssignedTickets.length,
+        myActiveAssignedCount: myAssignedTickets.filter((ticket) => ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)).length,
         recentTickets: [...tickets].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).slice(0, 5),
         criticalCount: criticalTickets.length,
         unassignedCount: unassignedTickets.length,
@@ -104,7 +112,7 @@ export const dashboardService = {
     const startOfTrendWindow = new Date(startOfToday);
     startOfTrendWindow.setDate(startOfTrendWindow.getDate() - 6);
 
-    const [open, inProgress, waitingCustomer, closed, criticalCount, unassignedCount, resolvedTodayCount, recentRecords, criticalRecords, unassignedRecords, waitingCustomerRecords, technicians, trendRecords, slaRecords] = await Promise.all([
+    const [open, inProgress, waitingCustomer, closed, criticalCount, unassignedCount, resolvedTodayCount, recentRecords, criticalRecords, unassignedRecords, waitingCustomerRecords, technicians, trendRecords, slaRecords, myAssignedRecords] = await Promise.all([
       prisma.ticket.count({ where: { status: "OPEN" } }),
       prisma.ticket.count({ where: { status: "IN_PROGRESS" } }),
       prisma.ticket.count({ where: { status: "WAITING_CUSTOMER" } }),
@@ -141,7 +149,7 @@ export const dashboardService = {
         take: 5
       }),
       prisma.user.findMany({
-        where: { active: true, role: { in: ["ADMIN", "ATTENDANT", "TECHNICIAN"] } },
+        where: { active: true, role: { in: ["ATTENDANT", "TECHNICIAN"] } },
         include: {
           _count: {
             select: {
@@ -168,7 +176,16 @@ export const dashboardService = {
             in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"]
           }
         }
-      })
+      }),
+      currentUserId
+        ? prisma.ticket.findMany({
+            include: ticketInclude,
+            where: {
+              assigneeId: currentUserId
+            },
+            orderBy: [{ updatedAt: "desc" }]
+          })
+        : Promise.resolve([])
     ]);
     const trend = buildTrend(trendRecords);
     const mappedSlaRecords = slaRecords.map(mapTicket);
@@ -184,6 +201,11 @@ export const dashboardService = {
         waitingCustomer,
         closed
       },
+      myAssignedTickets: myAssignedRecords.map(mapTicket),
+      myAssignedCount: myAssignedRecords.length,
+      myActiveAssignedCount: myAssignedRecords.filter((ticket) =>
+        ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)
+      ).length,
       recentTickets: recentRecords.map(mapTicket),
       criticalCount,
       unassignedCount,

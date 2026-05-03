@@ -18,7 +18,7 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     return NextResponse.json(
       {
         success: false,
-        message: "Usuario nao encontrado."
+        message: "Usuário não encontrado."
       },
       { status: 404 }
     );

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db/prisma";
 import { clients } from "@/lib/mock-data";
 import type { Client, PaginationResult } from "@/types";
-import { isDatabaseConfigured, normalizeOptionalString } from "@/server/db-support";
+import { isDatabaseConfigured, normalizeOptionalNumber, normalizeOptionalString } from "@/server/db-support";
 import { mapClient } from "@/server/mappers";
 import { buildPaginationResult, getPagination } from "@/server/pagination";
 
@@ -12,6 +12,14 @@ export interface CreateClientInput {
   email?: string;
   phone?: string;
   notes?: string;
+  billingProfile?: {
+    defaultBillingType: Client["billingProfile"] extends infer T ? T extends { defaultBillingType: infer U } ? U : never : never;
+    hourlyRate?: number;
+    travelRate?: number;
+    defaultDiscountPercent?: number;
+    hasActiveContract: boolean;
+    contractNotes?: string;
+  };
 }
 
 export interface UpdateClientInput extends CreateClientInput {
@@ -37,7 +45,8 @@ export const clientRepository = {
           select: {
             tickets: true
           }
-        }
+        },
+        billingProfile: true
       },
       orderBy: [{ name: "asc" }]
     });
@@ -104,7 +113,8 @@ export const clientRepository = {
             select: {
               tickets: true
             }
-          }
+          },
+          billingProfile: true
         },
         orderBy,
         skip,
@@ -128,7 +138,8 @@ export const clientRepository = {
           select: {
             tickets: true
           }
-        }
+        },
+        billingProfile: true
       }
     });
 
@@ -143,14 +154,27 @@ export const clientRepository = {
         contactName: input.contactName,
         email: normalizeOptionalString(input.email),
         phone: normalizeOptionalString(input.phone),
-        notes: normalizeOptionalString(input.notes)
+        notes: normalizeOptionalString(input.notes),
+        billingProfile: input.billingProfile
+          ? {
+              create: {
+                defaultBillingType: input.billingProfile.defaultBillingType,
+                hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
+                travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
+                defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
+                hasActiveContract: input.billingProfile.hasActiveContract,
+                contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+              }
+            }
+          : undefined
       },
       include: {
         _count: {
           select: {
             tickets: true
           }
-        }
+        },
+        billingProfile: true
       }
     });
 
@@ -167,14 +191,37 @@ export const clientRepository = {
         email: normalizeOptionalString(input.email),
         phone: normalizeOptionalString(input.phone),
         notes: normalizeOptionalString(input.notes),
-        active: input.active
+        active: input.active,
+        billingProfile: input.billingProfile
+          ? {
+              upsert: {
+                create: {
+                  defaultBillingType: input.billingProfile.defaultBillingType,
+                  hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
+                  travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
+                  defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
+                  hasActiveContract: input.billingProfile.hasActiveContract,
+                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                },
+                update: {
+                  defaultBillingType: input.billingProfile.defaultBillingType,
+                  hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
+                  travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
+                  defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
+                  hasActiveContract: input.billingProfile.hasActiveContract,
+                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                }
+              }
+            }
+          : undefined
       },
       include: {
         _count: {
           select: {
             tickets: true
           }
-        }
+        },
+        billingProfile: true
       }
     });
 

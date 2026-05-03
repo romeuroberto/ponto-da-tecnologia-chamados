@@ -3,40 +3,427 @@ const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient();
 
-function hoursAgo(totalHours) {
-  return new Date(Date.now() - totalHours * 60 * 60 * 1000);
+const attachmentLibrary = [
+  {
+    fileName: "erro-nf-log.txt",
+    filePath: "/uploads/tickets/seed-attachments/erro-nf-log.txt",
+    mimeType: "text/plain",
+    sizeBytes: 2048
+  },
+  {
+    fileName: "mapa-servidor-arquivos.txt",
+    filePath: "/uploads/tickets/seed-attachments/mapa-servidor-arquivos.txt",
+    mimeType: "text/plain",
+    sizeBytes: 1536
+  },
+  {
+    fileName: "analise-consulta-bd.txt",
+    filePath: "/uploads/tickets/seed-attachments/analise-consulta-bd.txt",
+    mimeType: "text/plain",
+    sizeBytes: 3072
+  },
+  {
+    fileName: "passos-vpn.pdf",
+    filePath: "/uploads/tickets/seed-attachments/passos-vpn.pdf",
+    mimeType: "application/pdf",
+    sizeBytes: 4096
+  }
+];
+
+const clientSeedData = [
+  {
+    name: "Alfa Contabilidade",
+    contactName: "Fernanda Rocha",
+    email: "fernanda@alfa.com.br",
+    phone: "(11) 98888-1111",
+    notes: "Cliente com alta recorrencia de suporte remoto.",
+    billingProfile: {
+      defaultBillingType: "CONTRATO",
+      hourlyRate: 180,
+      travelRate: 90,
+      defaultDiscountPercent: 8,
+      hasActiveContract: true,
+      contractNotes: "Contrato mensal com franquia reduzida para visitas presenciais."
+    }
+  },
+  {
+    name: "Mercado Central",
+    contactName: "Rafael Teles",
+    email: "rafael@mercadocentral.com",
+    phone: "(11) 97777-2222",
+    notes: "Priorizar falhas relacionadas ao caixa.",
+    billingProfile: {
+      defaultBillingType: "AVULSO",
+      hourlyRate: 210,
+      travelRate: 120,
+      defaultDiscountPercent: 0,
+      hasActiveContract: false,
+      contractNotes: "Atendimentos cobrados por hora com deslocamento separado."
+    }
+  },
+  {
+    name: "Clinica Vida",
+    contactName: "Luciana Prado",
+    email: "luciana@clinicavida.com.br",
+    phone: "(11) 96666-3333",
+    billingProfile: {
+      defaultBillingType: "CONTRATO",
+      hourlyRate: 165,
+      travelRate: 75,
+      defaultDiscountPercent: 5,
+      hasActiveContract: true,
+      contractNotes: "Contrato com desconto padrao para ajustes pequenos."
+    }
+  },
+  {
+    name: "TransLog Express",
+    contactName: "Bruno Salles",
+    email: "bruno@translog.com.br",
+    phone: "(11) 95555-4444",
+    notes: "Opera 24x7 e depende fortemente do sistema de rastreio.",
+    billingProfile: {
+      defaultBillingType: "AVULSO",
+      hourlyRate: 240,
+      travelRate: 140,
+      defaultDiscountPercent: 0,
+      hasActiveContract: false,
+      contractNotes: "Cliente sensivel a incidentes criticos fora do horario."
+    }
+  },
+  {
+    name: "Escola Horizonte",
+    contactName: "Patricia Nogueira",
+    email: "patricia@escolahorizonte.com.br",
+    phone: "(11) 94444-5555",
+    billingProfile: {
+      defaultBillingType: "CONTRATO",
+      hourlyRate: 155,
+      travelRate: 70,
+      defaultDiscountPercent: 10,
+      hasActiveContract: true,
+      contractNotes: "Chamados academicos com maior volume em inicio de semestre."
+    }
+  },
+  {
+    name: "Oficina Master Car",
+    contactName: "Diego Araujo",
+    email: "diego@mastercar.com.br",
+    phone: "(11) 93333-6666",
+    billingProfile: {
+      defaultBillingType: "AVULSO",
+      hourlyRate: 175,
+      travelRate: 95,
+      defaultDiscountPercent: 0,
+      hasActiveContract: false,
+      contractNotes: "Atendimentos pontuais de hardware e impressao."
+    }
+  },
+  {
+    name: "Hotel Costa Azul",
+    contactName: "Sandra Melo",
+    email: "sandra@hotelcostaazul.com.br",
+    phone: "(11) 92222-1111",
+    notes: "Ambiente com recepcao 24h.",
+    billingProfile: {
+      defaultBillingType: "CONTRATO",
+      hourlyRate: 195,
+      travelRate: 100,
+      defaultDiscountPercent: 6,
+      hasActiveContract: true,
+      contractNotes: "Cobertura de plantao remoto durante madrugadas."
+    }
+  },
+  {
+    name: "Farmacia Bem Estar",
+    contactName: "Tania Duarte",
+    email: "tania@farmaciabemestar.com.br",
+    phone: "(11) 91111-2222",
+    billingProfile: {
+      defaultBillingType: "GARANTIA",
+      hourlyRate: 0,
+      travelRate: 0,
+      defaultDiscountPercent: 100,
+      hasActiveContract: false,
+      contractNotes: "Itens em garantia para PDV e impressoras fiscais."
+    }
+  },
+  {
+    name: "Construtora Horizonte Sul",
+    contactName: "Andre Matos",
+    email: "andre@horizontesul.com.br",
+    phone: "(11) 90000-3333",
+    billingProfile: {
+      defaultBillingType: "AVULSO",
+      hourlyRate: 230,
+      travelRate: 150,
+      defaultDiscountPercent: 3,
+      hasActiveContract: false,
+      contractNotes: "Visitas in loco frequentes para canteiros."
+    }
+  },
+  {
+    name: "Studio Forma",
+    contactName: "Camila Viana",
+    email: "camila@studioforma.com.br",
+    phone: "(11) 98800-4444",
+    billingProfile: {
+      defaultBillingType: "CORTESIA",
+      hourlyRate: 0,
+      travelRate: 0,
+      defaultDiscountPercent: 100,
+      hasActiveContract: false,
+      contractNotes: "Primeiro mes de onboarding com suporte de cortesia."
+    }
+  },
+  {
+    name: "Academia Pulse",
+    contactName: "Leandro Pires",
+    email: "leandro@academiapulse.com.br",
+    phone: "(11) 97700-5555",
+    billingProfile: {
+      defaultBillingType: "CONTRATO",
+      hourlyRate: 170,
+      travelRate: 85,
+      defaultDiscountPercent: 7,
+      hasActiveContract: true,
+      contractNotes: "Contrato cobre suporte remoto e pequenos reparos."
+    }
+  },
+  {
+    name: "Juridico Oliveira & Prado",
+    contactName: "Renata Oliveira",
+    email: "renata@oliveiraprado.adv.br",
+    phone: "(11) 96600-6666",
+    billingProfile: {
+      defaultBillingType: "AVULSO",
+      hourlyRate: 220,
+      travelRate: 100,
+      defaultDiscountPercent: 4,
+      hasActiveContract: false,
+      contractNotes: "Cliente com demandas de acesso seguro e documentos."
+    }
+  }
+];
+
+const issueTemplates = [
+  {
+    title: "Erro ao emitir nota fiscal",
+    category: "Sistema",
+    description: "O sistema retorna erro ao concluir a emissao da nota fiscal em uma ou mais estacoes."
+  },
+  {
+    title: "Usuario sem acesso ao e-mail",
+    category: "E-mail",
+    description: "Solicitante nao consegue autenticar no Outlook ou webmail desde o inicio do turno."
+  },
+  {
+    title: "Instalacao de impressora no financeiro",
+    category: "Infraestrutura",
+    description: "Necessario configurar uma nova impressora no setor financeiro e validar impressao."
+  },
+  {
+    title: "Servidor de arquivos indisponivel",
+    category: "Infraestrutura",
+    description: "Usuarios nao conseguem acessar a pasta compartilhada principal e subpastas do setor."
+  },
+  {
+    title: "Cadastro nao salva no sistema",
+    category: "Sistema",
+    description: "Formulario trava ao concluir novo cadastro e o registro nao fica persistido."
+  },
+  {
+    title: "Computador da recepcao lento",
+    category: "Hardware",
+    description: "Equipamento apresenta lentidao severa na abertura de programas e no login."
+  },
+  {
+    title: "Erro no caixa ao fechar venda",
+    category: "PDV",
+    description: "Terminal retorna mensagem de integracao pendente ao finalizar pagamento."
+  },
+  {
+    title: "VPN nao conecta para home office",
+    category: "Rede",
+    description: "Colaborador nao consegue estabelecer conexao remota com a empresa."
+  },
+  {
+    title: "Solicitacao de novo usuario no sistema",
+    category: "Acesso",
+    description: "Criar acesso para colaborador recem-contratado no modulo administrativo."
+  },
+  {
+    title: "Backup noturno com falha",
+    category: "Backup",
+    description: "Job de backup falhou nas ultimas execucoes e precisa de analise."
+  },
+  {
+    title: "Telefone IP sem audio",
+    category: "Telefonia",
+    description: "Aparelho liga normalmente, mas nao transmite audio nas ligacoes."
+  },
+  {
+    title: "Erro 500 na intranet",
+    category: "Sistema",
+    description: "Pagina interna retorna erro 500 ao carregar em navegadores distintos."
+  },
+  {
+    title: "Permissao negada na pasta RH",
+    category: "Acesso",
+    description: "Gestora perdeu acesso a documentos do setor apos alteracao recente de senha."
+  },
+  {
+    title: "Wi-Fi oscilando no escritorio",
+    category: "Rede",
+    description: "Conexao sem fio cai em intervalos curtos na area administrativa."
+  },
+  {
+    title: "Solicitacao de instalacao do Office",
+    category: "Software",
+    description: "Novo computador precisa receber pacote Office e impressoras do setor."
+  },
+  {
+    title: "Monitor nao liga",
+    category: "Hardware",
+    description: "Estacao permanece sem video apos reinicio e troca basica de cabos."
+  },
+  {
+    title: "Lentidao no banco de dados",
+    category: "Banco de dados",
+    description: "Consultas do sistema principal estao mais lentas desde a atualizacao."
+  },
+  {
+    title: "Relatorio PDF sai em branco",
+    category: "Sistema",
+    description: "Modulo financeiro gera arquivo PDF vazio ao exportar para o cliente."
+  },
+  {
+    title: "Cadastro de fornecedor duplicando",
+    category: "Sistema",
+    description: "Ao salvar, o sistema cria dois registros identicos em vez de um."
+  },
+  {
+    title: "Bloqueio de acesso apos varias tentativas",
+    category: "Acesso",
+    description: "Usuario foi bloqueado apos tentativas consecutivas de login no portal."
+  },
+  {
+    title: "Atualizacao do antivirus falhou",
+    category: "Seguranca",
+    description: "Agente do antivirus nao recebe a assinatura mais recente em algumas maquinas."
+  },
+  {
+    title: "Impressora fiscal sem comunicacao",
+    category: "PDV",
+    description: "Impressora fiscal deixou de responder ao sistema apos troca de bobina."
+  },
+  {
+    title: "Planilha compartilhada nao abre",
+    category: "Office",
+    description: "Arquivo compartilhado do financeiro acusa bloqueio ou corrupcao ao abrir."
+  },
+  {
+    title: "Acesso remoto expira rapidamente",
+    category: "Rede",
+    description: "Sessao remota cai poucos minutos apos autenticacao."
+  }
+];
+
+const statusCycle = ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "RESOLVED", "CLOSED", "CANCELED"];
+const priorityCycle = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+const billingTypeCycle = ["AVULSO", "CONTRATO", "GARANTIA", "CORTESIA"];
+const financialStatusCycle = ["PENDENTE", "EM_ANALISE", "APROVADO", "FATURADO", "PAGO", "CANCELADO"];
+const billingEntryTypeCycle = ["LABOR", "PART", "TRAVEL", "EXTRA"];
+
+function daysAgo(totalDays, hour = 9, minute = 0) {
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+  date.setDate(date.getDate() - totalDays);
+  return date;
+}
+
+function hoursAfter(baseDate, hours) {
+  return new Date(baseDate.getTime() + hours * 60 * 60 * 1000);
 }
 
 function minutesAfter(baseDate, minutes) {
   return new Date(baseDate.getTime() + minutes * 60 * 1000);
 }
 
-function buildHistory({
+function pad(number) {
+  return String(number).padStart(3, "0");
+}
+
+function decimal(value) {
+  return Number(value.toFixed(2));
+}
+
+function pickAttachment(index) {
+  const file = attachmentLibrary[index % attachmentLibrary.length];
+  return {
+    ...file
+  };
+}
+
+function statusLabel(status) {
+  const labels = {
+    OPEN: "aberto",
+    IN_PROGRESS: "em atendimento",
+    WAITING_CUSTOMER: "aguardando cliente",
+    RESOLVED: "resolvido",
+    CLOSED: "encerrado",
+    CANCELED: "cancelado"
+  };
+
+  return labels[status];
+}
+
+function priorityLabel(priority) {
+  const labels = {
+    LOW: "baixa",
+    MEDIUM: "media",
+    HIGH: "alta",
+    CRITICAL: "critica"
+  };
+
+  return labels[priority];
+}
+
+function buildTicketHistory({
   openedById,
   assigneeId,
   status,
   priority,
-  createdMessage,
-  updatedMessage,
   createdAt,
   updatedAt,
-  comments = []
+  title,
+  comments
 }) {
   const history = [
     {
       authorId: openedById,
       eventType: "CREATED",
-      message: createdMessage,
+      message: `Chamado aberto para ${title.toLowerCase()}.`,
       createdAt
     }
   ];
+
+  if (priority === "HIGH" || priority === "CRITICAL") {
+    history.push({
+      authorId: openedById,
+      eventType: "PRIORITY_CHANGE",
+      message: `Prioridade ajustada para ${priorityLabel(priority)} devido ao impacto informado pelo cliente.`,
+      previousPriority: priority === "CRITICAL" ? "HIGH" : "MEDIUM",
+      nextPriority: priority,
+      createdAt: minutesAfter(createdAt, 15)
+    });
+  }
 
   if (assigneeId) {
     history.push({
       authorId: openedById,
       eventType: "ASSIGNEE_CHANGE",
-      message: "Responsavel definido para atendimento inicial.",
-      createdAt: new Date(createdAt.getTime() + 20 * 60 * 1000)
+      message: "Responsavel definido para o atendimento inicial.",
+      createdAt: minutesAfter(createdAt, 30)
     });
   }
 
@@ -44,30 +431,28 @@ function buildHistory({
     history.push({
       authorId: assigneeId ?? openedById,
       eventType: "STATUS_CHANGE",
-      message: updatedMessage,
+      message: `Chamado movido para ${statusLabel(status)} durante a triagem.`,
       previousStatus: "OPEN",
       nextStatus: status,
       createdAt: updatedAt
     });
   }
 
-  if (priority === "CRITICAL") {
+  if (status === "RESOLVED") {
     history.push({
-      authorId: openedById,
-      eventType: "PRIORITY_CHANGE",
-      message: "Prioridade ajustada para critica devido ao impacto no cliente.",
-      previousPriority: "HIGH",
-      nextPriority: "CRITICAL",
-      createdAt: new Date(createdAt.getTime() + 10 * 60 * 1000)
+      authorId: assigneeId ?? openedById,
+      eventType: "COMMENT",
+      message: "Correcao aplicada e aguardando validacao final do cliente.",
+      createdAt: minutesAfter(updatedAt, 20)
     });
   }
 
-  if (status === "RESOLVED" || status === "CLOSED") {
+  if (status === "CLOSED") {
     history.push({
       authorId: assigneeId ?? openedById,
-      eventType: status === "CLOSED" ? "CLOSED" : "COMMENT",
-      message: status === "CLOSED" ? "Chamado encerrado apos validacao do cliente." : "Correcao aplicada e aguardando encerramento.",
-      createdAt: new Date(updatedAt.getTime() + 15 * 60 * 1000)
+      eventType: "CLOSED",
+      message: "Chamado encerrado apos confirmacao do cliente.",
+      createdAt: minutesAfter(updatedAt, 30)
     });
   }
 
@@ -76,7 +461,7 @@ function buildHistory({
       authorId: comment.authorId,
       eventType: "COMMENT",
       message: comment.message,
-      createdAt: comment.createdAt ?? minutesAfter(createdAt, 45 + index * 40)
+      createdAt: comment.createdAt ?? minutesAfter(createdAt, 60 + index * 55)
     });
   });
 
@@ -84,616 +469,402 @@ function buildHistory({
   return history;
 }
 
-async function main() {
-  await prisma.ticketHistory.deleteMany();
-  await prisma.attachment.deleteMany();
-  await prisma.ticket.deleteMany();
-  await prisma.client.deleteMany();
-  await prisma.user.deleteMany();
-
-  const defaultPasswordHash = await bcrypt.hash("123456", 10);
-
-  const users = await Promise.all([
-    prisma.user.create({
-      data: {
-        name: "Mariana Costa",
-        email: "mariana@empresa.com",
-        passwordHash: defaultPasswordHash,
-        role: "ADMIN"
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: "Carlos Souza",
-        email: "carlos@empresa.com",
-        passwordHash: defaultPasswordHash,
-        role: "ATTENDANT"
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: "Paulo Lima",
-        email: "paulo@empresa.com",
-        passwordHash: defaultPasswordHash,
-        role: "TECHNICIAN"
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: "Juliana Mendes",
-        email: "juliana@empresa.com",
-        passwordHash: defaultPasswordHash,
-        role: "ATTENDANT"
-      }
-    }),
-    prisma.user.create({
-      data: {
-        name: "Ricardo Nunes",
-        email: "ricardo@empresa.com",
-        passwordHash: defaultPasswordHash,
-        role: "TECHNICIAN"
-      }
-    })
-  ]);
-
-  const [admin, attendantA, technicianA, attendantB, technicianB] = users;
-
-  const clients = await Promise.all([
-    prisma.client.create({
-      data: {
-        name: "Alfa Contabilidade",
-        contactName: "Fernanda Rocha",
-        email: "fernanda@alfa.com.br",
-        phone: "(11) 98888-1111",
-        notes: "Cliente com alta recorrencia de suporte remoto."
-      }
-    }),
-    prisma.client.create({
-      data: {
-        name: "Mercado Central",
-        contactName: "Rafael Teles",
-        email: "rafael@mercadocentral.com",
-        phone: "(11) 97777-2222",
-        notes: "Priorizar falhas relacionadas ao caixa."
-      }
-    }),
-    prisma.client.create({
-      data: {
-        name: "Clinica Vida",
-        contactName: "Luciana Prado",
-        email: "luciana@clinicavida.com.br",
-        phone: "(11) 96666-3333"
-      }
-    }),
-    prisma.client.create({
-      data: {
-        name: "TransLog Express",
-        contactName: "Bruno Salles",
-        email: "bruno@translog.com.br",
-        phone: "(11) 95555-4444",
-        notes: "Opera 24x7 e depende fortemente do sistema de rastreio."
-      }
-    }),
-    prisma.client.create({
-      data: {
-        name: "Escola Horizonte",
-        contactName: "Patricia Nogueira",
-        email: "patricia@escolahorizonte.com.br",
-        phone: "(11) 94444-5555"
-      }
-    }),
-    prisma.client.create({
-      data: {
-        name: "Oficina Master Car",
-        contactName: "Diego Araujo",
-        email: "diego@mastercar.com.br",
-        phone: "(11) 93333-6666"
-      }
-    })
-  ]);
-
-  const [clientA, clientB, clientC, clientD, clientE, clientF] = clients;
-
-  const ticketSeeds = [
+function buildBillingEntries({
+  profile,
+  financialStatus,
+  createdAt,
+  createdById,
+  includeTravel,
+  index
+}) {
+  const laborHours = decimal(1 + ((index % 5) * 0.5));
+  const laborRate = profile?.hourlyRate ? Number(profile.hourlyRate) : 180 + (index % 4) * 20;
+  const entries = [
     {
-      number: "CH-2026-001",
-      title: "Erro ao emitir nota fiscal",
-      description: "O sistema retorna erro ao concluir a emissao da nota fiscal em duas estacoes.",
-      category: "Sistema",
-      priority: "CRITICAL",
-      status: "IN_PROGRESS",
-      requesterName: "Fernanda Rocha",
-      requesterEmail: "fernanda@alfa.com.br",
-      clientId: clientA.id,
-      assigneeId: technicianA.id,
-      openedById: attendantA.id,
-      createdAt: hoursAgo(72),
-      updatedAt: hoursAgo(69),
-      createdMessage: "Chamado aberto e priorizado como critico.",
-      updatedMessage: "Analise iniciada. Possivel falha na integracao fiscal.",
-      comments: [
-        {
-          authorId: technicianA.id,
-          message: "Logs coletados e enviados para revisao da integracao fiscal.",
-          createdAt: hoursAgo(70)
-        }
-      ],
-      attachments: [
-        {
-          fileName: "erro-nf-log.txt",
-          filePath: "/uploads/tickets/seed-attachments/erro-nf-log.txt",
-          mimeType: "text/plain",
-          sizeBytes: 2048
-        }
-      ]
-    },
-    {
-      number: "CH-2026-002",
-      title: "Usuario sem acesso ao e-mail",
-      description: "Solicitante nao consegue autenticar no Outlook desde o inicio da manha.",
-      category: "E-mail",
-      priority: "HIGH",
-      status: "WAITING_CUSTOMER",
-      requesterName: "Rafael Teles",
-      requesterEmail: "rafael@mercadocentral.com",
-      clientId: clientB.id,
-      assigneeId: attendantA.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(68),
-      updatedAt: hoursAgo(66),
-      createdMessage: "Chamado aberto via atendimento telefonico.",
-      updatedMessage: "Solicitada validacao de senha e teste em outro dispositivo.",
-      comments: [
-        {
-          authorId: attendantA.id,
-          message: "Usuario informou que o problema ocorre em desktop e celular.",
-          createdAt: hoursAgo(67)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-003",
-      title: "Instalacao de impressora no financeiro",
-      description: "Necessario configurar uma nova impressora no setor financeiro.",
-      category: "Infraestrutura",
-      priority: "MEDIUM",
-      status: "OPEN",
-      requesterName: "Luciana Prado",
-      requesterEmail: "luciana@clinicavida.com.br",
-      clientId: clientC.id,
-      assigneeId: null,
-      openedById: attendantA.id,
-      createdAt: hoursAgo(65),
-      updatedAt: hoursAgo(65),
-      createdMessage: "Chamado aguardando atribuicao.",
-      updatedMessage: "Chamado aguardando atribuicao."
-    },
-    {
-      number: "CH-2026-004",
-      title: "Servidor de arquivos indisponivel",
-      description: "Usuarios nao conseguem acessar a pasta compartilhada principal.",
-      category: "Infraestrutura",
-      priority: "CRITICAL",
-      status: "IN_PROGRESS",
-      requesterName: "Bruno Salles",
-      requesterEmail: "bruno@translog.com.br",
-      clientId: clientD.id,
-      assigneeId: technicianB.id,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(60),
-      updatedAt: hoursAgo(58),
-      createdMessage: "Incidente registrado com impacto alto na operacao.",
-      updatedMessage: "Tecnico em analise de rede e permissao de compartilhamento.",
-      comments: [
-        {
-          authorId: technicianB.id,
-          message: "Acesso restabelecido parcialmente, mantendo monitoramento.",
-          createdAt: hoursAgo(57)
-        }
-      ],
-      attachments: [
-        {
-          fileName: "mapa-servidor-arquivos.txt",
-          filePath: "/uploads/tickets/seed-attachments/mapa-servidor-arquivos.txt",
-          mimeType: "text/plain",
-          sizeBytes: 1536
-        }
-      ]
-    },
-    {
-      number: "CH-2026-005",
-      title: "Cadastro de aluno nao salva",
-      description: "Formulario trava ao concluir novo cadastro na secretaria.",
-      category: "Sistema",
-      priority: "HIGH",
-      status: "OPEN",
-      requesterName: "Patricia Nogueira",
-      requesterEmail: "patricia@escolahorizonte.com.br",
-      clientId: clientE.id,
-      assigneeId: null,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(54),
-      updatedAt: hoursAgo(54),
-      createdMessage: "Solicitacao registrada e aguardando triagem.",
-      updatedMessage: "Solicitacao registrada e aguardando triagem."
-    },
-    {
-      number: "CH-2026-006",
-      title: "Computador da recepcao lento",
-      description: "Equipamento apresenta lentidao severa na abertura de programas.",
-      category: "Hardware",
-      priority: "LOW",
-      status: "RESOLVED",
-      requesterName: "Luciana Prado",
-      requesterEmail: "luciana@clinicavida.com.br",
-      clientId: clientC.id,
-      assigneeId: technicianA.id,
-      openedById: attendantA.id,
-      createdAt: hoursAgo(52),
-      updatedAt: hoursAgo(48),
-      createdMessage: "Chamado aberto para diagnostico de performance.",
-      updatedMessage: "Limpeza de sistema executada com melhora confirmada.",
-      comments: [
-        {
-          authorId: technicianA.id,
-          message: "Itens de inicializacao desnecessarios foram removidos.",
-          createdAt: hoursAgo(49)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-007",
-      title: "Erro no caixa ao fechar venda",
-      description: "Terminal retorna mensagem de integracao pendente ao finalizar pagamento.",
-      category: "PDV",
-      priority: "HIGH",
-      status: "IN_PROGRESS",
-      requesterName: "Rafael Teles",
-      requesterEmail: "rafael@mercadocentral.com",
-      clientId: clientB.id,
-      assigneeId: technicianB.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(46),
-      updatedAt: hoursAgo(42),
-      createdMessage: "Chamado aberto com impacto direto em vendas.",
-      updatedMessage: "Log coletado e correcoes em andamento no terminal.",
-      comments: [
-        {
-          authorId: technicianB.id,
-          message: "Erro reproduzido apenas em um terminal especifico do caixa 2.",
-          createdAt: hoursAgo(43)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-008",
-      title: "VPN nao conecta para home office",
-      description: "Gerente nao consegue estabelecer conexao remota com a empresa.",
-      category: "Rede",
-      priority: "MEDIUM",
-      status: "WAITING_CUSTOMER",
-      requesterName: "Fernanda Rocha",
-      requesterEmail: "fernanda@alfa.com.br",
-      clientId: clientA.id,
-      assigneeId: technicianA.id,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(40),
-      updatedAt: hoursAgo(38),
-      createdMessage: "Chamado aberto para validar credenciais e VPN.",
-      updatedMessage: "Aguardando teste de acesso apos reset de credenciais.",
-      attachments: [
-        {
-          fileName: "passos-vpn.pdf",
-          filePath: "/uploads/tickets/seed-attachments/passos-vpn.pdf",
-          mimeType: "application/pdf",
-          sizeBytes: 4096
-        }
-      ]
-    },
-    {
-      number: "CH-2026-009",
-      title: "Solicitacao de novo usuario no sistema",
-      description: "Criar acesso para colaborador recem-contratado no modulo administrativo.",
-      category: "Acesso",
-      priority: "LOW",
-      status: "CLOSED",
-      requesterName: "Patricia Nogueira",
-      requesterEmail: "patricia@escolahorizonte.com.br",
-      clientId: clientE.id,
-      assigneeId: attendantA.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(36),
-      updatedAt: hoursAgo(30),
-      createdMessage: "Solicitacao de cadastro recebida pelo atendimento.",
-      updatedMessage: "Usuario criado e acesso validado com o solicitante."
-    },
-    {
-      number: "CH-2026-010",
-      title: "Backup noturno com falha",
-      description: "Job de backup falhou nas ultimas duas madrugadas.",
-      category: "Backup",
-      priority: "CRITICAL",
-      status: "IN_PROGRESS",
-      requesterName: "Bruno Salles",
-      requesterEmail: "bruno@translog.com.br",
-      clientId: clientD.id,
-      assigneeId: technicianA.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(28),
-      updatedAt: hoursAgo(24),
-      createdMessage: "Rotina de backup reportada com falha recorrente.",
-      updatedMessage: "Validacao de espaco em disco e integridade do destino iniciada.",
-      comments: [
-        {
-          authorId: technicianA.id,
-          message: "Detectado crescimento acelerado da particao de destino.",
-          createdAt: hoursAgo(26)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-011",
-      title: "Telefone IP sem audio",
-      description: "Aparelho liga normalmente, mas nao transmite audio nas ligacoes.",
-      category: "Telefonia",
-      priority: "MEDIUM",
-      status: "OPEN",
-      requesterName: "Diego Araujo",
-      requesterEmail: "diego@mastercar.com.br",
-      clientId: clientF.id,
-      assigneeId: null,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(22),
-      updatedAt: hoursAgo(22),
-      createdMessage: "Solicitacao aberta e aguardando tecnico disponivel.",
-      updatedMessage: "Solicitacao aberta e aguardando tecnico disponivel."
-    },
-    {
-      number: "CH-2026-012",
-      title: "Erro 500 na intranet",
-      description: "Pagina interna de recados retorna erro 500 ao carregar.",
-      category: "Sistema",
-      priority: "HIGH",
-      status: "RESOLVED",
-      requesterName: "Fernanda Rocha",
-      requesterEmail: "fernanda@alfa.com.br",
-      clientId: clientA.id,
-      assigneeId: technicianB.id,
-      openedById: attendantA.id,
-      createdAt: hoursAgo(20),
-      updatedAt: hoursAgo(16),
-      createdMessage: "Erro validado em mais de um navegador.",
-      updatedMessage: "Servico reiniciado e erro corrigido.",
-      comments: [
-        {
-          authorId: technicianB.id,
-          message: "Cache da aplicacao limpo antes da reinicializacao do servico.",
-          createdAt: hoursAgo(17)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-013",
-      title: "Permissao negada na pasta RH",
-      description: "Gestora perdeu acesso a documentos do setor apos mudanca de senha.",
-      category: "Acesso",
-      priority: "MEDIUM",
-      status: "WAITING_CUSTOMER",
-      requesterName: "Luciana Prado",
-      requesterEmail: "luciana@clinicavida.com.br",
-      clientId: clientC.id,
-      assigneeId: attendantA.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(18),
-      updatedAt: hoursAgo(14),
-      createdMessage: "Ticket aberto para revisao de permissoes.",
-      updatedMessage: "Permissao ajustada. Aguardando confirmacao do cliente."
-    },
-    {
-      number: "CH-2026-014",
-      title: "Wi-Fi oscilando no escritorio",
-      description: "Conexao sem fio cai em intervalos curtos na area administrativa.",
-      category: "Rede",
-      priority: "HIGH",
-      status: "IN_PROGRESS",
-      requesterName: "Patricia Nogueira",
-      requesterEmail: "patricia@escolahorizonte.com.br",
-      clientId: clientE.id,
-      assigneeId: technicianB.id,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(15),
-      updatedAt: hoursAgo(11),
-      createdMessage: "Incidente de conectividade registrado com urgencia.",
-      updatedMessage: "Analise do access point e mudanca de canal em execucao.",
-      comments: [
-        {
-          authorId: technicianB.id,
-          message: "Foi identificado ruido no canal atual do access point principal.",
-          createdAt: hoursAgo(12)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-015",
-      title: "Solicitacao de instalacao do Office",
-      description: "Novo computador precisa receber pacote Office e impressoras.",
-      category: "Software",
-      priority: "LOW",
-      status: "CLOSED",
-      requesterName: "Diego Araujo",
-      requesterEmail: "diego@mastercar.com.br",
-      clientId: clientF.id,
-      assigneeId: technicianA.id,
-      openedById: attendantA.id,
-      createdAt: hoursAgo(12),
-      updatedAt: hoursAgo(9),
-      createdMessage: "Solicitacao agendada para configuracao local.",
-      updatedMessage: "Instalacao concluida e validada pelo usuario."
-    },
-    {
-      number: "CH-2026-016",
-      title: "Monitor nao liga",
-      description: "Estacao do caixa secundario permanece sem video apos reinicio.",
-      category: "Hardware",
-      priority: "MEDIUM",
-      status: "OPEN",
-      requesterName: "Rafael Teles",
-      requesterEmail: "rafael@mercadocentral.com",
-      clientId: clientB.id,
-      assigneeId: null,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(10),
-      updatedAt: hoursAgo(10),
-      createdMessage: "Chamado registrado para verificacao de energia e cabos.",
-      updatedMessage: "Chamado registrado para verificacao de energia e cabos."
-    },
-    {
-      number: "CH-2026-017",
-      title: "Lentidao no banco de dados",
-      description: "Consultas do sistema principal estao mais lentas desde a atualizacao.",
-      category: "Banco de dados",
-      priority: "CRITICAL",
-      status: "IN_PROGRESS",
-      requesterName: "Bruno Salles",
-      requesterEmail: "bruno@translog.com.br",
-      clientId: clientD.id,
-      assigneeId: technicianA.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(8),
-      updatedAt: hoursAgo(5),
-      createdMessage: "Ocorrencia aberta com impacto em varias equipes.",
-      updatedMessage: "Indices e consultas em revisao para reduzir tempo de resposta.",
-      comments: [
-        {
-          authorId: technicianA.id,
-          message: "Plano de execucao aponta gargalo em consulta de pedidos recentes.",
-          createdAt: hoursAgo(6)
-        }
-      ],
-      attachments: [
-        {
-          fileName: "analise-consulta-bd.txt",
-          filePath: "/uploads/tickets/seed-attachments/analise-consulta-bd.txt",
-          mimeType: "text/plain",
-          sizeBytes: 3072
-        }
-      ]
-    },
-    {
-      number: "CH-2026-018",
-      title: "Relatorio PDF sai em branco",
-      description: "Modulo financeiro gera arquivo PDF vazio ao exportar.",
-      category: "Sistema",
-      priority: "HIGH",
-      status: "RESOLVED",
-      requesterName: "Fernanda Rocha",
-      requesterEmail: "fernanda@alfa.com.br",
-      clientId: clientA.id,
-      assigneeId: technicianB.id,
-      openedById: attendantA.id,
-      createdAt: hoursAgo(7),
-      updatedAt: hoursAgo(3),
-      createdMessage: "Defeito reproduzido com mesma base do cliente.",
-      updatedMessage: "Biblioteca de geracao reiniciada e exportacao normalizada.",
-      comments: [
-        {
-          authorId: technicianB.id,
-          message: "Cliente recebeu arquivo de teste e confirmou a renderizacao correta.",
-          createdAt: hoursAgo(2)
-        }
-      ]
-    },
-    {
-      number: "CH-2026-019",
-      title: "Cadastro de fornecedor duplicando",
-      description: "Ao salvar, o sistema cria dois registros identicos.",
-      category: "Sistema",
-      priority: "MEDIUM",
-      status: "WAITING_CUSTOMER",
-      requesterName: "Luciana Prado",
-      requesterEmail: "luciana@clinicavida.com.br",
-      clientId: clientC.id,
-      assigneeId: attendantB.id,
-      openedById: admin.id,
-      createdAt: hoursAgo(6),
-      updatedAt: hoursAgo(2),
-      createdMessage: "Chamado aberto para analise de fluxo de cadastro.",
-      updatedMessage: "Correcao aplicada em homologacao. Aguardando retorno do cliente."
-    },
-    {
-      number: "CH-2026-020",
-      title: "Bloqueio de acesso ap\u00f3s v\u00e1rias tentativas",
-      description: "Usu\u00e1rio foi bloqueado ap\u00f3s tentativas consecutivas de login no portal.",
-      category: "Acesso",
-      priority: "LOW",
-      status: "CLOSED",
-      requesterName: "Patricia Nogueira",
-      requesterEmail: "patricia@escolahorizonte.com.br",
-      clientId: clientE.id,
-      assigneeId: attendantA.id,
-      openedById: attendantB.id,
-      createdAt: hoursAgo(5),
-      updatedAt: hoursAgo(1),
-      createdMessage: "Solicitacao aberta para desbloqueio de usuario.",
-      updatedMessage: "Conta desbloqueada e acesso confirmado com o solicitante.",
-      comments: [
-        {
-          authorId: attendantA.id,
-          message: "Orientado o uso de redefinicao de senha para evitar novo bloqueio.",
-          createdAt: hoursAgo(1)
-        }
-      ]
+      entryType: "LABOR",
+      description: "Horas tecnicas de atendimento e diagnostico.",
+      quantity: laborHours,
+      unitPrice: decimal(laborRate),
+      totalPrice: decimal(laborHours * laborRate),
+      billable: financialStatus !== "CORTESIA",
+      createdById,
+      createdAt,
+      updatedAt: minutesAfter(createdAt, 20)
     }
   ];
 
-  for (const seed of ticketSeeds) {
-    const {
-      createdMessage,
-      updatedMessage,
+  if (index % 3 === 0) {
+    const partPrice = 45 + (index % 6) * 35;
+    entries.push({
+      entryType: "PART",
+      description: "Peca ou insumo utilizado no atendimento.",
+      quantity: 1,
+      unitPrice: decimal(partPrice),
+      totalPrice: decimal(partPrice),
+      billable: true,
+      createdById,
+      createdAt: minutesAfter(createdAt, 10),
+      updatedAt: minutesAfter(createdAt, 25)
+    });
+  }
+
+  if (includeTravel) {
+    const travelRate = profile?.travelRate ? Number(profile.travelRate) : 85 + (index % 3) * 20;
+    entries.push({
+      entryType: "TRAVEL",
+      description: "Deslocamento para atendimento presencial.",
+      quantity: 1,
+      unitPrice: decimal(travelRate),
+      totalPrice: decimal(travelRate),
+      billable: true,
+      createdById,
+      createdAt: minutesAfter(createdAt, 15),
+      updatedAt: minutesAfter(createdAt, 30)
+    });
+  }
+
+  if (index % 4 === 0) {
+    const extraPrice = 30 + (index % 5) * 25;
+    entries.push({
+      entryType: "EXTRA",
+      description: "Ajuste complementar ou configuracao adicional.",
+      quantity: 1,
+      unitPrice: decimal(extraPrice),
+      totalPrice: decimal(extraPrice),
+      billable: true,
+      createdById,
+      createdAt: minutesAfter(createdAt, 20),
+      updatedAt: minutesAfter(createdAt, 40)
+    });
+  }
+
+  return entries;
+}
+
+function buildFinancialStatus(ticketStatus, index, billingType) {
+  if (billingType === "CORTESIA") {
+    return index % 2 === 0 ? "PAGO" : "CANCELADO";
+  }
+
+  if (billingType === "GARANTIA") {
+    return index % 2 === 0 ? "PAGO" : "APROVADO";
+  }
+
+  if (ticketStatus === "CLOSED") {
+    return index % 3 === 0 ? "PAGO" : "FATURADO";
+  }
+
+  if (ticketStatus === "RESOLVED") {
+    return index % 2 === 0 ? "APROVADO" : "FATURADO";
+  }
+
+  if (ticketStatus === "CANCELED") {
+    return "CANCELADO";
+  }
+
+  return index % 2 === 0 ? "EM_ANALISE" : "PENDENTE";
+}
+
+function buildBillingHistory({
+  authorId,
+  billingType,
+  financialStatus,
+  createdAt,
+  updatedAt,
+  entryCount,
+  totalAmount
+}) {
+  const history = [
+    {
+      authorId,
+      eventType: "SUMMARY_UPDATED",
+      message: `Resumo financeiro criado com cobranca ${billingType.toLowerCase()}.`,
+      createdAt
+    }
+  ];
+
+  for (let index = 0; index < entryCount; index += 1) {
+    history.push({
+      authorId,
+      eventType: "ENTRY_CREATED",
+      message: `Lancamento financeiro ${index + 1} registrado no chamado.`,
+      createdAt: minutesAfter(createdAt, 12 + index * 8)
+    });
+  }
+
+  history.push({
+    authorId,
+    eventType: "STATUS_UPDATED",
+    message: `Status financeiro atualizado para ${financialStatus.toLowerCase()}.`,
+    createdAt: updatedAt
+  });
+
+  if (financialStatus === "PAGO") {
+    history.push({
+      authorId,
+      eventType: "SUMMARY_UPDATED",
+      message: `Recebimento confirmado no valor total de R$ ${totalAmount.toFixed(2)}.`,
+      createdAt: minutesAfter(updatedAt, 25)
+    });
+  }
+
+  return history;
+}
+
+async function clearDatabase() {
+  await prisma.billingHistory.deleteMany();
+  await prisma.billingEntry.deleteMany();
+  await prisma.ticketBilling.deleteMany();
+  await prisma.ticketHistory.deleteMany();
+  await prisma.attachment.deleteMany();
+  await prisma.ticket.deleteMany();
+  await prisma.clientBillingProfile.deleteMany();
+  await prisma.client.deleteMany();
+  await prisma.user.deleteMany();
+}
+
+async function main() {
+  await clearDatabase();
+
+  const defaultPasswordHash = await bcrypt.hash("123456", 10);
+
+  const users = await Promise.all(
+    [
+      { name: "Mariana Costa", email: "mariana@empresa.com", role: "ADMIN" },
+      { name: "Carlos Souza", email: "carlos@empresa.com", role: "ATTENDANT" },
+      { name: "Paulo Lima", email: "paulo@empresa.com", role: "TECHNICIAN" },
+      { name: "Juliana Mendes", email: "juliana@empresa.com", role: "ATTENDANT" },
+      { name: "Ricardo Nunes", email: "ricardo@empresa.com", role: "TECHNICIAN" },
+      { name: "Aline Batista", email: "aline@empresa.com", role: "ATTENDANT" },
+      { name: "Gustavo Freitas", email: "gustavo@empresa.com", role: "TECHNICIAN" },
+      { name: "Bianca Moraes", email: "bianca@empresa.com", role: "ADMIN" }
+    ].map((user) =>
+      prisma.user.create({
+        data: {
+          ...user,
+          passwordHash: defaultPasswordHash
+        }
+      })
+    )
+  );
+
+  const admins = users.filter((user) => user.role === "ADMIN");
+  const attendants = users.filter((user) => user.role === "ATTENDANT");
+  const technicians = users.filter((user) => user.role === "TECHNICIAN");
+
+  const clients = await Promise.all(
+    clientSeedData.map((client) =>
+      prisma.client.create({
+        data: {
+          name: client.name,
+          contactName: client.contactName,
+          email: client.email,
+          phone: client.phone,
+          notes: client.notes,
+          billingProfile: client.billingProfile
+            ? {
+                create: client.billingProfile
+              }
+            : undefined
+        },
+        include: {
+          billingProfile: true
+        }
+      })
+    )
+  );
+
+  const ticketSeeds = [];
+  const totalTickets = 72;
+
+  for (let index = 0; index < totalTickets; index += 1) {
+    const template = issueTemplates[index % issueTemplates.length];
+    const client = clients[index % clients.length];
+    const status = statusCycle[index % statusCycle.length];
+    const priority = priorityCycle[index % priorityCycle.length];
+    const openedBy = attendants[index % attendants.length] ?? admins[index % admins.length];
+    const fallbackAdmin = admins[index % admins.length];
+    const assignedTechnician = technicians[index % technicians.length];
+    const assignedAttendant = attendants[(index + 1) % attendants.length];
+    const assignee =
+      status === "OPEN"
+        ? null
+        : template.category === "Acesso" || template.category === "E-mail"
+          ? assignedAttendant
+          : assignedTechnician;
+    const createdAt = daysAgo(42 - Math.floor(index / 2), 8 + (index % 8), (index * 7) % 60);
+    const updatedAt = hoursAfter(createdAt, 2 + (index % 14));
+    const requesterName = client.contactName;
+    const requesterEmail = client.email;
+    const includeAttachments = index % 6 === 0 || priority === "CRITICAL";
+    const comments = [
+      {
+        authorId: assignee?.id ?? openedBy.id,
+        message: "Primeira analise registrada na fila de atendimento.",
+        createdAt: minutesAfter(createdAt, 55)
+      }
+    ];
+
+    if (status === "WAITING_CUSTOMER" || status === "RESOLVED") {
+      comments.push({
+        authorId: fallbackAdmin.id,
+        message: "Cliente orientado sobre o proximo passo e validacao pendente.",
+        createdAt: minutesAfter(updatedAt, 10)
+      });
+    }
+
+    const shouldCreateBilling = status !== "OPEN" && (index % 2 === 0 || status === "RESOLVED" || status === "CLOSED");
+    const billingType = client.billingProfile?.defaultBillingType ?? billingTypeCycle[index % billingTypeCycle.length];
+    const financialStatus = buildFinancialStatus(status, index, billingType);
+    const billingCreatedAt = minutesAfter(updatedAt, 25);
+    const billingUpdatedAt = minutesAfter(updatedAt, 80);
+    const billingEntries = shouldCreateBilling
+      ? buildBillingEntries({
+          profile: client.billingProfile,
+          financialStatus: billingStatusToBillableReference(financialStatus, billingType),
+          createdAt: billingCreatedAt,
+          createdById: openedBy.id,
+          includeTravel: index % 3 === 0,
+          index
+        })
+      : [];
+    const subtotalAmount = decimal(billingEntries.reduce((sum, entry) => sum + entry.totalPrice, 0));
+    const discountPercent = Number(client.billingProfile?.defaultDiscountPercent ?? 0);
+    const discountAmount =
+      shouldCreateBilling && billingType !== "CORTESIA" && billingType !== "GARANTIA"
+        ? decimal(subtotalAmount * (discountPercent / 100))
+        : shouldCreateBilling && billingType === "CORTESIA"
+          ? subtotalAmount
+          : 0;
+    const totalAmount = shouldCreateBilling ? decimal(Math.max(subtotalAmount - discountAmount, 0)) : 0;
+
+    ticketSeeds.push({
+      number: `CH-2026-${pad(index + 1)}`,
+      title: `${template.title} - ${client.name}`,
+      description: template.description,
+      category: template.category,
+      priority,
+      status,
+      requesterName,
+      requesterEmail,
+      clientId: client.id,
+      assigneeId: assignee?.id ?? null,
+      openedById: openedBy.id,
       createdAt,
       updatedAt,
-      status,
-      priority,
-      assigneeId,
-      openedById,
-      comments = [],
-      attachments = [],
-      ...ticketData
-    } = seed;
+      resolvedAt: status === "RESOLVED" || status === "CLOSED" ? updatedAt : null,
+      closedAt: status === "CLOSED" ? minutesAfter(updatedAt, 30) : null,
+      closingReason:
+        status === "CLOSED" ? "Atendimento concluido com validacao do cliente e checklist final." : null,
+      comments,
+      attachments: includeAttachments ? [pickAttachment(index)] : [],
+      billing:
+        shouldCreateBilling
+          ? {
+              billingType,
+              financialStatus,
+              subtotalAmount,
+              discountAmount,
+              totalAmount,
+              internalNotes: client.billingProfile?.contractNotes ?? "Resumo financeiro gerado pelo seed.",
+              approvedAt:
+                financialStatus === "APROVADO" || financialStatus === "FATURADO" || financialStatus === "PAGO"
+                  ? minutesAfter(billingUpdatedAt, 15)
+                  : null,
+              invoicedAt: financialStatus === "FATURADO" || financialStatus === "PAGO" ? minutesAfter(billingUpdatedAt, 40) : null,
+              paidAt: financialStatus === "PAGO" ? minutesAfter(billingUpdatedAt, 70) : null,
+              entries: billingEntries,
+              history: buildBillingHistory({
+                authorId: openedBy.id,
+                billingType,
+                financialStatus,
+                createdAt: billingCreatedAt,
+                updatedAt: billingUpdatedAt,
+                entryCount: billingEntries.length,
+                totalAmount
+              })
+            }
+          : null
+    });
+  }
 
+  for (const seed of ticketSeeds) {
     await prisma.ticket.create({
       data: {
-        ...ticketData,
-        status,
-        priority,
-        assigneeId,
-        openedById,
-        createdAt,
-        updatedAt,
-        resolvedAt: status === "RESOLVED" || status === "CLOSED" ? updatedAt : null,
-        closedAt: status === "CLOSED" ? updatedAt : null,
-        closingReason: status === "CLOSED" ? "Atendimento concluido com validacao do cliente." : null,
+        number: seed.number,
+        title: seed.title,
+        description: seed.description,
+        category: seed.category,
+        priority: seed.priority,
+        status: seed.status,
+        requesterName: seed.requesterName,
+        requesterEmail: seed.requesterEmail,
+        clientId: seed.clientId,
+        assigneeId: seed.assigneeId,
+        openedById: seed.openedById,
+        createdAt: seed.createdAt,
+        updatedAt: seed.updatedAt,
+        resolvedAt: seed.resolvedAt,
+        closedAt: seed.closedAt,
+        closingReason: seed.closingReason,
         history: {
-          create: buildHistory({
-            openedById,
-            assigneeId,
-            status,
-            priority,
-            createdMessage,
-            updatedMessage,
-            createdAt,
-            updatedAt,
-            comments
+          create: buildTicketHistory({
+            openedById: seed.openedById,
+            assigneeId: seed.assigneeId,
+            status: seed.status,
+            priority: seed.priority,
+            createdAt: seed.createdAt,
+            updatedAt: seed.updatedAt,
+            title: seed.title,
+            comments: seed.comments
           })
         },
         attachments: {
-          create: attachments
-        }
+          create: seed.attachments
+        },
+        billing: seed.billing
+          ? {
+              create: {
+                billingType: seed.billing.billingType,
+                financialStatus: seed.billing.financialStatus,
+                subtotalAmount: seed.billing.subtotalAmount,
+                discountAmount: seed.billing.discountAmount,
+                totalAmount: seed.billing.totalAmount,
+                internalNotes: seed.billing.internalNotes,
+                approvedAt: seed.billing.approvedAt,
+                invoicedAt: seed.billing.invoicedAt,
+                paidAt: seed.billing.paidAt,
+                createdAt: seed.createdAt,
+                updatedAt: seed.updatedAt,
+                entries: {
+                  create: seed.billing.entries
+                },
+                history: {
+                  create: seed.billing.history
+                }
+              }
+            }
+          : undefined
       }
     });
   }
 
-  console.log(`Seed concluido com ${users.length} usuarios, ${clients.length} clientes e ${ticketSeeds.length} chamados.`);
+  const billedCount = ticketSeeds.filter((ticket) => ticket.billing).length;
+  console.log(
+    `Seed concluido com ${users.length} usuarios, ${clients.length} clientes, ${ticketSeeds.length} chamados e ${billedCount} chamados com financeiro.`
+  );
+}
+
+function billingStatusToBillableReference(financialStatus, billingType) {
+  if (billingType === "CORTESIA") {
+    return "CORTESIA";
+  }
+
+  if (financialStatus === "CANCELADO") {
+    return "CANCELADO";
+  }
+
+  return financialStatus;
 }
 
 main()

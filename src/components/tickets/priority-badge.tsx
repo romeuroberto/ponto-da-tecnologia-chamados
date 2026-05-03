@@ -3,9 +3,9 @@ import type { TicketPriority } from "@/types";
 
 const labels: Record<TicketPriority, string> = {
   LOW: "Baixa",
-  MEDIUM: "Media",
+  MEDIUM: "Média",
   HIGH: "Alta",
-  CRITICAL: "Critica"
+  CRITICAL: "Crítica"
 };
 
 const classes: Record<TicketPriority, string> = {
@@ -18,4 +18,3 @@ const classes: Record<TicketPriority, string> = {
 export function PriorityBadge({ priority }: { priority: TicketPriority }) {
   return <Badge className={classes[priority]}>{labels[priority]}</Badge>;
 }
-

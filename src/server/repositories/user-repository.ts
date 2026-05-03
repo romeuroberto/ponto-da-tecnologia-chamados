@@ -40,6 +40,25 @@ export const userRepository = {
 
     return records.map(mapUser);
   },
+  async listAssignable() {
+    if (!isDatabaseConfigured()) {
+      return users
+        .filter((user) => user.active && (user.role === "ATTENDANT" || user.role === "TECHNICIAN"))
+        .sort((left, right) => left.name.localeCompare(right.name));
+    }
+
+    const records = await prisma.user.findMany({
+      where: {
+        active: true,
+        role: {
+          in: ["ATTENDANT", "TECHNICIAN"]
+        }
+      },
+      orderBy: [{ role: "asc" }, { name: "asc" }]
+    });
+
+    return records.map(mapUser);
+  },
 
   async search(filters: UserSearchInput): Promise<PaginationResult<AppUser>> {
     const { page, pageSize, skip } = getPagination(filters.page, filters.pageSize);

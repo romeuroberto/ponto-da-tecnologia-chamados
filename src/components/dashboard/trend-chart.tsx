@@ -29,7 +29,7 @@ export function TrendChart({
         <div className="mb-5 flex items-end justify-between">
           <div>
             <p className="text-3xl font-semibold text-slate-950">{total}</p>
-            <p className="text-sm text-slate-500">Últimos 7 dias</p>
+            <p className="text-sm text-slate-500">Ultimos 7 dias</p>
           </div>
         </div>
         <div className="grid grid-cols-7 gap-3">

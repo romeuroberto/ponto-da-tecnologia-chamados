@@ -43,3 +43,23 @@ export function canEditTicketStatus(role: UserRole) {
 export function canCommentTicket(role: UserRole) {
   return role === "ADMIN" || role === "ATTENDANT" || role === "TECHNICIAN";
 }
+
+export function canOperateOnTicket(role: UserRole, userId: string, assigneeId?: string) {
+  if (role === "ADMIN" || role === "ATTENDANT") {
+    return true;
+  }
+
+  if (role !== "TECHNICIAN") {
+    return false;
+  }
+
+  return !assigneeId || assigneeId === userId;
+}
+
+export function canViewFinancialModule(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
+export function canManageTicketBilling(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}

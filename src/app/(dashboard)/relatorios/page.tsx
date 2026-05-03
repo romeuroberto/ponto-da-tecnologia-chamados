@@ -1,8 +1,11 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { TrendChart } from "@/components/dashboard/trend-chart";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/utils";
+import { canViewFinancialModule } from "@/server/auth/permissions";
+import { requireUser } from "@/server/auth/session";
 import { getParam } from "@/server/search-params";
 import { reportService } from "@/server/services/report-service";
 
@@ -11,25 +14,62 @@ export default async function ReportsPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const user = await requireUser();
   const params = await searchParams;
   const from = getParam(params.from) ?? "";
   const to = getParam(params.to) ?? "";
+  const canViewFinancial = canViewFinancialModule(user.role);
+  const operationalExportParams = new URLSearchParams();
+
+  if (from) {
+    operationalExportParams.set("from", from);
+  }
+
+  if (to) {
+    operationalExportParams.set("to", to);
+  }
+
+  const operationalExportHref = `/api/reports/operational${operationalExportParams.toString() ? `?${operationalExportParams.toString()}` : ""}`;
+  const financialExportHref = `/api/reports/financial${operationalExportParams.toString() ? `?${operationalExportParams.toString()}` : ""}`;
   const report = await reportService.getOperationalReport({
     from: from || undefined,
     to: to || undefined
   });
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Relatorios" description="Primeira camada de relatorios operacionais para acompanhar volume, SLA e distribuicao." />
-      <form action="/relatorios" className="contents">
+    <div className="space-y-8">
+      <PageHeader
+        title="Relatórios"
+        description="Primeira camada de relatórios operacionais e financeiros para acompanhar volume, SLA e faturamento."
+        action={
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={operationalExportHref}
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
+            >
+              Exportar operacional CSV
+            </a>
+            {canViewFinancial ? (
+              <a
+                href={financialExportHref}
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
+              >
+                Exportar financeiro CSV
+              </a>
+            ) : null}
+          </div>
+        }
+      />
+      <form action="/relatorios">
         <Card>
           <CardContent className="grid gap-4 p-4 md:grid-cols-4">
             <Input name="from" type="date" defaultValue={from} />
             <Input name="to" type="date" defaultValue={to} />
-            <Button type="submit" variant="secondary">Atualizar relatorio</Button>
+            <Button type="submit" variant="secondary">
+              Atualizar relatório
+            </Button>
             <a href="/relatorios" className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
-              Limpar periodo
+              Limpar período
             </a>
           </CardContent>
         </Card>
@@ -37,7 +77,7 @@ export default async function ReportsPage({
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Total no periodo</p>
+            <p className="text-sm text-slate-600">Total no período</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{report.summary.total}</p>
           </CardContent>
         </Card>
@@ -49,7 +89,7 @@ export default async function ReportsPage({
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Concluidos</p>
+            <p className="text-sm text-slate-600">Concluídos</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{report.summary.completed}</p>
           </CardContent>
         </Card>
@@ -74,30 +114,64 @@ export default async function ReportsPage({
       </section>
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
-          title="Aberturas no periodo"
-          description="Quantidade diaria de chamados abertos nos ultimos 7 dias."
+          title="Aberturas no período"
+          description="Quantidade diária de chamados abertos nos últimos 7 dias."
           total={report.trend.reduce((sum, item) => sum + item.opened, 0)}
           data={report.trend.map((item) => ({ label: item.label, value: item.opened }))}
           tone="blue"
         />
         <TrendChart
-          title="Conclusoes no periodo"
-          description="Quantidade diaria de chamados resolvidos ou encerrados nos ultimos 7 dias."
+          title="Conclusões no período"
+          description="Quantidade diária de chamados resolvidos ou encerrados nos últimos 7 dias."
           total={report.trend.reduce((sum, item) => sum + item.resolved, 0)}
           data={report.trend.map((item) => ({ label: item.label, value: item.resolved }))}
           tone="green"
         />
       </section>
+      {canViewFinancial ? (
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <Card className="border-sky-200 bg-sky-50/60">
+            <CardContent className="p-5">
+              <p className="text-sm text-sky-700">Chamados com financeiro</p>
+              <p className="mt-2 text-3xl font-semibold text-sky-950">{report.financial.totalTicketsWithBilling}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-emerald-200 bg-emerald-50/60">
+            <CardContent className="p-5">
+              <p className="text-sm text-emerald-700">Subtotal</p>
+              <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(report.financial.subtotal)}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-amber-200 bg-amber-50/60">
+            <CardContent className="p-5">
+              <p className="text-sm text-amber-700">Descontos</p>
+              <p className="mt-2 text-2xl font-semibold text-amber-950">{formatCurrency(report.financial.discount)}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-slate-200 bg-slate-50/60">
+            <CardContent className="p-5">
+              <p className="text-sm text-slate-700">Total financeiro</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(report.financial.total)}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-rose-200 bg-rose-50/60">
+            <CardContent className="p-5">
+              <p className="text-sm text-rose-700">Pendente de recebimento</p>
+              <p className="mt-2 text-2xl font-semibold text-rose-950">{formatCurrency(report.financial.pendingTotal)}</p>
+            </CardContent>
+          </Card>
+        </section>
+      ) : null}
       <section className="grid gap-6 xl:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Tempo medio de resolucao</CardTitle>
+            <CardTitle>Tempo médio de resolução</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-semibold text-slate-950">
               {report.summary.averageResolutionHours !== null ? `${report.summary.averageResolutionHours}h` : "-"}
             </p>
-            <p className="mt-2 text-sm text-slate-600">Media calculada com base nos chamados resolvidos ou encerrados no periodo filtrado.</p>
+            <p className="mt-2 text-sm text-slate-600">Média calculada com base nos chamados resolvidos ou encerrados no período filtrado.</p>
           </CardContent>
         </Card>
         <Card>
@@ -139,14 +213,14 @@ export default async function ReportsPage({
                   <span className="font-medium text-slate-900">{item.clientName}</span>
                   <span className="text-sm font-semibold text-slate-950">{item.total}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluidos: {item.completed}</p>
+                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluídos: {item.completed}</p>
               </div>
             ))}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Distribuicao por responsavel</CardTitle>
+            <CardTitle>Distribuição por responsável</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {report.byAssignee.slice(0, 8).map((item) => (
@@ -155,12 +229,64 @@ export default async function ReportsPage({
                   <span className="font-medium text-slate-900">{item.assigneeName}</span>
                   <span className="text-sm font-semibold text-slate-950">{item.total}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluidos: {item.completed}</p>
+                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluídos: {item.completed}</p>
               </div>
             ))}
           </CardContent>
         </Card>
       </section>
+      {canViewFinancial ? (
+        <section className="grid gap-6 xl:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Por tipo de cobrança</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {report.financial.byBillingType.map((item) => (
+                <div key={item.type} className="rounded-xl border border-slate-200 px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-medium text-slate-900">{item.label}</span>
+                    <span className="text-sm font-semibold text-slate-950">{item.total}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">{formatCurrency(item.amount)}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Por status financeiro</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {report.financial.byFinancialStatus.map((item) => (
+                <div key={item.status} className="rounded-xl border border-slate-200 px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-medium text-slate-900">{item.label}</span>
+                    <span className="text-sm font-semibold text-slate-950">{item.total}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">{formatCurrency(item.amount)}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Pendência por cliente</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {report.financial.pendingByClient.slice(0, 8).map((item) => (
+                <div key={item.clientId} className="rounded-xl border border-slate-200 px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-medium text-slate-900">{item.clientName}</span>
+                    <span className="text-sm font-semibold text-slate-950">{formatCurrency(item.total)}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">{item.count} chamado(s) pendente(s)</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </section>
+      ) : null}
     </div>
   );
 }

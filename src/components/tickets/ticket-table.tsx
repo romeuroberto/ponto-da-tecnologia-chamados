@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
 import type { Ticket } from "@/types";
 import { PriorityBadge } from "./priority-badge";
-import { TicketSlaBadge } from "./ticket-sla-badge";
 import { StatusBadge } from "./status-badge";
+import { TicketSlaBadge } from "./ticket-sla-badge";
 
 function buildSortHref(sort: string, params: Record<string, string | undefined>) {
   const searchParams = new URLSearchParams();
@@ -35,9 +35,9 @@ export function TicketTable({
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
             <tr>
-              <th className="px-6 py-4 font-medium">Numero</th>
+              <th className="px-6 py-4 font-medium">Número</th>
               <th className="px-6 py-4 font-medium">Cliente</th>
-              <th className="px-6 py-4 font-medium">Titulo</th>
+              <th className="px-6 py-4 font-medium">Título</th>
               <th className="px-6 py-4 font-medium">
                 <Link href={buildSortHref(currentSort === "priority_desc" ? "priority_asc" : "priority_desc", params)} className="hover:text-slate-900">
                   Prioridade {currentSort.startsWith("priority_") ? "•" : ""}
@@ -45,13 +45,13 @@ export function TicketTable({
               </th>
               <th className="px-6 py-4 font-medium">Status</th>
               <th className="px-6 py-4 font-medium">SLA</th>
-              <th className="px-6 py-4 font-medium">Responsavel</th>
+              <th className="px-6 py-4 font-medium">Responsável</th>
               <th className="px-6 py-4 font-medium">
                 <Link href={buildSortHref(currentSort === "updated_desc" ? "updated_asc" : "updated_desc", params)} className="hover:text-slate-900">
                   Atualizado {currentSort.startsWith("updated_") ? "•" : ""}
                 </Link>
               </th>
-              <th className="px-6 py-4 font-medium">Acoes</th>
+              <th className="px-6 py-4 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -69,7 +69,7 @@ export function TicketTable({
                 <td className="px-6 py-4">
                   <TicketSlaBadge ticket={ticket} />
                 </td>
-                <td className="px-6 py-4">{ticket.assigneeName ?? "Nao atribuido"}</td>
+                <td className="px-6 py-4">{ticket.assigneeName ?? "Não atribuído"}</td>
                 <td className="px-6 py-4 text-slate-500">{formatDate(ticket.updatedAt)}</td>
                 <td className="px-6 py-4">
                   <Link href={`/chamados/${ticket.id}`} className="font-semibold text-sky-700">

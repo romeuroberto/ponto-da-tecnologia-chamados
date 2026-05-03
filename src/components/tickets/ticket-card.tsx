@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
 import { formatDate } from "@/lib/utils";
 import type { Ticket } from "@/types";
 import { PriorityBadge } from "./priority-badge";
-import { TicketSlaBadge } from "./ticket-sla-badge";
 import { StatusBadge } from "./status-badge";
+import { TicketSlaBadge } from "./ticket-sla-badge";
 
 export function TicketCard({ ticket }: { ticket: Ticket }) {
   return (
@@ -24,6 +25,7 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
           <TicketSlaBadge ticket={ticket} />
         </div>
         <div className="text-sm text-slate-600">
+          <p>Tipo: {getAttendanceTypeLabel(ticket.attendanceType)}</p>
           <p>Responsavel: {ticket.assigneeName ?? "Nao atribuido"}</p>
           <p>Atualizado: {formatDate(ticket.updatedAt)}</p>
         </div>

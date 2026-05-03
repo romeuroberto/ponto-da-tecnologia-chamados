@@ -6,12 +6,14 @@ import { useState, useTransition } from "react";
 import { FormMessage } from "@/components/forms/form-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { AppUser, Ticket } from "@/types";
+import { getTicketFlowSummary } from "@/lib/ticket-flow";
+import { formatUserWithRole, groupAssignableUsers } from "@/lib/users";
 import { canCommentTicket, canEditTicketAssignment, canEditTicketPriority, canEditTicketStatus } from "@/server/auth/permissions";
-import { Input } from "@/components/ui/input";
+import type { AppUser, Ticket } from "@/types";
 
 export function TicketDetailActions({
   ticket,
@@ -21,6 +23,7 @@ export function TicketDetailActions({
   ticket: Ticket;
   users: AppUser[];
   role: AppUser["role"];
+  currentUserId?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -40,6 +43,8 @@ export function TicketDetailActions({
   const canSaveFields = canEditStatus || canEditPriorityValue || canEditAssignment;
   const requiresClosingReason = fields.status === "CLOSED" || fields.status === "CANCELED";
   const canReopen = canEditStatus && (ticket.status === "RESOLVED" || ticket.status === "CLOSED" || ticket.status === "CANCELED");
+  const flow = getTicketFlowSummary(ticket);
+  const groupedUsers = groupAssignableUsers(users, ticket.category);
 
   function saveFields() {
     setMessage(null);
@@ -189,9 +194,13 @@ export function TicketDetailActions({
             <CardTitle>Acoes rapidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <p className="font-semibold text-slate-950">Etapa atual: {flow.currentStageLabel}</p>
+              <p className="mt-1">{flow.nextAction}</p>
+            </div>
             {canEditStatus ? (
               <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
+                <Label htmlFor="status">Status tecnico</Label>
                 <Select id="status" value={fields.status} onChange={(event) => setFields((current) => ({ ...current, status: event.target.value as Ticket["status"] }))}>
                   <option value="OPEN">Aberto</option>
                   <option value="IN_PROGRESS">Em atendimento</option>
@@ -218,12 +227,26 @@ export function TicketDetailActions({
                 <Label htmlFor="assignee">Responsavel</Label>
                 <Select id="assignee" value={fields.assigneeId} onChange={(event) => setFields((current) => ({ ...current, assigneeId: event.target.value }))}>
                   <option value="">Nao atribuido</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
+                  {groupedUsers.suggestedUsers.length > 0 ? (
+                    <optgroup label={groupedUsers.suggestion.label}>
+                      {groupedUsers.suggestedUsers.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {formatUserWithRole(user)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                  {groupedUsers.otherUsers.length > 0 ? (
+                    <optgroup label="Outros perfis operacionais">
+                      {groupedUsers.otherUsers.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {formatUserWithRole(user)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
                 </Select>
+                <p className="text-xs text-slate-500">{groupedUsers.suggestion.description}</p>
               </div>
             ) : null}
             {requiresClosingReason ? (
@@ -269,11 +292,7 @@ export function TicketDetailActions({
           <CardContent className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="attachment">Arquivo</Label>
-              <Input
-                id="attachment"
-                type="file"
-                onChange={(event) => setAttachment(event.target.files?.[0] ?? null)}
-              />
+              <Input id="attachment" type="file" onChange={(event) => setAttachment(event.target.files?.[0] ?? null)} />
               <p className="text-xs text-slate-500">Limite de 5 MB por arquivo.</p>
             </div>
             <Button type="button" className="w-full" disabled={isPending} onClick={submitAttachment}>

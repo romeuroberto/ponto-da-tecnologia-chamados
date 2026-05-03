@@ -35,14 +35,14 @@ export default async function ClientsPage({
   const canEdit = role ? canEditClient(role) : false;
   const activeFilters = [
     q ? { label: "Busca", value: q } : null,
-    sort !== "name_asc" ? { label: "Ordenacao", value: sort } : null
+    sort !== "name_asc" ? { label: "Ordenação", value: sort } : null
   ].filter((item): item is { label: string; value: string } => Boolean(item));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Clientes"
-        description="Cadastro central dos clientes atendidos pela operacao."
+        description="Cadastro central dos clientes atendidos pela operação."
         action={canCreate ? (
           <Link href="/clientes/novo">
             <Button>Novo cliente</Button>
@@ -51,7 +51,7 @@ export default async function ClientsPage({
       />
       <ResultsSummary label="clientes" total={result.total} page={result.page} totalPages={result.totalPages} />
       <ActiveFilters pathname="/clientes" filters={activeFilters} />
-      <form action="/clientes" className="contents">
+      <form action="/clientes" >
         <Card>
           <CardContent className="grid gap-4 p-4 md:grid-cols-[2fr_1fr_auto]">
             <Input name="q" defaultValue={q} placeholder="Buscar cliente por nome, contato ou e-mail" />
@@ -96,8 +96,8 @@ export default async function ClientsPage({
                 )}
               </div>
               <div className="grid gap-2 text-sm text-slate-600">
-                <p>E-mail: {client.email ?? "Nao informado"}</p>
-                <p>Telefone: {client.phone ?? "Nao informado"}</p>
+                <p>E-mail: {client.email ?? "Não informado"}</p>
+                <p>Telefone: {client.phone ?? "Não informado"}</p>
                 <p>Total de chamados: {client.ticketCount}</p>
               </div>
             </CardContent>

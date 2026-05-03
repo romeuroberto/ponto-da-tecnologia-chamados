@@ -1,0 +1,4 @@
+CREATE TYPE "TicketAttendanceType" AS ENUM ('REMOTE', 'INTERNAL', 'IN_STORE_EQUIPMENT', 'FIELD_VISIT');
+
+ALTER TABLE "Ticket"
+ADD COLUMN "attendanceType" "TicketAttendanceType" NOT NULL DEFAULT 'INTERNAL';

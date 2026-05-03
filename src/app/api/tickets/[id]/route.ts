@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { ticketCommentSchema, ticketUpdateSchema } from "@/lib/validations/ticket-actions";
-import { canEditTicketAssignment, canEditTicketPriority } from "@/server/auth/permissions";
+import { canEditTicketAssignment, canEditTicketPriority, canOperateOnTicket } from "@/server/auth/permissions";
 import { requireApiUser } from "@/server/auth/api-guard";
 import { ticketService } from "@/server/services/ticket-service";
 
@@ -54,19 +54,29 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       );
     }
 
+    const current = await ticketService.getTicket(id);
+
+    if (!current) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Chamado nao encontrado."
+        },
+        { status: 404 }
+      );
+    }
+
+    if (!canOperateOnTicket(guard.user.role, guard.user.id, current.assigneeId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Seu perfil so pode alterar chamados sem responsavel ou atribuidos a voce."
+        },
+        { status: 403 }
+      );
+    }
+
     if (!canEditTicketPriority(guard.user.role) || !canEditTicketAssignment(guard.user.role)) {
-      const current = await ticketService.getTicket(id);
-
-      if (!current) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Chamado nao encontrado."
-          },
-          { status: 404 }
-        );
-      }
-
       const changedPriority = result.data.priority !== current.priority;
       const changedAssignee = (result.data.assigneeId || "") !== (current.assigneeId || "");
 
@@ -136,6 +146,28 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
           errors: result.error.flatten()
         },
         { status: 400 }
+      );
+    }
+
+    const current = await ticketService.getTicket(id);
+
+    if (!current) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Chamado nao encontrado."
+        },
+        { status: 404 }
+      );
+    }
+
+    if (!canOperateOnTicket(guard.user.role, guard.user.id, current.assigneeId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Seu perfil so pode interagir em chamados sem responsavel ou atribuidos a voce."
+        },
+        { status: 403 }
       );
     }
 

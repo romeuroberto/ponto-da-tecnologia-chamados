@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { tickets } from "@/lib/mock-data";
-import type { PaginationResult, Ticket, TicketPriority, TicketStatus } from "@/types";
+import type { PaginationResult, Ticket, TicketAttendanceType, TicketPriority, TicketStatus } from "@/types";
 import { isDatabaseConfigured, normalizeOptionalString } from "@/server/db-support";
 import { mapTicket, ticketInclude } from "@/server/mappers";
 import { buildPaginationResult, getPagination } from "@/server/pagination";
@@ -11,6 +11,7 @@ export interface CreateTicketInput {
   title: string;
   description: string;
   category?: string;
+  attendanceType: TicketAttendanceType;
   priority: TicketPriority;
   requesterName: string;
   requesterEmail?: string;
@@ -58,9 +59,9 @@ const statusLabels: Record<TicketStatus, string> = {
 
 const priorityLabels: Record<TicketPriority, string> = {
   LOW: "Baixa",
-  MEDIUM: "Media",
+  MEDIUM: "Média",
   HIGH: "Alta",
-  CRITICAL: "Critica"
+  CRITICAL: "Crítica"
 };
 
 export const ticketRepository = {
@@ -205,6 +206,7 @@ export const ticketRepository = {
         title: input.title,
         description: input.description,
         category: normalizeOptionalString(input.category),
+        attendanceType: input.attendanceType,
         priority: input.priority,
         status: "OPEN",
         requesterName: input.requesterName,
@@ -219,7 +221,7 @@ export const ticketRepository = {
             message: "Chamado criado no sistema."
           }
         }
-      },
+      } as never,
       include: ticketInclude
     });
 
@@ -304,7 +306,7 @@ export const ticketRepository = {
       historyEntries.push({
         authorId: input.authorId,
         eventType: "ASSIGNEE_CHANGE" as const,
-        message: input.assigneeId ? "Responsavel atualizado." : "Responsavel removido."
+        message: input.assigneeId ? "Responsável atualizado." : "Responsável removido."
       });
     }
 

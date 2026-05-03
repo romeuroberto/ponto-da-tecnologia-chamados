@@ -14,7 +14,7 @@ export async function requireApiUser(roles?: UserRole[]) {
       error: NextResponse.json(
         {
           success: false,
-          message: "Nao autenticado."
+          message: "Não autenticado."
         },
         { status: 401 }
       )
@@ -29,7 +29,7 @@ export async function requireApiUser(roles?: UserRole[]) {
         error: NextResponse.json(
           {
             success: false,
-            message: "Sua sessao nao corresponde mais a um usuario ativo. Entre novamente."
+            message: "Sua sessão não corresponde mais a um usuário ativo. Entre novamente."
           },
           { status: 401 }
         )

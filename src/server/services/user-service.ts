@@ -9,6 +9,9 @@ export const userService = {
   async listUsers() {
     return userRepository.list();
   },
+  async listAssignableUsers() {
+    return userRepository.listAssignable();
+  },
   async searchUsers(filters: UserSearchInput) {
     return userRepository.search(filters);
   },
@@ -17,7 +20,7 @@ export const userService = {
   },
   async createUser(input: UserInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de gravar usuarios reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de gravar usuários reais.");
     }
 
     return userRepository.create({
@@ -29,7 +32,7 @@ export const userService = {
   },
   async updateUser(id: string, input: UserInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar usuarios reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de atualizar usuários reais.");
     }
 
     return userRepository.update(id, {
