@@ -9,8 +9,10 @@ import { userRepository } from "@/server/repositories/user-repository";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
-    signIn: "/login"
+    signIn: "/login",
+    error: "/login"
   },
+  trustHost: true,
   session: {
     strategy: "jwt"
   },
