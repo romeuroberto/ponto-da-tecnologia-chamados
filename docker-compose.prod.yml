@@ -39,6 +39,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-ticket_system}
       AUTH_SECRET: ${AUTH_SECRET}
       AUTH_URL: ${AUTH_URL}
+      AUTH_TRUST_HOST: "true"
       NODE_ENV: production
     volumes:
       - ${UPLOADS_STORAGE_PATH}:/app/public/uploads
@@ -48,4 +49,4 @@ services:
       migrator:
         condition: service_completed_successfully
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
