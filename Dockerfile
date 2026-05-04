@@ -7,6 +7,13 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+# ── Migrator (aplica migrações com node_modules completo) ────────────────────
+FROM base AS migrator
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY prisma ./prisma
+CMD ["node_modules/.bin/prisma", "migrate", "deploy"]
+
 # ── Build ─────────────────────────────────────────────────────────────────────
 FROM base AS builder
 WORKDIR /app
@@ -16,7 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx prisma generate
 RUN npm run build
 
-# ── Runner (imagem final) ─────────────────────────────────────────────────────
+# ── Runner (imagem final, apenas o necessário para rodar) ────────────────────
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
@@ -25,16 +32,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Arquivos públicos e build standalone
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Prisma: runtime + CLI (necessário para migrate deploy)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma      ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma      ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma       ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/prisma                    ./prisma
+# Apenas o runtime do Prisma Client (não precisa do CLI)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma  ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma  ./node_modules/@prisma
 
 COPY --chown=nextjs:nodejs entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
