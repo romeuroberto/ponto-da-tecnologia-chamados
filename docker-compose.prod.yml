@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ${STORAGE_PATH}/postgres:/var/lib/postgresql/data
+      - ${DB_STORAGE_PATH}:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ticket_system}"]
       interval: 5s
@@ -28,7 +28,7 @@ services:
       AUTH_URL: ${AUTH_URL}
       NODE_ENV: production
     volumes:
-      - ${STORAGE_PATH}/uploads:/app/public/uploads
+      - ${UPLOADS_STORAGE_PATH}:/app/public/uploads
     depends_on:
       db:
         condition: service_healthy

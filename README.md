@@ -10,9 +10,10 @@ Sistema web interno para registro, acompanhamento e encerramento de chamados de 
 
 ### Pré-requisitos
 
-- Container LXC Ubuntu 24.04 no Proxmox
-- Disco de storage separado montado no LXC (ex: `/mnt/storage`)
-- Nginx Proxy Manager rodando em outro container com acesso à rede
+- VM Ubuntu 24.04 no Proxmox
+- Disco principal (SSD) para sistema e banco de dados
+- Disco secundário (HD mecânico) adicionado à VM para uploads
+- Nginx Proxy Manager rodando em outro container/VM com acesso à rede
 - Domínio configurado apontando para o IP público do servidor
 - Repositório clonado no servidor
 
@@ -37,18 +38,54 @@ cd /opt/chamados
 
 ---
 
-### 3. Preparar o disco de storage
+### 3. Preparar os discos de dados
 
-O banco de dados e os arquivos enviados são armazenados fora do container, no disco de storage.
+O banco fica no SSD (rápido, crítico para performance) e os uploads no HD mecânico (grande capacidade, acesso não crítico).
+
+#### 3.1 Adicionar o HD mecânico à VM
+
+No Proxmox, acesse a VM → **Hardware → Add → Hard Disk**, selecione o storage do HD mecânico e defina o tamanho. Inicie a VM.
+
+#### 3.2 Formatar e montar o HD mecânico
+
+Dentro do Ubuntu, identifique o novo disco (geralmente `/dev/sdb` ou `/dev/vdb`):
 
 ```bash
-# Criar estrutura de diretórios
-mkdir -p /mnt/storage/chamados/postgres
-mkdir -p /mnt/storage/chamados/uploads
+lsblk
+```
 
-# Permissões: postgres roda como uid 999, app como uid 1001
-chown -R 999:999  /mnt/storage/chamados/postgres
-chown -R 1001:1001 /mnt/storage/chamados/uploads
+Formate e monte permanentemente:
+
+```bash
+# Criar partição e sistema de arquivos
+sudo parted /dev/sdb mklabel gpt
+sudo parted /dev/sdb mkpart primary ext4 0% 100%
+sudo mkfs.ext4 /dev/sdb1
+
+# Criar ponto de montagem
+sudo mkdir -p /mnt/hd
+
+# Obter o UUID do disco
+sudo blkid /dev/sdb1
+# Copie o UUID exibido, ex: UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+# Adicionar ao fstab para montar automaticamente no boot
+echo 'UUID=SEU_UUID_AQUI /mnt/hd ext4 defaults,nofail 0 2' | sudo tee -a /etc/fstab
+
+# Montar agora
+sudo mount -a
+```
+
+#### 3.3 Criar os diretórios de dados
+
+```bash
+# Banco de dados → SSD (disco principal da VM)
+sudo mkdir -p /opt/chamados-data/postgres
+sudo chown -R 999:999 /opt/chamados-data/postgres
+
+# Uploads → HD mecânico
+sudo mkdir -p /mnt/hd/chamados/uploads
+sudo chown -R 1001:1001 /mnt/hd/chamados/uploads
 ```
 
 ---
@@ -56,6 +93,7 @@ chown -R 1001:1001 /mnt/storage/chamados/uploads
 ### 4. Criar o arquivo de variáveis de ambiente
 
 ```bash
+cd /opt/chamados
 cp .env.production.example .env.production
 nano .env.production
 ```
@@ -72,8 +110,11 @@ POSTGRES_PASSWORD=senha_forte_aqui
 AUTH_SECRET=   # gerar com: openssl rand -base64 32
 AUTH_URL=https://chamados.seudominio.com.br
 
-# Caminho do disco de storage no host
-STORAGE_PATH=/mnt/storage/chamados
+# Banco → SSD (dentro do LXC)
+DB_STORAGE_PATH=/opt/chamados-data/postgres
+
+# Uploads → HD mecânico (montado no LXC)
+UPLOADS_STORAGE_PATH=/mnt/hd/chamados/uploads
 ```
 
 Gerar o `AUTH_SECRET`:
