@@ -612,6 +612,17 @@ function buildBillingHistory({
 }
 
 async function clearDatabase() {
+  await prisma.companyProfile.deleteMany();
+  await prisma.fiscalDocumentLink.deleteMany();
+  await prisma.fiscalDocument.deleteMany();
+  await prisma.paymentInstruction.deleteMany();
+  await prisma.stockMovement.deleteMany();
+  await prisma.saleItem.deleteMany();
+  await prisma.sale.deleteMany();
+  await prisma.serviceOrderPart.deleteMany();
+  await prisma.serviceOrder.deleteMany();
+  await prisma.partCatalogItem.deleteMany();
+  await prisma.serviceCatalogItem.deleteMany();
   await prisma.billingHistory.deleteMany();
   await prisma.billingEntry.deleteMany();
   await prisma.ticketBilling.deleteMany();
@@ -652,6 +663,25 @@ async function main() {
   const attendants = users.filter((user) => user.role === "ATTENDANT");
   const technicians = users.filter((user) => user.role === "TECHNICIAN");
 
+  await prisma.companyProfile.create({
+    data: {
+      legalName: "Ponto da Tecnologia Ltda",
+      tradeName: "Ponto da Tecnologia",
+      document: "12.345.678/0001-90",
+      stateRegistration: "123.456.789.000",
+      municipalRegistration: "987654321",
+      financialEmail: "financeiro@pontodatecnologia.com.br",
+      phone: "(11) 4000-1234",
+      website: "https://pontodatecnologia.com.br",
+      addressLine1: "Rua das Soluções, 120",
+      addressLine2: "Sala 5",
+      city: "São Paulo",
+      state: "SP",
+      postalCode: "01000-000",
+      notes: "Perfil institucional seed para o módulo administrativo."
+    }
+  });
+
   const clients = await Promise.all(
     clientSeedData.map((client) =>
       prisma.client.create({
@@ -674,8 +704,65 @@ async function main() {
     )
   );
 
+  await Promise.all(
+    clients.slice(0, 4).map((client, index) =>
+      prisma.user.create({
+        data: {
+          name: client.contactName,
+          email: `portal${index + 1}@cliente.com`,
+          passwordHash: defaultPasswordHash,
+          role: "CLIENT",
+          clientId: client.id
+        }
+      })
+    )
+  );
+
+  await prisma.paymentInstruction.createMany({
+    data: [
+      {
+        title: "Pix principal",
+        paymentChannel: "Pix",
+        pixKey: "financeiro@pontodatecnologia.com.br",
+        pixCopyPaste: "00020126360014BR.GOV.BCB.PIX0114financeiro@ponto5204000053039865406100.005802BR5920PONTO DA TECNOLOGIA6009SAO PAULO62070503***6304ABCD",
+        notes: "Após o pagamento, envie o comprovante se a cobrança ainda não tiver baixa automática.",
+        active: true,
+        sortOrder: 1
+      },
+      {
+        title: "Transferência bancária",
+        paymentChannel: "Transferência",
+        bankName: "Banco do Brasil",
+        bankAgency: "1234-5",
+        bankAccount: "98765-4",
+        accountHolder: "Ponto da Tecnologia Ltda",
+        accountDocument: "12.345.678/0001-90",
+        notes: "Use a referência da cobrança ao efetuar a transferência.",
+        active: true,
+        sortOrder: 2
+      }
+    ]
+  });
+
+  const partCatalogItems = await Promise.all(
+    [
+      { name: "SSD 480GB", code: "SSD-480", unitPrice: 349.9, stockQuantity: 10 },
+      { name: "Memória DDR4 8GB", code: "MEM-8GB", unitPrice: 179.9, stockQuantity: 16 },
+      { name: "Fonte 500W", code: "FON-500", unitPrice: 289.9, stockQuantity: 8 },
+      { name: "Roteador Wi-Fi AX", code: "ROT-AX", unitPrice: 459.9, stockQuantity: 5 }
+    ].map((part) =>
+      prisma.partCatalogItem.create({
+        data: {
+          ...part,
+          description: `Item de estoque seed: ${part.name}.`
+        }
+      })
+    )
+  );
+
   const ticketSeeds = [];
   const totalTickets = 72;
+  const createdTickets = [];
 
   for (let index = 0; index < totalTickets; index += 1) {
     const template = issueTemplates[index % issueTemplates.length];
@@ -789,7 +876,7 @@ async function main() {
   }
 
   for (const seed of ticketSeeds) {
-    await prisma.ticket.create({
+    const createdTicket = await prisma.ticket.create({
       data: {
         number: seed.number,
         title: seed.title,
@@ -847,11 +934,114 @@ async function main() {
           : undefined
       }
     });
+
+    createdTickets.push(createdTicket);
   }
+
+  const sales = [];
+
+  for (let index = 0; index < 8; index += 1) {
+    const client = clients[index % clients.length];
+    const createdBy = attendants[index % attendants.length] ?? admins[0];
+    const part = partCatalogItems[index % partCatalogItems.length];
+    const quantity = 1 + (index % 2);
+    const financialStatus = index % 3 === 0 ? "PAGO" : index % 4 === 0 ? "CANCELADO" : "PENDENTE";
+    const createdAt = daysAgo(18 - index, 10 + (index % 6), 15);
+    const totalPrice = decimal(Number(part.unitPrice) * quantity);
+
+    const sale = await prisma.sale.create({
+      data: {
+        number: `VD-2026-${pad(index + 1)}`,
+        clientId: client.id,
+        financialStatus,
+        paymentMethod: financialStatus === "PAGO" ? "Pix" : null,
+        paymentDate: financialStatus === "PAGO" ? minutesAfter(createdAt, 240) : null,
+        paymentReference: financialStatus === "PAGO" ? `PIX-${pad(index + 1)}` : null,
+        totalAmount: totalPrice,
+        paidAt: financialStatus === "PAGO" ? minutesAfter(createdAt, 240) : null,
+        canceledAt: financialStatus === "CANCELADO" ? minutesAfter(createdAt, 120) : null,
+        cancellationReason: financialStatus === "CANCELADO" ? "Venda cancelada pelo cliente durante a aprovação." : null,
+        internalNotes: "Venda seed para o portal do cliente.",
+        createdById: createdBy.id,
+        createdAt,
+        updatedAt: minutesAfter(createdAt, 30),
+        items: {
+          create: {
+            partCatalogItemId: part.id,
+            partName: part.name,
+            partCode: part.code,
+            quantity,
+            unitPrice: part.unitPrice,
+            totalPrice
+          }
+        }
+      },
+      include: {
+        items: true
+      }
+    });
+
+    if (financialStatus !== "CANCELADO") {
+      await prisma.stockMovement.create({
+        data: {
+          partCatalogItemId: part.id,
+          type: "SALE_EXIT",
+          quantity,
+          saleId: sale.id,
+          createdById: createdBy.id
+        }
+      });
+
+      await prisma.partCatalogItem.update({
+        where: { id: part.id },
+        data: {
+          stockQuantity: {
+            decrement: quantity
+          }
+        }
+      });
+    }
+
+    sales.push(sale);
+  }
+
+  await Promise.all(
+    createdTickets.slice(0, 6).map((ticket, index) =>
+      prisma.fiscalDocument.create({
+        data: {
+          clientId: ticket.clientId,
+          type: index % 2 === 0 ? "NFSE" : "RECIBO",
+          number: `DOC-2026-${pad(index + 1)}`,
+          series: "1",
+          issueDate: daysAgo(12 - index, 14, 0),
+          totalAmount: decimal(180 + index * 37.5),
+          fileName: `documento-${index + 1}.pdf`,
+          filePath: `/uploads/fiscal/documento-${index + 1}.pdf`,
+          notes: "Documento fiscal seed disponibilizado no portal.",
+          links: {
+            create: [
+              {
+                ticketId: ticket.id,
+                label: `Chamado ${ticket.number}`
+              },
+              ...(sales[index]
+                ? [
+                    {
+                      saleId: sales[index].id,
+                      label: `Venda ${sales[index].number}`
+                    }
+                  ]
+                : [])
+            ]
+          }
+        }
+      })
+    )
+  );
 
   const billedCount = ticketSeeds.filter((ticket) => ticket.billing).length;
   console.log(
-    `Seed concluido com ${users.length} usuarios, ${clients.length} clientes, ${ticketSeeds.length} chamados e ${billedCount} chamados com financeiro.`
+    `Seed concluido com ${users.length + 4} usuarios, ${clients.length} clientes, ${ticketSeeds.length} chamados, ${billedCount} chamados com financeiro e ${sales.length} vendas.`
   );
 }
 

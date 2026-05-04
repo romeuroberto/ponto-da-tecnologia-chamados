@@ -2,10 +2,11 @@ import { auth } from "@/auth";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
   ADMIN: "Administrador",
   ATTENDANT: "Atendente",
-  TECHNICIAN: "T\u00e9cnico"
+  TECHNICIAN: "Técnico",
+  CLIENT: "Cliente"
 };
 
 export async function Topbar() {
@@ -20,17 +21,17 @@ export async function Topbar() {
           <BrandMark />
         </div>
         <div className="hidden lg:flex lg:flex-col">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{"Opera\u00e7\u00e3o"}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Operação</p>
           <p className="text-sm font-medium text-slate-600">Central de atendimento e acompanhamento</p>
         </div>
       </div>
 
-      {/* Usu\u00e1rio + sair */}
+      {/* Usuário + sair */}
       <div className="flex items-center gap-3">
         <div className="hidden text-right sm:block">
-          <p className="text-sm font-semibold text-slate-800">{user?.name ?? "Sem sess\u00e3o"}</p>
+          <p className="text-sm font-semibold text-slate-800">{user?.name ?? "Sem sessão"}</p>
           <p className="text-xs text-slate-400">
-            {user ? roleLabels[user.role] : "N\u00e3o autenticado"}
+            {user ? roleLabels[user.role] : "Não autenticado"}
           </p>
         </div>
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: "#1B2D5E" }}>

@@ -1,14 +1,19 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
 import { ClientForm } from "@/components/forms/client-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
+import { StatusBadge } from "@/components/tickets/status-badge";
+import { ClientPortalAccessSection } from "@/components/clients/client-portal-access-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { canEditClient } from "@/server/auth/permissions";
 import { clientService } from "@/server/services/client-service";
 import { ticketService } from "@/server/services/ticket-service";
+import { userService } from "@/server/services/user-service";
 
 export default async function ClientDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -19,7 +24,10 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const tickets = await ticketService.listTickets();
+  const [tickets, portalUser] = await Promise.all([
+    ticketService.listTickets(),
+    userService.getPortalUserByClientId(id)
+  ]);
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
   const canEdit = session?.user ? canEditClient(session.user.role) : false;
 
@@ -51,24 +59,39 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
             </CardContent>
           </Card>
         )}
-        <Card>
-          <CardHeader>
-            <CardTitle>Chamados do cliente</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {clientTickets.map((ticket) => (
-              <div key={ticket.id} className="rounded-xl border border-slate-200 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ticket.number}</p>
-                    <p className="mt-1 font-semibold text-slate-950">{ticket.title}</p>
-                  </div>
-                  <PriorityBadge priority={ticket.priority} />
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chamados do cliente</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {clientTickets.length > 0 ? (
+                clientTickets.map((ticket) => (
+                  <Link
+                    key={ticket.id}
+                    href={`/chamados/${ticket.id}` as Route}
+                    className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ticket.number}</p>
+                        <p className="mt-1 font-semibold text-slate-950">{ticket.title}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={ticket.status} />
+                        <PriorityBadge priority={ticket.priority} />
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">Nenhum chamado registrado para este cliente.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <ClientPortalAccessSection clientId={client.id} portalUser={portalUser} canEdit={canEdit} />
+        </div>
       </div>
     </div>
   );

@@ -14,10 +14,11 @@ import { requireRole } from "@/server/auth/session";
 import { getParam } from "@/server/search-params";
 import { userService } from "@/server/services/user-service";
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
   ADMIN: "Administrador",
   ATTENDANT: "Atendente",
-  TECHNICIAN: "Técnico"
+  TECHNICIAN: "Técnico",
+  CLIENT: "Cliente (portal)"
 };
 
 export default async function UsersPage({

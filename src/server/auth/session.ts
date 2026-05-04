@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -29,4 +30,18 @@ export async function requireRole(roles: UserRole[]) {
 
 export function hasRole(role: UserRole, roles: UserRole[]) {
   return roles.includes(role);
+}
+
+export async function requirePortalUser() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/portal" as Route);
+  }
+
+  if (session.user.role !== "CLIENT" || !session.user.clientId) {
+    redirect("/dashboard" as Route);
+  }
+
+  return { ...session.user, clientId: session.user.clientId };
 }

@@ -47,7 +47,7 @@ export function TicketFlowOverview({ ticket }: { ticket: Ticket }) {
               <p className="mt-1 text-sm font-semibold text-slate-950">{flow.overallLabel}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tecnico</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Técnico</p>
               <p className="mt-1 text-sm font-semibold text-slate-950">{flow.technicalStatusLabel}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
@@ -59,7 +59,7 @@ export function TicketFlowOverview({ ticket }: { ticket: Ticket }) {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Proxima acao recomendada</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Próxima ação recomendada</p>
           <p className="mt-1 text-sm font-medium text-amber-950">{flow.nextAction}</p>
         </div>
 

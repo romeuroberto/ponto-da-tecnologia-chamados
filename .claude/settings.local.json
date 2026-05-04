@@ -8,7 +8,13 @@
       "PowerShell($env:PATH = \"$env:PATH;C:\\\\Program Files\\\\GitHub CLI\"; gh auth login --web --git-protocol https 2>&1)",
       "PowerShell($env:PATH = \"$env:PATH;C:\\\\Program Files\\\\GitHub CLI\"; gh repo create ponto-da-tecnologia-chamados --private --description \"Central de Chamados - Ponto da Tecnologia\" 2>&1)",
       "Bash(npx prisma *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npx auth *)",
+      "Bash(node -e \"const crypto = require\\('crypto'\\); console.log\\(crypto.randomBytes\\(32\\).toString\\('base64url'\\)\\)\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\" -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\" -Recurse -Directory)",
+      "Bash(Select-Object -First 50)"
     ]
   }
 }

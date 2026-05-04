@@ -13,3 +13,23 @@ export async function generateTicketNumber() {
   return `CH-${year}-${String(total + 1).padStart(3, "0")}`;
 }
 
+
+export async function generateServiceOrderNumber() {
+  const now = new Date();
+  const year = now.getFullYear();
+
+  if (!isDatabaseConfigured()) {
+    return `OS-${year}-${Date.now().toString().slice(-4)}`;
+  }
+
+  const total = await prisma.serviceOrder.count();
+  return `OS-${year}-${String(total + 1).padStart(3, "0")}`;
+}
+
+export async function generateSaleNumber() {
+  const now = new Date();
+  const year = now.getFullYear();
+
+  const total = await prisma.sale.count();
+  return `VD-${year}-${String(total + 1).padStart(3, "0")}`;
+}

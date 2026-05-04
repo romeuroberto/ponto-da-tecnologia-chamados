@@ -10,6 +10,7 @@ export interface CreateUserInput {
   email: string;
   passwordHash: string;
   role: UserRole;
+  clientId?: string;
 }
 
 export interface UpdateUserInput {
@@ -165,13 +166,20 @@ export const userRepository = {
     });
   },
 
+  async findByClientId(clientId: string) {
+    return prisma.user.findFirst({
+      where: { clientId, role: "CLIENT" }
+    });
+  },
+
   async create(input: CreateUserInput) {
     const record = await prisma.user.create({
       data: {
         name: input.name,
         email: input.email,
         passwordHash: input.passwordHash,
-        role: input.role
+        role: input.role,
+        clientId: input.clientId
       }
     });
 

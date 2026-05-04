@@ -195,7 +195,11 @@ export default async function FinancialDashboardPage({
           <CardContent className="space-y-3">
             {dashboard.recentActivity.length > 0 ? (
               dashboard.recentActivity.map((item) => (
-                <div key={item.id} className="rounded-xl border border-slate-200 p-4">
+                <Link
+                  key={item.id}
+                  href={`/chamados/${item.ticketId}` as Route}
+                  className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                >
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-sm font-semibold text-slate-950">{item.ticketNumber}</p>
                     <p className="text-xs text-slate-500">{formatDate(item.createdAt)}</p>
@@ -204,7 +208,7 @@ export default async function FinancialDashboardPage({
                   <p className="mt-1 text-sm text-slate-600">{item.clientName}</p>
                   <p className="mt-2 text-sm text-slate-700">{item.message}</p>
                   <p className="mt-2 text-xs text-slate-500">Por {item.authorName}</p>
-                </div>
+                </Link>
               ))
             ) : (
               <EmptyState title="Sem atividade financeira" description="Quando houver movimentações financeiras, elas aparecerão aqui." />

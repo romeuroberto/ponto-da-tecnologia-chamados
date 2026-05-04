@@ -7,7 +7,6 @@ import { PageHeader } from "@/components/layout/page-header";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { TicketSlaBadge } from "@/components/tickets/ticket-sla-badge";
-import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn, formatDate } from "@/lib/utils";
@@ -43,27 +42,27 @@ export default async function DashboardPage() {
     canCreateTicket(user.role)
       ? {
           title: "Novo chamado",
-          description: "Registrar uma nova solicitacao de suporte.",
+          description: "Registrar uma nova solicitação",
           href: "/chamados/novo" as Route,
           variant: "default" as const
         }
       : null,
     {
       title: "Fila aberta",
-      description: "Ver chamados abertos que ainda precisam de andamento.",
+      description: "Chamados sem conclusão",
       href: "/chamados?status=OPEN&sort=updated_desc" as Route,
       variant: "outline" as const
     },
     {
-      title: "Criticos",
-      description: "Ir direto para os chamados mais urgentes.",
+      title: "Críticos",
+      description: "Maior urgência primeiro",
       href: "/chamados?priority=CRITICAL&sort=priority_desc" as Route,
       variant: "outline" as const
     },
     canCreateClient(user.role)
       ? {
           title: "Novo cliente",
-          description: "Cadastrar um cliente para iniciar o atendimento.",
+          description: "Cadastrar para atendimento",
           href: "/clientes/novo" as Route,
           variant: "outline" as const
         }
@@ -71,7 +70,7 @@ export default async function DashboardPage() {
     canViewUsersModule(user.role)
       ? {
           title: "Equipe",
-          description: "Ajustar usuarios e perfis de acesso.",
+          description: "Usuários e perfis de acesso",
           href: "/usuarios" as Route,
           variant: "outline" as const
         }
@@ -84,79 +83,83 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Visao resumida da operacao de suporte."
-        action={
-          canCreateTicket(user.role) ? (
-            <Link href="/chamados/novo" className={cn(buttonVariants({ variant: "default" }))}>
-              Novo chamado
-            </Link>
-          ) : null
-        }
+        description="Visão resumida da operação de suporte."
       />
 
+      {/* Métricas */}
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
         <SummaryCard title="Abertos" value={summary.open} tone="blue" />
         <SummaryCard title="Em atendimento" value={summary.inProgress} tone="orange" />
         <SummaryCard title="Aguardando cliente" value={summary.waitingCustomer} tone="yellow" />
         <SummaryCard title="Encerrados" value={summary.closed} tone="slate" />
-        <SummaryCard title="Criticos" value={criticalCount} tone="red" />
-        <SummaryCard title="Sem responsavel" value={unassignedCount} tone="violet" />
+        <SummaryCard title="Críticos" value={criticalCount} tone="red" />
+        <SummaryCard title="Sem responsável" value={unassignedCount} tone="violet" />
         <SummaryCard title="Resolvidos hoje" value={resolvedTodayCount} tone="green" />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-sky-200 bg-sky-50/50">
-          <CardHeader>
-            <CardTitle>Meus chamados</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl border border-sky-200 bg-white px-4 py-4">
-                <p className="text-sm font-medium text-sky-700">Atribuidos a mim</p>
-                <p className="mt-2 text-3xl font-semibold text-sky-950">{myAssignedCount}</p>
-              </div>
-              <div className="rounded-2xl border border-amber-200 bg-white px-4 py-4">
-                <p className="text-sm font-medium text-amber-700">Ativos na minha fila</p>
-                <p className="mt-2 text-3xl font-semibold text-amber-950">{myActiveAssignedCount}</p>
-              </div>
-            </div>
-            {myAssignedTickets.length > 0 ? (
-              myAssignedTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-sky-200 bg-white p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <PriorityBadge priority={ticket.priority} />
-                    <StatusBadge status={ticket.status} />
-                    <TicketSlaBadge ticket={ticket} />
-                  </div>
-                  <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
-                  <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
-                  <p className="mt-2 text-xs text-slate-500">Atualizado em {formatDate(ticket.updatedAt)}</p>
-                </div>
-              ))
-            ) : (
-              <EmptyState title="Nenhum chamado atribuido a voce" description="Assim que houver chamados na sua fila, eles aparecerao primeiro aqui." />
+      {/* Ações rápidas */}
+      <section className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+        {quickActions.map((action) => (
+          <Link
+            key={action.href}
+            href={action.href}
+            className={cn(
+              "rounded-2xl border p-4 text-left transition-colors",
+              action.variant === "default"
+                ? "border-sky-600 bg-sky-600 text-white hover:bg-sky-700"
+                : "border-slate-200 bg-white text-slate-900 hover:border-sky-200 hover:bg-sky-50"
             )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Como usar o dia</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-700">
-            <div className="rounded-xl border border-slate-200 px-4 py-3">
-              Comece pela secao <span className="font-semibold text-slate-950">Meus chamados</span> para ver tudo que ja esta na sua fila.
-            </div>
-            <div className="rounded-xl border border-slate-200 px-4 py-3">
-              Depois acompanhe <span className="font-semibold text-slate-950">SLA vencido</span> e <span className="font-semibold text-slate-950">SLA em risco</span> para priorizar urgencias.
-            </div>
-            <div className="rounded-xl border border-slate-200 px-4 py-3">
-              Na atribuicao, o sistema agora sugere primeiro <span className="font-semibold text-slate-950">atendentes</span> ou <span className="font-semibold text-slate-950">tecnicos</span> conforme a categoria do chamado.
-            </div>
-          </CardContent>
-        </Card>
+          >
+            <p className={cn("font-semibold text-sm", action.variant === "default" ? "text-white" : "text-slate-950")}>
+              {action.title}
+            </p>
+            <p className={cn("mt-0.5 text-xs", action.variant === "default" ? "text-sky-100" : "text-slate-500")}>
+              {action.description}
+            </p>
+          </Link>
+        ))}
       </section>
 
+      {/* Meus chamados */}
+      <Card className="border-sky-200 bg-sky-50/50">
+        <CardHeader>
+          <CardTitle>Meus chamados</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-sky-200 bg-white px-4 py-4">
+              <p className="text-sm font-medium text-sky-700">Atribuídos a mim</p>
+              <p className="mt-2 text-3xl font-semibold text-sky-950">{myAssignedCount}</p>
+            </div>
+            <div className="rounded-2xl border border-amber-200 bg-white px-4 py-4">
+              <p className="text-sm font-medium text-amber-700">Ativos na minha fila</p>
+              <p className="mt-2 text-3xl font-semibold text-amber-950">{myActiveAssignedCount}</p>
+            </div>
+          </div>
+          {myAssignedTickets.length > 0 ? (
+            myAssignedTickets.map((ticket) => (
+              <Link
+                key={ticket.id}
+                href={`/chamados/${ticket.id}` as Route}
+                className="block rounded-xl border border-sky-200 bg-white p-4 transition-colors hover:border-sky-400 hover:bg-sky-50"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <PriorityBadge priority={ticket.priority} />
+                  <StatusBadge status={ticket.status} />
+                  <TicketSlaBadge ticket={ticket} />
+                </div>
+                <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
+                <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
+                <p className="mt-2 text-xs text-slate-500">Atualizado em {formatDate(ticket.updatedAt)}</p>
+              </Link>
+            ))
+          ) : (
+            <EmptyState title="Nenhum chamado atribuído a você" description="Assim que houver chamados na sua fila, eles aparecerão primeiro aqui." />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* SLA */}
       <section className="grid gap-6 xl:grid-cols-2">
         <Card className="border-rose-200 bg-rose-50/60">
           <CardHeader>
@@ -166,7 +169,11 @@ export default async function DashboardPage() {
             <p className="text-3xl font-semibold text-rose-950">{slaBreachedCount}</p>
             {slaBreachedTickets.length > 0 ? (
               slaBreachedTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-rose-200 bg-white p-4">
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-rose-200 bg-white p-4 transition-colors hover:border-rose-400 hover:bg-rose-50"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <PriorityBadge priority={ticket.priority} />
                     <StatusBadge status={ticket.status} />
@@ -174,7 +181,7 @@ export default async function DashboardPage() {
                   </div>
                   <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
-                </div>
+                </Link>
               ))
             ) : (
               <EmptyState title="Nenhum SLA vencido" description="Nenhum chamado ativo estourou o prazo neste momento." />
@@ -189,7 +196,11 @@ export default async function DashboardPage() {
             <p className="text-3xl font-semibold text-amber-950">{slaWarningCount}</p>
             {slaWarningTickets.length > 0 ? (
               slaWarningTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-amber-200 bg-white p-4">
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-amber-200 bg-white p-4 transition-colors hover:border-amber-400 hover:bg-amber-50"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <PriorityBadge priority={ticket.priority} />
                     <StatusBadge status={ticket.status} />
@@ -197,111 +208,100 @@ export default async function DashboardPage() {
                   </div>
                   <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
-                </div>
+                </Link>
               ))
             ) : (
-              <EmptyState title="Sem chamados em risco" description="Os chamados ativos ainda estao dentro de uma zona segura de prazo." />
+              <EmptyState title="Sem chamados em risco" description="Os chamados ativos ainda estão dentro de uma zona segura de prazo." />
             )}
           </CardContent>
         </Card>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Acoes rapidas</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
-            {quickActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={cn(
-                  "rounded-2xl border border-slate-200 p-4 text-left transition-colors hover:border-sky-200 hover:bg-sky-50",
-                  action.variant === "default" ? "border-sky-600 bg-sky-600 text-white hover:bg-sky-700 hover:text-white" : "text-slate-900"
-                )}
-              >
-                <p className={cn("font-semibold", action.variant === "default" ? "text-white" : "text-slate-950")}>{action.title}</p>
-                <p className={cn("mt-1 text-sm", action.variant === "default" ? "text-sky-100" : "text-slate-600")}>{action.description}</p>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Resumo da semana</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl bg-sky-50 p-4">
-              <p className="text-sm font-medium text-sky-700">Abertos em 7 dias</p>
-              <p className="mt-2 text-3xl font-semibold text-sky-950">{openedLast7Days}</p>
-            </div>
-            <div className="rounded-2xl bg-emerald-50 p-4">
-              <p className="text-sm font-medium text-emerald-700">Resolvidos em 7 dias</p>
-              <p className="mt-2 text-3xl font-semibold text-emerald-950">{resolvedLast7Days}</p>
-            </div>
-            <div className="rounded-2xl bg-slate-100 p-4">
-              <p className="text-sm font-medium text-slate-700">Saldo do periodo</p>
-              <p className="mt-2 text-3xl font-semibold text-slate-950">{openedLast7Days - resolvedLast7Days}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      {/* Resumo da semana */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Resumo da semana</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl bg-sky-50 p-4">
+            <p className="text-sm font-medium text-sky-700">Abertos em 7 dias</p>
+            <p className="mt-2 text-3xl font-semibold text-sky-950">{openedLast7Days}</p>
+          </div>
+          <div className="rounded-2xl bg-emerald-50 p-4">
+            <p className="text-sm font-medium text-emerald-700">Resolvidos em 7 dias</p>
+            <p className="mt-2 text-3xl font-semibold text-emerald-950">{resolvedLast7Days}</p>
+          </div>
+          <div className="rounded-2xl bg-slate-100 p-4">
+            <p className="text-sm font-medium text-slate-700">Saldo do período</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{openedLast7Days - resolvedLast7Days}</p>
+          </div>
+        </CardContent>
+      </Card>
 
+      {/* Tendências */}
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
-          title="Tendencia de abertura"
-          description="Quantidade diaria de chamados abertos."
+          title="Tendência de abertura"
+          description="Quantidade diária de chamados abertos."
           total={openedLast7Days}
           data={trend.map((item) => ({ label: item.label, value: item.opened }))}
           tone="blue"
         />
         <TrendChart
-          title="Tendencia de resolucao"
-          description="Quantidade diaria de chamados resolvidos ou encerrados."
+          title="Tendência de resolução"
+          description="Quantidade diária de chamados resolvidos ou encerrados."
           total={resolvedLast7Days}
           data={trend.map((item) => ({ label: item.label, value: item.resolved }))}
           tone="green"
         />
       </section>
 
+      {/* Filas de atenção */}
       <section className="grid gap-6 xl:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Chamados criticos</CardTitle>
+            <CardTitle>Chamados críticos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {criticalTickets.length > 0 ? (
               criticalTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-slate-200 p-4">
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <PriorityBadge priority={ticket.priority} />
                     <StatusBadge status={ticket.status} />
                   </div>
                   <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
-                </div>
+                </Link>
               ))
             ) : (
-              <EmptyState title="Nenhum chamado critico" description="Otimo sinal: nao ha chamados criticos neste momento." />
+              <EmptyState title="Nenhum chamado crítico" description="Ótimo sinal: não há chamados críticos neste momento." />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Sem responsavel</CardTitle>
+            <CardTitle>Sem responsável</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {unassignedTickets.length > 0 ? (
               unassignedTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-slate-200 p-4">
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                >
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ticket.number}</p>
                   <h3 className="mt-1 font-semibold text-slate-950">{ticket.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
-                </div>
+                </Link>
               ))
             ) : (
-              <EmptyState title="Nenhum chamado sem responsavel" description="Todos os chamados atuais ja possuem responsavel definido." />
+              <EmptyState title="Nenhum chamado sem responsável" description="Todos os chamados atuais já possuem responsável definido." />
             )}
           </CardContent>
         </Card>
@@ -312,43 +312,52 @@ export default async function DashboardPage() {
           <CardContent className="space-y-4">
             {waitingCustomerTickets.length > 0 ? (
               waitingCustomerTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-slate-200 p-4">
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                >
                   <div className="flex items-center gap-2">
                     <StatusBadge status={ticket.status} />
                   </div>
                   <h3 className="mt-3 font-semibold text-slate-950">{ticket.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">{ticket.clientName}</p>
-                </div>
+                </Link>
               ))
             ) : (
-              <EmptyState title="Sem pendencias com cliente" description="Nao ha chamados aguardando retorno do cliente agora." />
+              <EmptyState title="Sem pendências com cliente" description="Não há chamados aguardando retorno do cliente agora." />
             )}
           </CardContent>
         </Card>
       </section>
 
+      {/* Atualizações recentes + Carga */}
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Atualizacoes recentes</CardTitle>
+            <CardTitle>Atualizações recentes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentTickets.length > 0 ? (
               recentTickets.map((ticket) => (
-                <div key={ticket.id} className="rounded-xl border border-slate-200 p-4">
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                >
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ticket.number}</p>
                   <h3 className="mt-1 font-semibold text-slate-950">{ticket.title}</h3>
                   <p className="mt-1 text-sm text-slate-600">Atualizado em {formatDate(ticket.updatedAt)}</p>
-                </div>
+                </Link>
               ))
             ) : (
-              <EmptyState title="Sem atualizacoes recentes" description="Quando os chamados forem movimentados, eles aparecerao aqui." />
+              <EmptyState title="Sem atualizações recentes" description="Quando os chamados forem movimentados, eles aparecerão aqui." />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Carga por responsavel</CardTitle>
+            <CardTitle>Carga por responsável</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {workload.length > 0 ? (
@@ -359,7 +368,7 @@ export default async function DashboardPage() {
                 </div>
               ))
             ) : (
-              <EmptyState title="Sem distribuicao de carga" description="Atribua chamados aos usuarios para acompanhar a carga da equipe." />
+              <EmptyState title="Sem distribuição de carga" description="Atribua chamados aos usuários para acompanhar a carga da equipe." />
             )}
           </CardContent>
         </Card>

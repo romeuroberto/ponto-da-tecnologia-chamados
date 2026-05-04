@@ -1,4 +1,4 @@
-import type { AppUser, Client, DashboardSummary, Ticket } from "@/types";
+﻿import type { AppUser, Client, DashboardSummary, Ticket } from "@/types";
 
 export const currentUser: AppUser = {
   id: "u1",
@@ -33,7 +33,7 @@ export const clients: Client[] = [
     contactName: "Fernanda Rocha",
     email: "fernanda@alfa.com.br",
     phone: "(11) 98888-1111",
-    notes: "Cliente com alta recorrencia de suporte remoto.",
+    notes: "Cliente com alta recorrência de suporte remoto.",
     active: true,
     ticketCount: 12
   },
@@ -49,7 +49,7 @@ export const clients: Client[] = [
   },
   {
     id: "c3",
-    name: "Clinica Vida",
+    name: "Clínica Vida",
     contactName: "Luciana Prado",
     email: "luciana@clinicavida.com.br",
     phone: "(11) 96666-3333",
@@ -63,7 +63,7 @@ export const tickets: Ticket[] = [
     id: "t1",
     number: "CH-2026-001",
     title: "Erro ao emitir nota fiscal",
-    description: "O sistema retorna erro ao concluir a emissao da nota fiscal em duas estacoes.",
+    description: "O sistema retorna erro ao concluir a emissão da nota fiscal em duas estações.",
     category: "Sistema",
     attendanceType: "REMOTE",
     priority: "CRITICAL",
@@ -78,13 +78,14 @@ export const tickets: Ticket[] = [
     createdAt: "2026-04-30T09:15:00.000Z",
     updatedAt: "2026-04-30T11:20:00.000Z",
     attachments: [],
+    serviceOrders: [],
     history: [
       {
         id: "h1",
         ticketId: "t1",
         authorName: "Carlos Souza",
         eventType: "CREATED",
-        message: "Chamado aberto e priorizado como critico.",
+        message: "Chamado aberto e priorizado como crítico.",
         createdAt: "2026-04-30T09:15:00.000Z"
       },
       {
@@ -92,7 +93,7 @@ export const tickets: Ticket[] = [
         ticketId: "t1",
         authorName: "Paulo Lima",
         eventType: "COMMENT",
-        message: "Analise iniciada. Possivel falha na integracao fiscal.",
+        message: "Análise iniciada. Possível falha na integração fiscal.",
         createdAt: "2026-04-30T11:20:00.000Z"
       }
     ]
@@ -100,10 +101,10 @@ export const tickets: Ticket[] = [
   {
     id: "t2",
     number: "CH-2026-002",
-    title: "Usuario sem acesso ao e-mail",
+    title: "Usuário sem acesso ao e-mail",
     description: "Solicitante não consegue autenticar no Outlook desde o início da manhã.",
     category: "E-mail",
-    attendanceType: "INTERNAL",
+    attendanceType: "BALCAO",
     priority: "HIGH",
     status: "WAITING_CUSTOMER",
     requesterName: "Rafael Teles",
@@ -116,13 +117,14 @@ export const tickets: Ticket[] = [
     createdAt: "2026-04-30T08:40:00.000Z",
     updatedAt: "2026-04-30T10:05:00.000Z",
     attachments: [],
+    serviceOrders: [],
     history: [
       {
         id: "h3",
         ticketId: "t2",
         authorName: "Mariana Costa",
         eventType: "CREATED",
-        message: "Chamado aberto via atendimento telefonico.",
+        message: "Chamado aberto via atendimento telefônico.",
         createdAt: "2026-04-30T08:40:00.000Z"
       },
       {
@@ -130,7 +132,7 @@ export const tickets: Ticket[] = [
         ticketId: "t2",
         authorName: "Carlos Souza",
         eventType: "COMMENT",
-        message: "Solicitada validacao de senha e teste em outro dispositivo.",
+        message: "Solicitada validação de senha e teste em outro dispositivo.",
         createdAt: "2026-04-30T10:05:00.000Z"
       }
     ]
@@ -138,8 +140,8 @@ export const tickets: Ticket[] = [
   {
     id: "t3",
     number: "CH-2026-003",
-    title: "Instalacao de impressora",
-    description: "Necessario configurar uma nova impressora no setor financeiro.",
+    title: "Instalação de impressora",
+    description: "Necessário configurar uma nova impressora no setor financeiro.",
     category: "Infraestrutura",
     attendanceType: "FIELD_VISIT",
     priority: "MEDIUM",
@@ -147,18 +149,19 @@ export const tickets: Ticket[] = [
     requesterName: "Luciana Prado",
     requesterEmail: "luciana@clinicavida.com.br",
     clientId: "c3",
-    clientName: "Clinica Vida",
+    clientName: "Clínica Vida",
     openedByName: "Carlos Souza",
     createdAt: "2026-04-29T15:10:00.000Z",
     updatedAt: "2026-04-29T15:10:00.000Z",
     attachments: [],
+    serviceOrders: [],
     history: [
       {
         id: "h5",
         ticketId: "t3",
         authorName: "Carlos Souza",
         eventType: "CREATED",
-        message: "Chamado aguardando atribuicao.",
+        message: "Chamado aguardando atribuição.",
         createdAt: "2026-04-29T15:10:00.000Z"
       }
     ]
@@ -183,3 +186,4 @@ export function getClientById(id: string) {
 export function getUserById(id: string) {
   return users.find((user) => user.id === id);
 }
+

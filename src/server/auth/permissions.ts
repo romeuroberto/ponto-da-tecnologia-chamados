@@ -63,3 +63,31 @@ export function canViewFinancialModule(role: UserRole) {
 export function canManageTicketBilling(role: UserRole) {
   return role === "ADMIN" || role === "ATTENDANT";
 }
+
+export function canManageCompanyProfile(role: UserRole) {
+  return role === "ADMIN";
+}
+
+export function canManagePaymentInstructions(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
+export function canManageFiscalDocuments(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
+export function canViewCatalogModule(role: UserRole) {
+  return role === "ADMIN";
+}
+
+export function canViewSalesModule(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
+export function canManageSales(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
+export function canManageStock(role: UserRole) {
+  return role === "ADMIN";
+}

@@ -1,0 +1,141 @@
+import { isDatabaseConfigured } from "@/server/db-support";
+import { requireActivePartCatalogItems } from "@/server/services/service-order-support";
+import { serviceOrderRepository } from "@/server/repositories/service-order-repository";
+import { ticketRepository } from "@/server/repositories/ticket-repository";
+import { userRepository } from "@/server/repositories/user-repository";
+
+export const serviceOrderService = {
+  async listTicketServiceOrders(ticketId: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de usar ordens de serviço.");
+    }
+
+    const ticket = await ticketRepository.findById(ticketId);
+    if (!ticket) {
+      throw new Error("Chamado não encontrado.");
+    }
+
+    return serviceOrderRepository.listByTicketId(ticketId);
+  },
+
+  async getTicketServiceOrder(ticketId: string, serviceOrderId: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de usar ordens de serviço.");
+    }
+
+    const ticket = await ticketRepository.findById(ticketId);
+    if (!ticket) {
+      throw new Error("Chamado não encontrado.");
+    }
+
+    const serviceOrder = await serviceOrderRepository.findById(ticketId, serviceOrderId);
+    if (!serviceOrder) {
+      throw new Error("Ordem de serviço não encontrada.");
+    }
+
+    return serviceOrder;
+  },
+
+  async createTicketServiceOrder(
+    ticketId: string,
+    input: {
+      serviceType?: string;
+      assignedTechnicianId?: string;
+      scheduledStartAt?: string;
+      executionNotes?: string;
+      parts?: {
+        partCatalogItemId: string;
+        quantity: number;
+        unitPrice?: number;
+        notes?: string;
+      }[];
+    },
+    authorId: string
+  ) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de usar ordens de serviço.");
+    }
+
+    const [ticket, author] = await Promise.all([ticketRepository.findById(ticketId), userRepository.findById(authorId)]);
+
+    if (!ticket) {
+      throw new Error("Chamado não encontrado.");
+    }
+
+    if (!author?.active) {
+      throw new Error("Sua sessão não corresponde mais a um usuário ativo. Entre novamente.");
+    }
+
+    if (input.assignedTechnicianId) {
+      const technician = await userRepository.findById(input.assignedTechnicianId);
+      if (!technician || !technician.active) {
+        throw new Error("Técnico informado não foi encontrado ou está inativo.");
+      }
+    }
+
+    const parts = await requireActivePartCatalogItems(input.parts);
+
+    return serviceOrderRepository.create(ticketId, {
+      ...input,
+      parts,
+      createdById: authorId
+    });
+  },
+
+  async updateTicketServiceOrder(
+    ticketId: string,
+    serviceOrderId: string,
+    input: {
+      status: "PLANNED" | "IN_EXECUTION" | "PAUSED" | "COMPLETED" | "CANCELED";
+      serviceType?: string;
+      assignedTechnicianId?: string;
+      scheduledStartAt?: string;
+      startedAt?: string;
+      finishedAt?: string;
+      executionNotes?: string;
+      customerApprovalName?: string;
+      customerApprovalAt?: string;
+      parts?: {
+        partCatalogItemId: string;
+        quantity: number;
+        unitPrice?: number;
+        notes?: string;
+      }[];
+    },
+    authorId: string
+  ) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de usar ordens de serviço.");
+    }
+
+    const [ticket, author] = await Promise.all([ticketRepository.findById(ticketId), userRepository.findById(authorId)]);
+
+    if (!ticket) {
+      throw new Error("Chamado não encontrado.");
+    }
+
+    if (!author?.active) {
+      throw new Error("Sua sessão não corresponde mais a um usuário ativo. Entre novamente.");
+    }
+
+    if (input.assignedTechnicianId) {
+      const technician = await userRepository.findById(input.assignedTechnicianId);
+      if (!technician || !technician.active) {
+        throw new Error("Técnico informado não foi encontrado ou está inativo.");
+      }
+    }
+
+    const parts = await requireActivePartCatalogItems(input.parts);
+
+    const serviceOrder = await serviceOrderRepository.update(ticketId, serviceOrderId, {
+      ...input,
+      parts
+    });
+
+    if (!serviceOrder) {
+      throw new Error("Ordem de serviço não encontrada.");
+    }
+
+    return serviceOrder;
+  }
+};

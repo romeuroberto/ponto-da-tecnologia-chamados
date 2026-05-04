@@ -63,7 +63,7 @@ export function TicketDetailActions({
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel atualizar o chamado."
+          text: result.message ?? "Não foi possível atualizar o chamado."
         });
         return;
       }
@@ -102,7 +102,7 @@ export function TicketDetailActions({
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel reabrir o chamado."
+          text: result.message ?? "Não foi possível reabrir o chamado."
         });
         return;
       }
@@ -132,7 +132,7 @@ export function TicketDetailActions({
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel registrar o comentario."
+          text: result.message ?? "Não foi possível registrar o comentário."
         });
         return;
       }
@@ -140,7 +140,7 @@ export function TicketDetailActions({
       setComment("");
       setMessage({
         type: "success",
-        text: "Comentario adicionado ao historico."
+        text: "Comentário adicionado ao histórico."
       });
       router.refresh();
     });
@@ -171,7 +171,7 @@ export function TicketDetailActions({
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel enviar o anexo."
+          text: result.message ?? "Não foi possível enviar o anexo."
         });
         return;
       }
@@ -191,7 +191,7 @@ export function TicketDetailActions({
       {canSaveFields ? (
         <Card>
           <CardHeader>
-            <CardTitle>Acoes rapidas</CardTitle>
+            <CardTitle>Ações rápidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
@@ -200,7 +200,7 @@ export function TicketDetailActions({
             </div>
             {canEditStatus ? (
               <div className="grid gap-2">
-                <Label htmlFor="status">Status tecnico</Label>
+                <Label htmlFor="status">Status técnico</Label>
                 <Select id="status" value={fields.status} onChange={(event) => setFields((current) => ({ ...current, status: event.target.value as Ticket["status"] }))}>
                   <option value="OPEN">Aberto</option>
                   <option value="IN_PROGRESS">Em atendimento</option>
@@ -216,17 +216,17 @@ export function TicketDetailActions({
                 <Label htmlFor="priority">Prioridade</Label>
                 <Select id="priority" value={fields.priority} onChange={(event) => setFields((current) => ({ ...current, priority: event.target.value as Ticket["priority"] }))}>
                   <option value="LOW">Baixa</option>
-                  <option value="MEDIUM">Media</option>
+                  <option value="MEDIUM">Média</option>
                   <option value="HIGH">Alta</option>
-                  <option value="CRITICAL">Critica</option>
+                  <option value="CRITICAL">Crítica</option>
                 </Select>
               </div>
             ) : null}
             {canEditAssignment ? (
               <div className="grid gap-2">
-                <Label htmlFor="assignee">Responsavel</Label>
+                <Label htmlFor="assignee">Responsável</Label>
                 <Select id="assignee" value={fields.assigneeId} onChange={(event) => setFields((current) => ({ ...current, assigneeId: event.target.value }))}>
-                  <option value="">Nao atribuido</option>
+                  <option value="">Não atribuído</option>
                   {groupedUsers.suggestedUsers.length > 0 ? (
                     <optgroup label={groupedUsers.suggestion.label}>
                       {groupedUsers.suggestedUsers.map((user) => (
@@ -261,7 +261,7 @@ export function TicketDetailActions({
               </div>
             ) : null}
             <Button type="button" className="w-full" disabled={isPending} onClick={saveFields}>
-              {isPending ? "Salvando..." : "Salvar alteracoes"}
+              {isPending ? "Salvando..." : "Salvar alterações"}
             </Button>
             {canReopen ? (
               <Button type="button" variant="outline" className="w-full" disabled={isPending} onClick={reopenTicket}>
@@ -274,12 +274,12 @@ export function TicketDetailActions({
       {canComment ? (
         <Card>
           <CardHeader>
-            <CardTitle>Nova interacao</CardTitle>
+            <CardTitle>Nova interação</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Registrar comentario, retorno do cliente ou tratativa executada" />
+            <Textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Registrar comentário, retorno do cliente ou tratativa executada" />
             <Button type="button" className="w-full" disabled={isPending} onClick={submitComment}>
-              {isPending ? "Enviando..." : "Adicionar ao historico"}
+              {isPending ? "Enviando..." : "Adicionar ao histórico"}
             </Button>
           </CardContent>
         </Card>

@@ -70,7 +70,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json(
         {
           success: false,
-          message: "Seu perfil so pode alterar chamados sem responsavel ou atribuidos a voce."
+        message: "Seu perfil só pode alterar chamados sem responsável ou atribuídos a você."
         },
         { status: 403 }
       );
@@ -84,7 +84,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         return NextResponse.json(
           {
             success: false,
-            message: "Seu perfil nao pode alterar prioridade ou responsavel."
+        message: "Seu perfil não pode alterar prioridade ou responsável."
           },
           { status: 403 }
         );
@@ -165,7 +165,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json(
         {
           success: false,
-          message: "Seu perfil so pode interagir em chamados sem responsavel ou atribuidos a voce."
+        message: "Seu perfil só pode interagir em chamados sem responsável ou atribuídos a você."
         },
         { status: 403 }
       );

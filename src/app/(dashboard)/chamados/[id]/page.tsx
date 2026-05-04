@@ -1,30 +1,49 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { TicketDetailActions } from "@/components/tickets/ticket-detail-actions";
 import { TicketAttachments } from "@/components/tickets/ticket-attachments";
-import { TicketBillingPanel } from "@/components/tickets/ticket-billing-panel";
+import { TicketDetailActions } from "@/components/tickets/ticket-detail-actions";
+import { TicketFlowActions } from "@/components/tickets/ticket-flow-actions";
 import { TicketFlowOverview } from "@/components/tickets/ticket-flow-overview";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { TicketServiceOrdersPanel } from "@/components/tickets/ticket-service-orders-panel";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
-import { formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { canViewFinancialModule } from "@/server/auth/permissions";
 import { requireUser } from "@/server/auth/session";
-import { clientService } from "@/server/services/client-service";
+import { catalogService } from "@/server/services/catalog-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
+
+const financialStatusLabels: Record<string, { label: string; className: string }> = {
+  PENDENTE: { label: "Pendente", className: "bg-slate-100 text-slate-700" },
+  EM_ANALISE: { label: "Em analise", className: "bg-blue-100 text-blue-700" },
+  APROVADO: { label: "Aprovado", className: "bg-emerald-100 text-emerald-700" },
+  FATURADO: { label: "Faturado", className: "bg-violet-100 text-violet-700" },
+  PAGO: { label: "Pago", className: "bg-green-100 text-green-800" },
+  CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
+};
 
 export default async function TicketDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const currentUser = await requireUser();
   const { id } = await params;
-  const [ticket, users] = await Promise.all([ticketService.getTicket(id), userService.listAssignableUsers()]);
+  const [ticket, users, serviceCatalogItems, partCatalogItems] = await Promise.all([
+    ticketService.getTicket(id),
+    userService.listAssignableUsers(),
+    catalogService.listServiceItems(),
+    catalogService.listPartItems()
+  ]);
 
   if (!ticket) {
     notFound();
   }
 
-  const client = await clientService.getClient(ticket.clientId);
+  const canViewFinancial = canViewFinancialModule(currentUser.role);
 
   return (
     <div className="space-y-6">
@@ -38,7 +57,9 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
           </div>
         }
       />
+
       <TicketFlowOverview ticket={ticket} />
+
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
           <Card>
@@ -59,8 +80,8 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 <p className="mt-1 text-sm text-slate-900">{getAttendanceTypeLabel(ticket.attendanceType)}</p>
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{"Respons\u00e1vel"}</p>
-                <p className="mt-1 text-sm text-slate-900">{ticket.assigneeName ?? "N\u00e3o atribu\u00eddo"}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Responsável</p>
+                <p className="mt-1 text-sm text-slate-900">{ticket.assigneeName ?? "Nao atribuido"}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado</p>
@@ -85,14 +106,24 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 </div>
               ) : null}
               <div className="md:col-span-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{"Descri\u00e7\u00e3o"}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</p>
                 <p className="mt-1 text-sm leading-6 text-slate-700">{ticket.description}</p>
               </div>
             </CardContent>
           </Card>
+
+          <TicketServiceOrdersPanel
+            ticket={ticket}
+            users={users}
+            role={currentUser.role}
+            currentUserId={currentUser.id}
+            serviceCatalogItems={serviceCatalogItems}
+            partCatalogItems={partCatalogItems}
+          />
+
           <Card>
             <CardHeader>
-              <CardTitle>{"Hist\u00f3rico"}</CardTitle>
+              <CardTitle>Historico</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {ticket.history.map((item) => (
@@ -106,16 +137,48 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
               ))}
             </CardContent>
           </Card>
+
           <TicketAttachments attachments={ticket.attachments} />
         </div>
+
         <div className="space-y-6">
-          <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
-          <TicketBillingPanel
-            ticketId={ticket.id}
-            initialBilling={ticket.billing}
-            clientBillingProfile={client?.billingProfile}
-            role={currentUser.role}
-          />
+          {currentUser.role === "ADMIN" ? (
+            <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
+          ) : (
+            <TicketFlowActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
+          )}
+
+          {canViewFinancial ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Financeiro</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {ticket.billing ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
+                        <span className={cn("mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold", financialStatusLabels[ticket.billing.financialStatus]?.className)}>
+                          {financialStatusLabels[ticket.billing.financialStatus]?.label}
+                        </span>
+                      </div>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrency(ticket.billing.totalAmount)}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">{ticket.billing.entries.length} lancamento(s) registrado(s)</p>
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-500">Nenhum financeiro iniciado para este chamado.</p>
+                )}
+                <Link href={`/chamados/${id}/financeiro` as Route} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
+                  {ticket.billing ? "Gerenciar financeiro ->" : "Iniciar financeiro ->"}
+                </Link>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </div>
     </div>

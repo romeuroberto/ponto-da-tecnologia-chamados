@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
 import type { BillingEntryType, BillingType, FinancialStatus, TicketBilling } from "@/types";
-import { normalizeOptionalString } from "@/server/db-support";
+import { isDatabaseConfigured, normalizeOptionalString } from "@/server/db-support";
 import { mapTicketBilling, ticketBillingInclude } from "@/server/mappers";
 
 export interface UpsertTicketBillingInput {
@@ -10,6 +10,12 @@ export interface UpsertTicketBillingInput {
   financialStatus: FinancialStatus;
   discountAmount: number;
   internalNotes?: string;
+  invoiceNumber?: string;
+  invoiceDueDate?: string;
+  paymentMethod?: string;
+  paymentDate?: string;
+  paymentReference?: string;
+  cancellationReason?: string;
   authorId: string;
 }
 
@@ -35,11 +41,20 @@ function toMoney(value: number) {
   return Number(value.toFixed(2));
 }
 
-function buildFinancialTimestamps(status: FinancialStatus, current?: { approvedAt?: Date | null; invoicedAt?: Date | null; paidAt?: Date | null }) {
+function toOptionalDate(value?: string): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function buildFinancialTimestamps(
+  status: FinancialStatus,
+  current?: { approvedAt?: Date | null; invoicedAt?: Date | null; paidAt?: Date | null }
+) {
   return {
-    approvedAt: status === "APROVADO" || status === "FATURADO" || status === "PAGO" ? current?.approvedAt ?? new Date() : null,
-    invoicedAt: status === "FATURADO" || status === "PAGO" ? current?.invoicedAt ?? new Date() : null,
-    paidAt: status === "PAGO" ? current?.paidAt ?? new Date() : null
+    approvedAt: ["APROVADO", "FATURADO", "PAGO"].includes(status) ? (current?.approvedAt ?? new Date()) : null,
+    invoicedAt: ["FATURADO", "PAGO"].includes(status) ? (current?.invoicedAt ?? new Date()) : null,
+    paidAt: status === "PAGO" ? (current?.paidAt ?? new Date()) : null
   };
 }
 
@@ -50,8 +65,54 @@ function getEntryTypeLabel(type: BillingEntryType) {
     TRAVEL: "Deslocamento",
     EXTRA: "Extra"
   };
-
   return labels[type];
+}
+
+function buildTransitionMessage(
+  previousStatus: FinancialStatus | null,
+  input: UpsertTicketBillingInput
+): string {
+  const { financialStatus: next } = input;
+
+  if (!previousStatus) {
+    return `Resumo financeiro criado. Tipo: ${input.billingType}. Status: ${next}.`;
+  }
+
+  if (previousStatus === next) {
+    return `Resumo financeiro atualizado. Tipo: ${input.billingType}, desconto R$ ${toMoney(input.discountAmount).toFixed(2)}.`;
+  }
+
+  switch (next) {
+    case "EM_ANALISE":
+      return "Financeiro submetido para análise.";
+    case "APROVADO":
+      return "Valores aprovados. Lançamentos bloqueados para edição.";
+    case "FATURADO": {
+      const parts = ["Faturamento registrado."];
+      if (input.invoiceNumber) parts.push(`Cobrança: ${input.invoiceNumber}.`);
+      if (input.invoiceDueDate) {
+        const due = new Date(input.invoiceDueDate);
+        parts.push(`Vencimento: ${due.toLocaleDateString("pt-BR")}.`);
+      }
+      return parts.join(" ");
+    }
+    case "PAGO": {
+      const parts = ["Pagamento confirmado."];
+      if (input.paymentDate) {
+        const d = new Date(input.paymentDate);
+        parts.push(`Data: ${d.toLocaleDateString("pt-BR")}.`);
+      }
+      if (input.paymentMethod) parts.push(`Forma: ${input.paymentMethod}.`);
+      if (input.paymentReference) parts.push(`Ref.: ${input.paymentReference}.`);
+      return parts.join(" ");
+    }
+    case "CANCELADO":
+      return `Financeiro cancelado. Motivo: ${input.cancellationReason || "não informado"}.`;
+    case "PENDENTE":
+      return "Financeiro reaberto para novo ciclo.";
+    default:
+      return `Status financeiro atualizado para ${next}.`;
+  }
 }
 
 async function recalculateTotals(tx: Prisma.TransactionClient, billingId: string) {
@@ -60,35 +121,104 @@ async function recalculateTotals(tx: Prisma.TransactionClient, billingId: string
     include: ticketBillingInclude
   });
 
-  if (!billing) {
-    return null;
-  }
+  if (!billing) return null;
 
   const subtotalAmount = toMoney(
-    billing.entries.filter((entry) => entry.billable).reduce((sum, entry) => sum + Number(entry.totalPrice), 0)
+    billing.entries.filter((e) => e.billable).reduce((sum, e) => sum + Number(e.totalPrice), 0)
   );
   const discountAmount = toMoney(Number(billing.discountAmount));
   const totalAmount = Math.max(0, toMoney(subtotalAmount - discountAmount));
 
   const updated = await tx.ticketBilling.update({
     where: { id: billingId },
-    data: {
-      subtotalAmount,
-      totalAmount
-    },
+    data: { subtotalAmount, totalAmount },
     include: ticketBillingInclude
   });
 
   return mapTicketBilling(updated);
 }
 
+export interface BillingListItem {
+  id: string;
+  ticketId: string;
+  ticketNumber: string;
+  ticketTitle: string;
+  clientName: string;
+  billingType: BillingType;
+  financialStatus: FinancialStatus;
+  totalAmount: number;
+  entryCount: number;
+  invoiceDueDate?: string;
+  updatedAt: string;
+}
+
 export const billingRepository = {
+  async listAll(input: { financialStatus?: FinancialStatus }): Promise<BillingListItem[]> {
+    const records = await prisma.ticketBilling.findMany({
+      where: {
+        financialStatus: input.financialStatus
+      },
+      include: {
+        ticket: { include: { client: true } },
+        _count: { select: { entries: true } }
+      },
+      orderBy: { updatedAt: "desc" }
+    });
+
+    return records.map((r) => ({
+      id: r.id,
+      ticketId: r.ticketId,
+      ticketNumber: r.ticket.number,
+      ticketTitle: r.ticket.title,
+      clientName: r.ticket.client.name,
+      billingType: r.billingType,
+      financialStatus: r.financialStatus,
+      totalAmount: Number(r.totalAmount),
+      entryCount: r._count.entries,
+      invoiceDueDate: r.invoiceDueDate?.toISOString(),
+      updatedAt: r.updatedAt.toISOString()
+    }));
+  },
+
+  async listByClient(clientId: string, input: { financialStatus?: FinancialStatus } = {}): Promise<BillingListItem[]> {
+    if (!isDatabaseConfigured()) {
+      return [];
+    }
+
+    const records = await prisma.ticketBilling.findMany({
+      where: {
+        financialStatus: input.financialStatus,
+        ticket: {
+          clientId
+        }
+      },
+      include: {
+        ticket: { include: { client: true } },
+        _count: { select: { entries: true } }
+      },
+      orderBy: { updatedAt: "desc" }
+    });
+
+    return records.map((r) => ({
+      id: r.id,
+      ticketId: r.ticketId,
+      ticketNumber: r.ticket.number,
+      ticketTitle: r.ticket.title,
+      clientName: r.ticket.client.name,
+      billingType: r.billingType,
+      financialStatus: r.financialStatus,
+      totalAmount: Number(r.totalAmount),
+      entryCount: r._count.entries,
+      invoiceDueDate: r.invoiceDueDate?.toISOString(),
+      updatedAt: r.updatedAt.toISOString()
+    }));
+  },
+
   async findByTicketId(ticketId: string): Promise<TicketBilling | null> {
     const record = await prisma.ticketBilling.findUnique({
       where: { ticketId },
       include: ticketBillingInclude
     });
-
     return record ? mapTicketBilling(record) : null;
   },
 
@@ -107,6 +237,15 @@ export const billingRepository = {
 
       const timestamps = buildFinancialTimestamps(input.financialStatus, current ?? undefined);
 
+      const transitionData = {
+        invoiceNumber: normalizeOptionalString(input.invoiceNumber),
+        invoiceDueDate: toOptionalDate(input.invoiceDueDate),
+        paymentMethod: normalizeOptionalString(input.paymentMethod),
+        paymentDate: toOptionalDate(input.paymentDate),
+        paymentReference: normalizeOptionalString(input.paymentReference),
+        cancellationReason: normalizeOptionalString(input.cancellationReason)
+      };
+
       const record = await tx.ticketBilling.upsert({
         where: { ticketId },
         create: {
@@ -115,6 +254,7 @@ export const billingRepository = {
           financialStatus: input.financialStatus,
           discountAmount: toMoney(input.discountAmount),
           internalNotes: normalizeOptionalString(input.internalNotes),
+          ...transitionData,
           ...timestamps
         },
         update: {
@@ -122,23 +262,20 @@ export const billingRepository = {
           financialStatus: input.financialStatus,
           discountAmount: toMoney(input.discountAmount),
           internalNotes: normalizeOptionalString(input.internalNotes),
+          ...transitionData,
           ...timestamps
         },
         include: ticketBillingInclude
       });
 
+      const message = buildTransitionMessage(current?.financialStatus ?? null, input);
+
       await tx.billingHistory.create({
         data: {
           ticketBillingId: record.id,
           authorId: input.authorId,
-          eventType:
-            !current || current.financialStatus !== input.financialStatus
-              ? "STATUS_UPDATED"
-              : "SUMMARY_UPDATED",
-          message:
-            !current
-              ? `Resumo financeiro criado com tipo ${input.billingType} e status ${input.financialStatus}.`
-              : `Resumo financeiro atualizado. Tipo ${input.billingType}, status ${input.financialStatus}, desconto ${toMoney(input.discountAmount)}.`
+          eventType: !current || current.financialStatus !== input.financialStatus ? "STATUS_UPDATED" : "SUMMARY_UPDATED",
+          message
         }
       });
 
@@ -150,13 +287,9 @@ export const billingRepository = {
     return prisma.$transaction(async (tx) => {
       const billing = await tx.ticketBilling.upsert({
         where: { ticketId },
-        create: {
-          ticketId
-        },
+        create: { ticketId },
         update: {},
-        select: {
-          id: true
-        }
+        select: { id: true }
       });
 
       await tx.billingEntry.create({
@@ -177,7 +310,7 @@ export const billingRepository = {
           ticketBillingId: billing.id,
           authorId: input.createdById,
           eventType: "ENTRY_CREATED",
-          message: `Lancamento criado: ${getEntryTypeLabel(input.entryType)} - ${input.description}.`
+          message: `Lançamento criado: ${getEntryTypeLabel(input.entryType)} — ${input.description}.`
         }
       });
 
@@ -192,21 +325,14 @@ export const billingRepository = {
         select: { id: true }
       });
 
-      if (!billing) {
-        return null;
-      }
+      if (!billing) return null;
 
       const existingEntry = await tx.billingEntry.findFirst({
-        where: {
-          id: entryId,
-          ticketBillingId: billing.id
-        },
+        where: { id: entryId, ticketBillingId: billing.id },
         select: { id: true }
       });
 
-      if (!existingEntry) {
-        return null;
-      }
+      if (!existingEntry) return null;
 
       await tx.billingEntry.update({
         where: { id: entryId },
@@ -225,7 +351,7 @@ export const billingRepository = {
           ticketBillingId: billing.id,
           authorId: input.authorId,
           eventType: "ENTRY_UPDATED",
-          message: `Lancamento atualizado: ${getEntryTypeLabel(input.entryType)} - ${input.description}.`
+          message: `Lançamento atualizado: ${getEntryTypeLabel(input.entryType)} — ${input.description}.`
         }
       });
 
@@ -240,32 +366,23 @@ export const billingRepository = {
         select: { id: true }
       });
 
-      if (!billing) {
-        return null;
-      }
+      if (!billing) return null;
 
       const existingEntry = await tx.billingEntry.findFirst({
-        where: {
-          id: entryId,
-          ticketBillingId: billing.id
-        },
+        where: { id: entryId, ticketBillingId: billing.id },
         select: { id: true, entryType: true, description: true }
       });
 
-      if (!existingEntry) {
-        return null;
-      }
+      if (!existingEntry) return null;
 
-      await tx.billingEntry.delete({
-        where: { id: entryId }
-      });
+      await tx.billingEntry.delete({ where: { id: entryId } });
 
       await tx.billingHistory.create({
         data: {
           ticketBillingId: billing.id,
           authorId,
           eventType: "ENTRY_DELETED",
-          message: `Lancamento removido: ${getEntryTypeLabel(existingEntry.entryType)} - ${existingEntry.description}.`
+          message: `Lançamento removido: ${getEntryTypeLabel(existingEntry.entryType)} — ${existingEntry.description}.`
         }
       });
 

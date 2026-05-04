@@ -1,24 +1,12 @@
 import type { AppUser } from "@/types";
+import { getCategoryByValue } from "@/lib/ticket-categories";
 
 const roleLabels: Record<AppUser["role"], string> = {
   ADMIN: "Admin",
   ATTENDANT: "Atendente",
-  TECHNICIAN: "Tecnico"
+  TECHNICIAN: "Técnico",
+  CLIENT: "Cliente"
 };
-
-const attendantFirstKeywords = ["acesso", "e-mail", "email", "office", "cadastro", "liberacao", "liberação"];
-const technicianFirstKeywords = [
-  "infraestrutura",
-  "rede",
-  "hardware",
-  "backup",
-  "banco de dados",
-  "sistema",
-  "seguranca",
-  "segurança",
-  "pdv",
-  "telefonia"
-];
 
 export function getUserRoleLabel(role: AppUser["role"]) {
   return roleLabels[role];
@@ -29,17 +17,18 @@ export function formatUserWithRole(user: Pick<AppUser, "name" | "role">) {
 }
 
 export function getSuggestedRoleForCategory(category?: string) {
-  const normalized = category?.trim().toLowerCase();
-
-  if (!normalized) {
+  if (!category) {
     return {
       role: null,
-      label: "Sem sugestao automatica",
-      description: "Defina a categoria para o sistema priorizar atendentes ou tecnicos na atribuicao."
+      label: "Sem sugestão automática",
+      description: "Defina a categoria para o sistema priorizar atendentes ou técnicos na atribuição."
     };
   }
 
-  if (attendantFirstKeywords.some((keyword) => normalized.includes(keyword))) {
+  const cat = getCategoryByValue(category);
+  const suggestedRole = cat?.suggestedRole ?? "TECHNICIAN";
+
+  if (suggestedRole === "ATTENDANT") {
     return {
       role: "ATTENDANT" as const,
       label: "Atendentes sugeridos",
@@ -47,18 +36,10 @@ export function getSuggestedRoleForCategory(category?: string) {
     };
   }
 
-  if (technicianFirstKeywords.some((keyword) => normalized.includes(keyword))) {
-    return {
-      role: "TECHNICIAN" as const,
-      label: "Tecnicos sugeridos",
-      description: "Para esta categoria, tecnicos aparecem primeiro por se tratar de demanda mais tecnica."
-    };
-  }
-
   return {
     role: "TECHNICIAN" as const,
-    label: "Tecnicos sugeridos",
-    description: "Sem regra especifica para a categoria. O sistema prioriza tecnicos como sugestao inicial."
+    label: "Técnicos sugeridos",
+    description: "Para esta categoria, técnicos aparecem primeiro por se tratar de demanda mais técnica."
   };
 }
 

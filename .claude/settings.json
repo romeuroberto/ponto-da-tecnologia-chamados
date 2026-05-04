@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo.)",
+      "Read(//c/Users/User/.claude/projects/c--Users-User-Desktop-Projetos-VS-ponto-da-tecnologia-chamados/memory/**)",
+      "Bash(npx tsc *)",
+      "Bash(del \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\")",
+      "PowerShell(Remove-Item \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\" -Confirm:$false)"
+    ]
+  }
+}

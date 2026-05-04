@@ -1,9 +1,17 @@
+import type { FinancialStatus } from "@/types";
 import { isDatabaseConfigured } from "@/server/db-support";
 import { billingRepository } from "@/server/repositories/billing-repository";
 import { ticketRepository } from "@/server/repositories/ticket-repository";
 import { userRepository } from "@/server/repositories/user-repository";
 
 export const billingService = {
+  async listBillings(input: { financialStatus?: FinancialStatus } = {}) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada.");
+    }
+    return billingRepository.listAll(input);
+  },
+
   async getTicketBilling(ticketId: string) {
     if (!isDatabaseConfigured()) {
       throw new Error("DATABASE_URL não configurada. Configure o banco antes de usar o financeiro.");
@@ -19,6 +27,12 @@ export const billingService = {
       financialStatus: "PENDENTE" | "EM_ANALISE" | "APROVADO" | "FATURADO" | "PAGO" | "CANCELADO";
       discountAmount: number;
       internalNotes?: string;
+      invoiceNumber?: string;
+      invoiceDueDate?: string;
+      paymentMethod?: string;
+      paymentDate?: string;
+      paymentReference?: string;
+      cancellationReason?: string;
     },
     authorId: string
   ) {

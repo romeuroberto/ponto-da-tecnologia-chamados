@@ -3,15 +3,48 @@ import type { Route } from "next";
 import { auth } from "@/auth";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { NavLinks } from "@/components/layout/nav-links";
-import { canViewClientsModule, canViewFinancialModule, canViewTicketsModule, canViewUsersModule } from "@/server/auth/permissions";
+import {
+  canViewCatalogModule,
+  canViewClientsModule,
+  canViewFinancialModule,
+  canViewSalesModule,
+  canViewTicketsModule,
+  canViewUsersModule
+} from "@/server/auth/permissions";
 
-const navigation: Array<{ href: Route; label: string }> = [
+const navigation: Array<{ href: Route; label: string; children?: Array<{ href: Route; label: string }> }> = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/chamados", label: "Chamados" },
-  { href: "/relatorios", label: "Relatórios" },
+  {
+    href: "/financeiro",
+    label: "Financeiro",
+    children: [
+      { href: "/financeiro", label: "Visao geral" },
+      { href: "/financeiro/cobrancas", label: "Cobrancas" },
+      { href: "/financeiro/pagamentos", label: "Pagamentos" },
+      { href: "/financeiro/documentos", label: "Documentos fiscais" }
+    ]
+  },
+  { href: "/empresa", label: "Empresa" },
   { href: "/clientes", label: "Clientes" },
-  { href: "/usuarios", label: "Usuários" },
-  { href: "/financeiro", label: "Financeiro" }
+  {
+    href: "/vendas",
+    label: "Vendas",
+    children: [
+      { href: "/vendas", label: "Vendas" },
+      { href: "/estoque", label: "Estoque" }
+    ]
+  },
+  { href: "/relatorios", label: "Relatorios" },
+  { href: "/usuarios", label: "Usuarios" },
+  {
+    href: "/catalogos",
+    label: "Catalogos",
+    children: [
+      { href: "/catalogos/servicos", label: "Servicos" },
+      { href: "/catalogos/pecas", label: "Pecas" }
+    ]
+  }
 ];
 
 export async function Sidebar() {
@@ -25,6 +58,9 @@ export async function Sidebar() {
     if (item.href === "/clientes") return canViewClientsModule(role);
     if (item.href === "/usuarios") return canViewUsersModule(role);
     if (item.href === "/financeiro") return canViewFinancialModule(role);
+    if (item.href === "/empresa") return role === "ADMIN";
+    if (item.href === "/catalogos") return canViewCatalogModule(role);
+    if (item.href === "/vendas") return canViewSalesModule(role);
     return true;
   });
 

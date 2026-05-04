@@ -4,8 +4,6 @@ import { auth } from "@/auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { TicketCard } from "@/components/tickets/ticket-card";
 import { TicketTable } from "@/components/tickets/ticket-table";
-import { PriorityBadge } from "@/components/tickets/priority-badge";
-import { StatusBadge } from "@/components/tickets/status-badge";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -169,21 +167,6 @@ export default async function TicketsPage({
       </div>
       {result.items.length > 0 ? <TicketTable tickets={result.items} currentSort={sort} params={{ q, status, priority, client, from, to }} /> : null}
       <PaginationControls pathname="/chamados" page={result.page} totalPages={result.totalPages} params={{ q, status, priority, client, from, to, sort }} />
-      <Card className="bg-slate-950 text-white">
-        <CardContent className="flex flex-col gap-3 p-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-medium text-slate-300">Leitura rápida da fila</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <PriorityBadge priority="CRITICAL" />
-              <PriorityBadge priority="HIGH" />
-              <StatusBadge status="WAITING_CUSTOMER" />
-            </div>
-          </div>
-          <p className="max-w-xl text-sm text-slate-300">
-            Esta primeira versão prioriza visualização e navegação. O próximo passo é ligar filtros e ações aos dados reais.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

@@ -41,5 +41,24 @@ export const userService = {
       passwordHash: input.password ? await bcrypt.hash(input.password, 10) : undefined,
       role: input.role
     });
+  },
+
+  async getPortalUserByClientId(clientId: string) {
+    const record = await userRepository.findByClientId(clientId);
+    return record ?? null;
+  },
+
+  async createClientAccess(clientId: string, name: string, email: string, password: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada.");
+    }
+
+    return userRepository.create({
+      name,
+      email,
+      passwordHash: await bcrypt.hash(password, 10),
+      role: "CLIENT",
+      clientId
+    });
   }
 };

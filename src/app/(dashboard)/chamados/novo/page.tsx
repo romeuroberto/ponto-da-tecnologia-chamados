@@ -10,7 +10,7 @@ export default async function NewTicketPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Novo chamado" description="Registro rapido de atendimento com os campos essenciais do MVP." />
+      <PageHeader title="Novo chamado" description="Registro rápido de atendimento com os campos essenciais do MVP." />
       <TicketForm clients={clients} users={users} />
     </div>
   );

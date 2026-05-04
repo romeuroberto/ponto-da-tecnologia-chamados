@@ -3,15 +3,28 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import type { AppUser, Client } from "@/types";
+import type { AppUser, Client, TicketAttendanceType } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { attendanceTypeDescriptions, attendanceTypeLabels } from "@/lib/ticket-attendance";
+import { TICKET_CATEGORIES } from "@/lib/ticket-categories";
 import { formatUserWithRole, groupAssignableUsers } from "@/lib/users";
 import { FormMessage } from "./form-message";
+
+const attendanceTypes: TicketAttendanceType[] = ["REMOTE", "BALCAO", "IN_STORE_EQUIPMENT", "FIELD_VISIT"];
+
+function getValidationMessage(result: unknown) {
+  if (!result || typeof result !== "object") {
+    return null;
+  }
+
+  const errors = (result as { errors?: { fieldErrors?: Record<string, string[] | undefined> } }).errors;
+  return errors?.fieldErrors ? Object.values(errors.fieldErrors).flat().find(Boolean) ?? null : null;
+}
 
 export function TicketForm({ clients, users }: { clients: Client[]; users: AppUser[] }) {
   const router = useRouter();
@@ -22,6 +35,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
     title: "",
     description: "",
     category: "",
+    attendanceType: "REMOTE" as TicketAttendanceType,
     priority: "MEDIUM",
     requesterName: "",
     requesterEmail: "",
@@ -51,7 +65,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
       if (!response.ok) {
         setMessage({
           type: "error",
-          text: result.message ?? "Nao foi possivel salvar o chamado."
+          text: getValidationMessage(result) ?? result.message ?? "Não foi possível salvar o chamado."
         });
         return;
       }
@@ -66,6 +80,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
         title: "",
         description: "",
         category: "",
+        attendanceType: "REMOTE",
         priority: "MEDIUM",
         requesterName: "",
         requesterEmail: "",
@@ -95,27 +110,50 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="title">Titulo</Label>
+            <Label htmlFor="title">Título</Label>
             <Input id="title" value={formData.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Resumo curto do problema" />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="description">Descricao</Label>
-            <Textarea id="description" value={formData.description} onChange={(event) => updateField("description", event.target.value)} placeholder="Descreva o problema com o maximo de contexto util" />
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(event) => updateField("description", event.target.value)}
+              placeholder="Descreva o problema com o máximo de contexto útil"
+            />
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="category">Categoria</Label>
-              <Input id="category" value={formData.category} onChange={(event) => updateField("category", event.target.value)} placeholder="Ex.: Infraestrutura, E-mail, Sistema" />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="priority">Prioridade</Label>
-              <Select id="priority" value={formData.priority} onChange={(event) => updateField("priority", event.target.value)}>
-                <option value="LOW">Baixa</option>
-                <option value="MEDIUM">Media</option>
-                <option value="HIGH">Alta</option>
-                <option value="CRITICAL">Critica</option>
+              <Select id="category" value={formData.category} onChange={(event) => updateField("category", event.target.value)}>
+                <option value="">Selecione uma categoria</option>
+                {TICKET_CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </option>
+                ))}
               </Select>
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="attendanceType">Tipo de atendimento</Label>
+              <Select id="attendanceType" value={formData.attendanceType} onChange={(event) => updateField("attendanceType", event.target.value)}>
+                {attendanceTypes.map((attendanceType) => (
+                  <option key={attendanceType} value={attendanceType}>
+                    {attendanceTypeLabels[attendanceType]}
+                  </option>
+                ))}
+              </Select>
+              <p className="text-xs text-slate-500">{attendanceTypeDescriptions[formData.attendanceType]}</p>
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="priority">Prioridade</Label>
+            <Select id="priority" value={formData.priority} onChange={(event) => updateField("priority", event.target.value)}>
+              <option value="LOW">Baixa</option>
+              <option value="MEDIUM">Média</option>
+              <option value="HIGH">Alta</option>
+              <option value="CRITICAL">Crítica</option>
+            </Select>
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             <div className="grid gap-2">
@@ -128,7 +166,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
             </div>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="assignee">Responsavel</Label>
+            <Label htmlFor="assignee">Responsável</Label>
             <Select id="assignee" value={formData.assigneeId} onChange={(event) => updateField("assigneeId", event.target.value)}>
               <option value="">Definir depois</option>
               {groupedUsers.suggestedUsers.length > 0 ? (

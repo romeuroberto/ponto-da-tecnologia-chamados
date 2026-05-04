@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { areBillingEntriesLocked } from "@/lib/billing-rules";
 import { billingEntrySchema } from "@/lib/validations/billing";
 import { requireApiUser } from "@/server/auth/api-guard";
 import { canManageTicketBilling } from "@/server/auth/permissions";
@@ -15,11 +16,18 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     if (!canManageTicketBilling(guard.user.role)) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Seu perfil não pode editar dados financeiros."
-        },
+        { success: false, message: "Seu perfil não pode editar dados financeiros." },
         { status: 403 }
+      );
+    }
+
+    const { id } = await context.params;
+
+    const current = await billingService.getTicketBilling(id);
+    if (current && areBillingEntriesLocked(current.financialStatus)) {
+      return NextResponse.json(
+        { success: false, message: "Não é possível adicionar lançamentos após a aprovação do financeiro." },
+        { status: 422 }
       );
     }
 
@@ -28,16 +36,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     if (!result.success) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Dados invalidos para o lancamento financeiro.",
-          errors: result.error.flatten()
-        },
+        { success: false, message: "Dados inválidos para o lançamento financeiro.", errors: result.error.flatten() },
         { status: 400 }
       );
     }
 
-    const { id } = await context.params;
     const data = await billingService.addBillingEntry(
       id,
       {
@@ -50,19 +53,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       guard.user.id
     );
 
-    return NextResponse.json(
-      {
-        success: true,
-        data
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Falha ao criar lancamento financeiro."
-      },
+      { success: false, message: error instanceof Error ? error.message : "Falha ao criar lançamento financeiro." },
       { status: 500 }
     );
   }
