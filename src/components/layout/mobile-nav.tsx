@@ -15,17 +15,17 @@ const navigation: Array<{ href: Route; label: string }> = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/chamados", label: "Chamados" },
   { href: "/financeiro", label: "Financeiro" },
-  { href: "/financeiro/cobrancas", label: "Cobrancas" },
+  { href: "/financeiro/cobrancas", label: "Cobranças" },
   { href: "/financeiro/pagamentos", label: "Pagamentos" },
   { href: "/financeiro/documentos", label: "Documentos fiscais" },
   { href: "/empresa", label: "Empresa" },
   { href: "/vendas", label: "Vendas" },
   { href: "/estoque", label: "Estoque" },
-  { href: "/relatorios", label: "Relatorios" },
+  { href: "/relatorios", label: "Relatórios" },
   { href: "/clientes", label: "Clientes" },
-  { href: "/usuarios", label: "Usuarios" },
-  { href: "/catalogos/servicos", label: "Catalogo servicos" },
-  { href: "/catalogos/pecas", label: "Catalogo pecas" }
+  { href: "/usuarios", label: "Usuários" },
+  { href: "/catalogos/servicos", label: "Catálogo de serviços" },
+  { href: "/catalogos/pecas", label: "Catálogo de peças" }
 ];
 
 export async function MobileNav() {

@@ -19,8 +19,8 @@ const navigation: Array<{ href: Route; label: string; children?: Array<{ href: R
     href: "/financeiro",
     label: "Financeiro",
     children: [
-      { href: "/financeiro", label: "Visao geral" },
-      { href: "/financeiro/cobrancas", label: "Cobrancas" },
+      { href: "/financeiro", label: "Visão geral" },
+      { href: "/financeiro/cobrancas", label: "Cobranças" },
       { href: "/financeiro/pagamentos", label: "Pagamentos" },
       { href: "/financeiro/documentos", label: "Documentos fiscais" }
     ]
@@ -35,14 +35,14 @@ const navigation: Array<{ href: Route; label: string; children?: Array<{ href: R
       { href: "/estoque", label: "Estoque" }
     ]
   },
-  { href: "/relatorios", label: "Relatorios" },
-  { href: "/usuarios", label: "Usuarios" },
+  { href: "/relatorios", label: "Relatórios" },
+  { href: "/usuarios", label: "Usuários" },
   {
     href: "/catalogos",
-    label: "Catalogos",
+    label: "Catálogos",
     children: [
-      { href: "/catalogos/servicos", label: "Servicos" },
-      { href: "/catalogos/pecas", label: "Pecas" }
+      { href: "/catalogos/servicos", label: "Serviços" },
+      { href: "/catalogos/pecas", label: "Peças" }
     ]
   }
 ];
