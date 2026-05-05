@@ -17,6 +17,7 @@ import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { canViewFinancialModule } from "@/server/auth/permissions";
 import { requireUser } from "@/server/auth/session";
 import { catalogService } from "@/server/services/catalog-service";
+import { clientService } from "@/server/services/client-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
 
@@ -39,11 +40,17 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
     catalogService.listPartItems()
   ]);
 
+  const client = ticket ? await clientService.getClient(ticket.clientId) : null;
+
   if (!ticket) {
     notFound();
   }
 
   const canViewFinancial = canViewFinancialModule(currentUser.role);
+  const contractCoversCategory =
+    !!(client?.billingProfile?.hasActiveContract &&
+      ticket.category &&
+      client.billingProfile.contractCoveredCategories.includes(ticket.category));
 
   return (
     <div className="space-y-6">
@@ -73,7 +80,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
         <div className="space-y-6 xl:order-2">
           <TicketFlowOverview ticket={ticket} />
 
-          {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && ticket.billing?.financialStatus === "PENDENTE" ? (
+          {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && ticket.billing?.financialStatus === "PENDENTE" && !contractCoversCategory ? (
             <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <span className="font-semibold">Financeiro pendente.</span>{" "}
               Este chamado está {ticket.status === "RESOLVED" ? "resolvido" : "encerrado"} mas o ciclo financeiro ainda não foi avançado.{" "}
@@ -100,6 +107,20 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de atendimento</p>
                 <p className="mt-1 text-sm text-slate-900">{getAttendanceTypeLabel(ticket.attendanceType)}</p>
               </div>
+              {client?.billingProfile?.hasActiveContract && ticket.category ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cobertura contratual</p>
+                  {client.billingProfile.contractCoveredCategories.includes(ticket.category) ? (
+                    <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+                      Coberto pelo contrato
+                    </span>
+                  ) : (
+                    <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                      Fora do contrato
+                    </span>
+                  )}
+                </div>
+              ) : null}
               <div className="hidden xl:block">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Responsável</p>
                 <p className="mt-1 text-sm text-slate-900">{ticket.assigneeName ?? "Não atribuído"}</p>
@@ -162,11 +183,11 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
           <TicketAttachments attachments={ticket.attachments} />
         </div>
 
-        <div className="space-y-6 xl:order-1">
+        <div className="space-y-6 xl:order-1 xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)] xl:overflow-y-auto">
           {currentUser.role === "ADMIN" ? (
-            <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
+            <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} contractCoversCategory={contractCoversCategory} />
           ) : (
-            <TicketFlowActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
+            <TicketFlowActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} contractCoversCategory={contractCoversCategory} />
           )}
 
           {canViewFinancial ? (

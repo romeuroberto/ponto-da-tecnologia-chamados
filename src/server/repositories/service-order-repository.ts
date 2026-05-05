@@ -192,5 +192,16 @@ export const serviceOrderRepository = {
     );
 
     return mapServiceOrder(record);
+  },
+
+  async delete(ticketId: string, serviceOrderId: string) {
+    const existing = await prisma.serviceOrder.findFirst({
+      where: { id: serviceOrderId, ticketId }
+    });
+
+    if (!existing) return null;
+
+    await prisma.serviceOrder.delete({ where: { id: serviceOrderId } });
+    return true;
   }
 };

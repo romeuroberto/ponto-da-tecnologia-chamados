@@ -91,3 +91,29 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     );
   }
 }
+
+export async function DELETE(_: Request, context: { params: Promise<{ id: string; serviceOrderId: string }> }) {
+  try {
+    const guard = await requireApiUser(["ADMIN", "ATTENDANT"]);
+    if ("error" in guard) return guard.error;
+
+    const { id, serviceOrderId } = await context.params;
+    const ticket = await ticketService.getTicket(id);
+
+    if (!ticket) {
+      return NextResponse.json({ success: false, message: "Chamado não encontrado." }, { status: 404 });
+    }
+
+    if (!canOperateOnTicket(guard.user.role, guard.user.id, ticket.assigneeId)) {
+      return NextResponse.json({ success: false, message: "Sem permissão para operar neste chamado." }, { status: 403 });
+    }
+
+    await serviceOrderService.deleteTicketServiceOrder(id, serviceOrderId);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: error instanceof Error ? error.message : "Falha ao excluir ordem de serviço." },
+      { status: 500 }
+    );
+  }
+}

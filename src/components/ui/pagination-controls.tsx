@@ -35,12 +35,12 @@ export function PaginationControls({
       <p className="text-sm text-slate-600">
         Página {page} de {totalPages}
       </p>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:flex">
         <Link href={previousHref} aria-disabled={page <= 1} className={page <= 1 ? "pointer-events-none opacity-50" : ""}>
-          <Button variant="outline">Anterior</Button>
+          <Button variant="outline" className="w-full sm:w-auto">Anterior</Button>
         </Link>
         <Link href={nextHref} aria-disabled={page >= totalPages} className={page >= totalPages ? "pointer-events-none opacity-50" : ""}>
-          <Button variant="outline">Próxima</Button>
+          <Button variant="outline" className="w-full sm:w-auto">Próxima</Button>
         </Link>
       </div>
     </div>

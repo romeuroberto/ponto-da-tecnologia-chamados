@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import type { Client } from "@/types";
+import type { Client, TicketCategory } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,9 +27,10 @@ type ClientFormState = {
   defaultDiscountPercent: string;
   hasActiveContract: boolean;
   contractNotes: string;
+  contractCoveredCategories: string[];
 };
 
-export function ClientForm({ client }: { client?: Client }) {
+export function ClientForm({ client, categories = [] }: { client?: Client; categories?: TicketCategory[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -45,7 +46,8 @@ export function ClientForm({ client }: { client?: Client }) {
     travelRate: formatCurrencyInput(client?.billingProfile?.travelRate ?? 0),
     defaultDiscountPercent: client?.billingProfile?.defaultDiscountPercent !== undefined ? String(client.billingProfile.defaultDiscountPercent) : "",
     hasActiveContract: client?.billingProfile?.hasActiveContract ?? false,
-    contractNotes: client?.billingProfile?.contractNotes ?? ""
+    contractNotes: client?.billingProfile?.contractNotes ?? "",
+    contractCoveredCategories: client?.billingProfile?.contractCoveredCategories ?? []
   });
 
   function handleChange(field: keyof ClientFormState, value: string) {
@@ -70,7 +72,8 @@ export function ClientForm({ client }: { client?: Client }) {
           travelRate: parseCurrencyInput(formData.travelRate),
           defaultDiscountPercent: formData.defaultDiscountPercent ? Number(formData.defaultDiscountPercent) : undefined,
           hasActiveContract: formData.hasActiveContract,
-          contractNotes: formData.contractNotes
+          contractNotes: formData.contractNotes,
+          contractCoveredCategories: formData.contractCoveredCategories
         }
       };
 
@@ -110,7 +113,8 @@ export function ClientForm({ client }: { client?: Client }) {
           travelRate: formatCurrencyInput(0),
           defaultDiscountPercent: "",
           hasActiveContract: false,
-          contractNotes: ""
+          contractNotes: "",
+          contractCoveredCategories: []
         });
       }
 
@@ -120,39 +124,55 @@ export function ClientForm({ client }: { client?: Client }) {
 
   return (
     <Card>
-      <CardContent className="p-6">
-        <form className="grid gap-5" onSubmit={handleSubmit}>
+      <CardContent className="p-4 sm:p-6">
+        <form className="grid gap-6" onSubmit={handleSubmit}>
           {message ? <FormMessage type={message.type} message={message.text} /> : null}
-          <div className="grid gap-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" value={formData.name} onChange={(event) => handleChange("name", event.target.value)} placeholder="Nome da empresa ou cliente" />
-          </div>
-          <div className="grid gap-2 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="document">Documento</Label>
-              <Input id="document" value={formData.document} onChange={(event) => handleChange("document", event.target.value)} placeholder="CNPJ ou identificação" />
+
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-slate-950">Dados principais</h2>
+              <p className="mt-1 text-sm text-slate-600">Preencha os dados de identificação e contato do cliente.</p>
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="contactName">Contato principal</Label>
-              <Input id="contactName" value={formData.contactName} onChange={(event) => handleChange("contactName", event.target.value)} placeholder="Nome do contato" />
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" value={formData.name} onChange={(event) => handleChange("name", event.target.value)} placeholder="Nome da empresa ou cliente" />
             </div>
-          </div>
-          <div className="grid gap-2 md:grid-cols-2">
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="document">Documento</Label>
+                <Input id="document" value={formData.document} onChange={(event) => handleChange("document", event.target.value)} placeholder="CNPJ ou identificação" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="contactName">Contato principal</Label>
+                <Input id="contactName" value={formData.contactName} onChange={(event) => handleChange("contactName", event.target.value)} placeholder="Nome do contato" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input id="email" value={formData.email} onChange={(event) => handleChange("email", event.target.value)} placeholder="contato@empresa.com" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Telefone</Label>
+                <PhoneInput id="phone" value={formData.phone} onValueChange={(value) => handleChange("phone", value)} placeholder="(00) 00000-0000" />
+              </div>
+            </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" value={formData.email} onChange={(event) => handleChange("email", event.target.value)} placeholder="contato@empresa.com" />
+              <Label htmlFor="notes">Observações</Label>
+              <Textarea id="notes" value={formData.notes} onChange={(event) => handleChange("notes", event.target.value)} placeholder="Informações relevantes do atendimento" />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <PhoneInput id="phone" value={formData.phone} onValueChange={(value) => handleChange("phone", value)} placeholder="(00) 00000-0000" />
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <div>
+              <h3 className="text-base font-semibold text-slate-950">Perfil financeiro</h3>
+              <p className="mt-1 text-sm text-slate-600">Defina regras padrão para cobrança, deslocamento e contrato.</p>
             </div>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="notes">Observações</Label>
-            <Textarea id="notes" value={formData.notes} onChange={(event) => handleChange("notes", event.target.value)} placeholder="Informações relevantes do atendimento" />
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <h3 className="text-base font-semibold text-slate-950">Perfil financeiro</h3>
+
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="defaultBillingType">Tipo de cobrança padrão</Label>
@@ -163,10 +183,12 @@ export function ClientForm({ client }: { client?: Client }) {
                   <option value="CORTESIA">Cortesia</option>
                 </Select>
               </div>
+
               <div className="flex items-end">
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                   <input
                     type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
                     checked={formData.hasActiveContract}
                     onChange={(event) => setFormData((current) => ({ ...current, hasActiveContract: event.target.checked }))}
                   />
@@ -174,6 +196,7 @@ export function ClientForm({ client }: { client?: Client }) {
                 </label>
               </div>
             </div>
+
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <div className="grid gap-2">
                 <Label htmlFor="hourlyRate">Valor/hora</Label>
@@ -209,6 +232,7 @@ export function ClientForm({ client }: { client?: Client }) {
                 />
               </div>
             </div>
+
             <div className="mt-4 grid gap-2">
               <Label htmlFor="contractNotes">Observações financeiras</Label>
               <Textarea
@@ -218,9 +242,35 @@ export function ClientForm({ client }: { client?: Client }) {
                 placeholder="Regras contratuais, condições especiais ou observações de faturamento"
               />
             </div>
-          </div>
+
+            {formData.hasActiveContract ? (
+              <div className="mt-4 grid gap-2">
+                <Label>Categorias cobertas pelo contrato</Label>
+                <p className="text-xs text-slate-500">Chamados dessas categorias serão sinalizados como inclusos no contrato.</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {categories.map((cat) => (
+                    <label key={cat.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 cursor-pointer hover:border-sky-200 hover:bg-sky-50/50 transition-colors">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                        checked={formData.contractCoveredCategories.includes(cat.name)}
+                        onChange={(event) => {
+                          const updated = event.target.checked
+                            ? [...formData.contractCoveredCategories, cat.name]
+                            : formData.contractCoveredCategories.filter((c) => c !== cat.name);
+                          setFormData((current) => ({ ...current, contractCoveredCategories: updated }));
+                        }}
+                      />
+                      {cat.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </section>
+
           <div className="flex justify-end">
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               {isPending ? "Salvando..." : "Salvar cliente"}
             </Button>
           </div>

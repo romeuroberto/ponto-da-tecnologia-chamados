@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import type { AppUser, Client, TicketAttendanceType } from "@/types";
+import type { AppUser, Client, TicketAttendanceType, TicketCategory } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { attendanceTypeDescriptions, attendanceTypeLabels } from "@/lib/ticket-attendance";
-import { TICKET_CATEGORIES } from "@/lib/ticket-categories";
 import { formatUserWithRole, groupAssignableUsers } from "@/lib/users";
 import { FormMessage } from "./form-message";
 
@@ -26,7 +25,7 @@ function getValidationMessage(result: unknown) {
   return errors?.fieldErrors ? Object.values(errors.fieldErrors).flat().find(Boolean) ?? null : null;
 }
 
-export function TicketForm({ clients, users }: { clients: Client[]; users: AppUser[] }) {
+export function TicketForm({ clients, users, categories }: { clients: Client[]; users: AppUser[]; categories: TicketCategory[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -41,7 +40,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
     requesterEmail: "",
     assigneeId: ""
   });
-  const groupedUsers = groupAssignableUsers(users, formData.category);
+  const groupedUsers = groupAssignableUsers(users, formData.category, categories);
 
   function updateField(field: keyof typeof formData, value: string) {
     setFormData((current) => ({ ...current, [field]: value }));
@@ -127,8 +126,8 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
               <Label htmlFor="category">Categoria</Label>
               <Select id="category" value={formData.category} onChange={(event) => updateField("category", event.target.value)}>
                 <option value="">Selecione uma categoria</option>
-                {TICKET_CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
                     {cat.label}
                   </option>
                 ))}

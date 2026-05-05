@@ -39,6 +39,17 @@ export type HistoryEventType =
   | "CLOSED"
   | "REOPENED";
 
+export interface TicketCategory {
+  id: string;
+  name: string;
+  label: string;
+  suggestedRole?: "ATTENDANT" | "TECHNICIAN";
+  active: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppUser {
   id: string;
   name: string;
@@ -309,6 +320,7 @@ export interface ClientBillingProfile {
   defaultDiscountPercent?: number;
   hasActiveContract: boolean;
   contractNotes?: string;
+  contractCoveredCategories: string[];
   createdAt: string;
   updatedAt: string;
 }

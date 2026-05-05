@@ -20,12 +20,14 @@ export function TicketDetailActions({
   ticket,
   users,
   role,
-  currentUserId = ""
+  currentUserId = "",
+  contractCoversCategory = false
 }: {
   ticket: Ticket;
   users: AppUser[];
   role: AppUser["role"];
   currentUserId?: string;
+  contractCoversCategory?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -68,6 +70,33 @@ export function TicketDetailActions({
       }
 
       setMessage({ type: "success", text: "Chamado atualizado com sucesso." });
+      router.refresh();
+    });
+  }
+
+  function closeByContract() {
+    setMessage(null);
+
+    startTransition(async () => {
+      const response = await fetch(`/api/tickets/${ticket.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...fields,
+          status: "CLOSED",
+          closingReason: "Encerrado sem cobrança — categoria coberta pelo contrato."
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage({ type: "error", text: result.message ?? "Não foi possível encerrar o chamado." });
+        return;
+      }
+
+      setFields((current) => ({ ...current, status: "CLOSED" }));
+      setMessage({ type: "success", text: "Chamado encerrado sem cobrança." });
       router.refresh();
     });
   }
@@ -154,7 +183,7 @@ export function TicketDetailActions({
       <FieldVisitCheckin ticket={ticket} role={role} currentUserId={currentUserId} />
 
       {canSaveFields ? (
-        <Card className="xl:sticky xl:top-24">
+        <Card>
           <CardHeader>
             <CardTitle>Ações rápidas</CardTitle>
           </CardHeader>
@@ -163,6 +192,16 @@ export function TicketDetailActions({
               <p className="font-semibold text-slate-950">Etapa atual: {flow.currentStageLabel}</p>
               <p className="mt-1">{flow.nextAction}</p>
             </div>
+
+            {contractCoversCategory && ticket.status === "RESOLVED" ? (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <p className="font-semibold">Coberto pelo contrato</p>
+                <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Você pode encerrar sem gerar cobrança.</p>
+                <Button type="button" className="mt-3 w-full bg-emerald-700 text-white hover:bg-emerald-800" disabled={isPending} onClick={closeByContract}>
+                  {isPending ? "Encerrando..." : "Encerrar sem cobrança"}
+                </Button>
+              </div>
+            ) : null}
             {canEditTitle ? (
               <div className="grid gap-2">
                 <Label htmlFor="title">Título</Label>

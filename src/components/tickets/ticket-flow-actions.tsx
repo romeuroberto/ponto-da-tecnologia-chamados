@@ -16,14 +16,17 @@ import { formatUserWithRole, groupAssignableUsers } from "@/lib/users";
 import { canCommentTicket, canEditTicketAssignment } from "@/server/auth/permissions";
 import type { AppUser, Ticket } from "@/types";
 
+const CONTRACT_CLOSE_REASON = "Encerrado sem cobrança — categoria coberta pelo contrato.";
+
 type FlowAction = {
   label: string;
   targetStatus: Ticket["status"];
   variant: "default" | "outline";
   requiresReason: boolean;
+  autoClosingReason?: string;
 };
 
-function getFlowActions(status: Ticket["status"], role: AppUser["role"]): FlowAction[] {
+function getFlowActions(status: Ticket["status"], role: AppUser["role"], contractCoversCategory?: boolean): FlowAction[] {
   const isAttendant = role === "ATTENDANT";
 
   switch (status) {
@@ -52,8 +55,11 @@ function getFlowActions(status: Ticket["status"], role: AppUser["role"]): FlowAc
 
     case "RESOLVED":
       return [
+        ...(contractCoversCategory
+          ? [{ label: "Encerrar sem cobrança", targetStatus: "CLOSED" as const, variant: "default" as const, requiresReason: false, autoClosingReason: CONTRACT_CLOSE_REASON }]
+          : []),
         ...(isAttendant
-          ? [{ label: "Encerrar chamado", targetStatus: "CLOSED" as const, variant: "default" as const, requiresReason: true }]
+          ? [{ label: contractCoversCategory ? "Encerrar com cobrança" : "Encerrar chamado", targetStatus: "CLOSED" as const, variant: contractCoversCategory ? "outline" as const : "default" as const, requiresReason: true }]
           : []),
         { label: "Reabrir chamado", targetStatus: "OPEN", variant: "outline", requiresReason: false }
       ];
@@ -71,12 +77,14 @@ export function TicketFlowActions({
   ticket,
   users,
   role,
-  currentUserId
+  currentUserId,
+  contractCoversCategory = false
 }: {
   ticket: Ticket;
   users: AppUser[];
   role: AppUser["role"];
   currentUserId?: string;
+  contractCoversCategory?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -88,7 +96,7 @@ export function TicketFlowActions({
   const [closingReason, setClosingReason] = useState("");
 
   const flow = getTicketFlowSummary(ticket);
-  const actions = getFlowActions(ticket.status, role);
+  const actions = getFlowActions(ticket.status, role, contractCoversCategory);
   const canComment = canCommentTicket(role);
   const canAssign = canEditTicketAssignment(role);
   const groupedUsers = groupAssignableUsers(users, ticket.category);
@@ -116,7 +124,7 @@ export function TicketFlowActions({
           status: pendingAction.targetStatus,
           priority: ticket.priority,
           assigneeId: ticket.assigneeId ?? "",
-          closingReason: pendingAction.requiresReason ? closingReason : ""
+          closingReason: pendingAction.requiresReason ? closingReason : (pendingAction.autoClosingReason ?? "")
         })
       });
 
@@ -219,7 +227,7 @@ export function TicketFlowActions({
       {message ? <FormMessage type={message.type} message={message.text} /> : null}
       <FieldVisitCheckin ticket={ticket} role={role} currentUserId={currentUserId ?? ""} />
 
-      <Card className="xl:sticky xl:top-24">
+      <Card>
         <CardHeader>
           <CardTitle>Ações rápidas</CardTitle>
         </CardHeader>
@@ -228,6 +236,13 @@ export function TicketFlowActions({
             <p className="font-semibold text-slate-950">Etapa atual: {flow.currentStageLabel}</p>
             <p className="mt-1">{flow.nextAction}</p>
           </div>
+
+          {contractCoversCategory && ticket.status === "RESOLVED" ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <p className="font-semibold">Coberto pelo contrato</p>
+              <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Você pode encerrar sem gerar cobrança.</p>
+            </div>
+          ) : null}
 
           {pendingAction ? (
             <div className="space-y-3 rounded-xl border border-sky-200 bg-sky-50 p-4">

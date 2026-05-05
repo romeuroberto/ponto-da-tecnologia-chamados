@@ -51,7 +51,8 @@ export const appNavigation: NavigationItem[] = [
     label: "Catálogos",
     children: [
       { href: "/catalogos/servicos", label: "Serviços" },
-      { href: "/catalogos/pecas", label: "Materiais" }
+      { href: "/catalogos/pecas", label: "Materiais" },
+      { href: "/catalogos/categorias" as Route, label: "Categorias" }
     ]
   }
 ];

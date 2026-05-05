@@ -19,6 +19,7 @@ export interface CreateClientInput {
     defaultDiscountPercent?: number;
     hasActiveContract: boolean;
     contractNotes?: string;
+    contractCoveredCategories?: string[];
   };
 }
 
@@ -163,7 +164,8 @@ export const clientRepository = {
                 travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                 defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
                 hasActiveContract: input.billingProfile.hasActiveContract,
-                contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                contractNotes: normalizeOptionalString(input.billingProfile.contractNotes),
+                contractCoveredCategories: input.billingProfile.contractCoveredCategories ?? []
               }
             }
           : undefined
@@ -201,7 +203,8 @@ export const clientRepository = {
                   travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                   defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
                   hasActiveContract: input.billingProfile.hasActiveContract,
-                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes),
+                  contractCoveredCategories: input.billingProfile.contractCoveredCategories ?? []
                 },
                 update: {
                   defaultBillingType: input.billingProfile.defaultBillingType,
@@ -209,7 +212,8 @@ export const clientRepository = {
                   travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                   defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
                   hasActiveContract: input.billingProfile.hasActiveContract,
-                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes),
+                  contractCoveredCategories: input.billingProfile.contractCoveredCategories ?? []
                 }
               }
             }

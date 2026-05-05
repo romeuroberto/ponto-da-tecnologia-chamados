@@ -59,6 +59,13 @@ type PendingTransition = FlowAction & {
   cancellationReason: string;
 };
 
+const entryTypeLabel: Record<BillingEntryType, string> = {
+  LABOR:  "Mão de obra",
+  PART:   "Material / Peça",
+  TRAVEL: "Deslocamento",
+  EXTRA:  "Cobrança avulsa"
+};
+
 // ---------------------------------------------------------------------------
 // Flow actions — quick paths destacados, fluxo detalhado abaixo
 // ---------------------------------------------------------------------------
@@ -539,7 +546,7 @@ export function TicketBillingPanel({
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-950 truncate">{entry.description}</p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {entry.entryType} · {entry.quantity} × {formatCurrency(entry.unitPrice)} · {entry.billable ? "Faturável" : "Não faturável"}
+                      {entryTypeLabel[entry.entryType]} · {entry.quantity} × {formatCurrency(entry.unitPrice)} · {entry.billable ? "Faturável" : "Não faturável"}
                     </p>
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-slate-950">{formatCurrency(entry.totalPrice)}</span>
@@ -566,10 +573,10 @@ export function TicketBillingPanel({
                   <Label htmlFor="entryType">Tipo</Label>
                   <Select id="entryType" value={entryFields.entryType} disabled={isPending}
                     onChange={(e) => setEntryFields((c) => ({ ...c, entryType: e.target.value as BillingEntryType }))}>
-                    <option value="LABOR">Horas</option>
-                    <option value="PART">Material</option>
+                    <option value="LABOR">Mão de obra</option>
+                    <option value="PART">Material / Peça</option>
                     <option value="TRAVEL">Deslocamento</option>
-                    <option value="EXTRA">Extra</option>
+                    <option value="EXTRA">Cobrança avulsa</option>
                   </Select>
                 </div>
                 <div className="grid gap-2">

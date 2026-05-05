@@ -161,6 +161,17 @@ model CompanyProfile {
   updatedAt            DateTime @updatedAt
 }
 
+model TicketCategory {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  label         String
+  suggestedRole String?
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model ServiceCatalogItem {
   id           String   @id @default(cuid())
   name         String
@@ -337,11 +348,12 @@ model ClientBillingProfile {
   hourlyRate             Decimal?     @db.Decimal(12, 2)
   travelRate             Decimal?     @db.Decimal(12, 2)
   defaultDiscountPercent Decimal?     @db.Decimal(5, 2)
-  hasActiveContract      Boolean      @default(false)
-  contractNotes          String?
-  createdAt              DateTime     @default(now())
-  updatedAt              DateTime     @updatedAt
-  client                 Client       @relation(fields: [clientId], references: [id])
+  hasActiveContract          Boolean      @default(false)
+  contractNotes              String?
+  contractCoveredCategories  String[]
+  createdAt                  DateTime     @default(now())
+  updatedAt                  DateTime     @updatedAt
+  client                     Client       @relation(fields: [clientId], references: [id])
 }
 
 model BillingHistory {

@@ -10,39 +10,47 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   const isLoggedIn = session?.user?.role === "CLIENT";
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.18),_transparent_32%),linear-gradient(180deg,_#eef7ff_0%,_#f8fafc_42%,_#f8fafc_100%)]">
-      <header className="border-b border-white/70 bg-white/80 backdrop-blur">
-        <div className="mx-auto max-w-6xl px-4 py-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="rounded-2xl bg-slate-950 p-2.5 text-white shadow-sm sm:p-3">
-                <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+    <div className="min-h-screen bg-slate-50">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-slate-950 p-2 text-white">
+                <Building2 className="h-5 w-5" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">Portal do Cliente</p>
-                <p className="mt-1 text-lg font-semibold text-slate-950">Ponto da Tecnologia</p>
-                <p className="hidden text-sm text-slate-500 sm:block">Acompanhe chamados, vendas, cobranças e documentos em um só lugar.</p>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Portal do Cliente</p>
+                <p className="font-semibold leading-tight text-slate-950">Ponto da Tecnologia</p>
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 lg:items-end">
-              {isLoggedIn ? (
-                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-                  <span className="rounded-full bg-slate-100 px-3 py-1.5 font-medium">{session.user.name}</span>
-                  <form action="/api/auth/signout" method="POST">
-                    <button type="submit" className="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 font-medium text-slate-600 hover:bg-slate-50">
-                      Sair
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                <Link href="/portal" className="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                  Acessar portal
-                </Link>
-              )}
-              {isLoggedIn ? <PortalNavigation /> : null}
-            </div>
+            {isLoggedIn ? (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="hidden text-slate-600 sm:block">{session.user.name}</span>
+                <form action="/api/auth/signout" method="POST">
+                  <button
+                    type="submit"
+                    className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    Sair
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <Link
+                href="/portal"
+                className="inline-flex h-9 items-center rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                Acessar portal
+              </Link>
+            )}
           </div>
+
+          {isLoggedIn ? (
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              <PortalNavigation />
+            </div>
+          ) : null}
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 pb-24 lg:py-8 lg:pb-8">{children}</main>

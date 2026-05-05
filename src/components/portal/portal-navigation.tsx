@@ -19,7 +19,8 @@ export function PortalNavigation() {
 
   return (
     <>
-      <nav className="hidden gap-2 overflow-x-auto pb-1 lg:flex">
+      {/* Desktop — barra inline no header */}
+      <nav className="hidden gap-1 lg:flex">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -29,10 +30,10 @@ export function PortalNavigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                "inline-flex min-w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+                "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "border-sky-500 bg-sky-600 text-white"
-                  : "border-white/15 bg-white/80 text-slate-700 hover:border-sky-200 hover:bg-white"
+                  ? "bg-slate-950 text-white"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               )}
             >
               <Icon className="h-4 w-4" />
@@ -42,6 +43,7 @@ export function PortalNavigation() {
         })}
       </nav>
 
+      {/* Mobile — bottom nav fixo */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/96 px-2 py-2 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl items-stretch justify-between gap-1">
           {items.map((item) => {
@@ -53,8 +55,8 @@ export function PortalNavigation() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-semibold transition-colors",
-                  isActive ? "bg-sky-600 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  "flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-semibold transition-colors",
+                  isActive ? "bg-slate-950 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                 )}
                 aria-current={isActive ? "page" : undefined}
               >

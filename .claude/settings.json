@@ -5,10 +5,14 @@
       "Read(//c/Users/User/.claude/projects/c--Users-User-Desktop-Projetos-VS-ponto-da-tecnologia-chamados/memory/**)",
       "Bash(npx tsc *)",
       "Bash(del \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\")",
-      "PowerShell(Remove-Item \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\" -Confirm:$false)"
+      "PowerShell(Remove-Item \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\" -Confirm:$false)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\prisma\\\\migrations\")",
+      "Bash(Sort-Object LastWriteTime -Descending)",
+      "Bash(Select-Object -First 3 Name)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]"
+      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",
+      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\categories"
     ]
   }
 }

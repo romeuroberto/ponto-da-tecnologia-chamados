@@ -62,6 +62,10 @@ export const serviceOrderService = {
       throw new Error("Chamado não encontrado.");
     }
 
+    if (ticket.status === "CLOSED" || ticket.status === "CANCELED") {
+      throw new Error("Não é possível criar ordens de serviço em chamados encerrados ou cancelados.");
+    }
+
     if (!author?.active) {
       throw new Error("Sua sessão não corresponde mais a um usuário ativo. Entre novamente.");
     }
@@ -137,5 +141,23 @@ export const serviceOrderService = {
     }
 
     return serviceOrder;
+  },
+
+  async deleteTicketServiceOrder(ticketId: string, serviceOrderId: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada.");
+    }
+
+    const ticket = await ticketRepository.findById(ticketId);
+    if (!ticket) throw new Error("Chamado não encontrado.");
+
+    const serviceOrder = await serviceOrderRepository.findById(ticketId, serviceOrderId);
+    if (!serviceOrder) throw new Error("Ordem de serviço não encontrada.");
+
+    if (serviceOrder.status !== "PLANNED") {
+      throw new Error("Só é possível excluir ordens de serviço com status Planejada.");
+    }
+
+    await serviceOrderRepository.delete(ticketId, serviceOrderId);
   }
 };

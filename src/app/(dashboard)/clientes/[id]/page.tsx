@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { canEditClient } from "@/server/auth/permissions";
 import { clientService } from "@/server/services/client-service";
+import { ticketCategoryService } from "@/server/services/ticket-category-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
 
@@ -24,9 +25,10 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const [tickets, portalUser] = await Promise.all([
+  const [tickets, portalUser, categories] = await Promise.all([
     ticketService.listTickets(),
-    userService.getPortalUserByClientId(id)
+    userService.getPortalUserByClientId(id),
+    ticketCategoryService.listCategories(true)
   ]);
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
   const canEdit = session?.user ? canEditClient(session.user.role) : false;
@@ -36,7 +38,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
       <PageHeader title={client.name} description={`Contato principal: ${client.contactName}`} />
       <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
         {canEdit ? (
-          <ClientForm client={client} />
+          <ClientForm client={client} categories={categories} />
         ) : (
           <Card>
             <CardHeader>

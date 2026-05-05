@@ -67,39 +67,50 @@ export function UserForm({ user }: { user?: AppUser }) {
 
   return (
     <Card>
-      <CardContent className="p-6">
-        <form className="grid gap-5" onSubmit={handleSubmit}>
+      <CardContent className="p-4 sm:p-6">
+        <form className="grid gap-6" onSubmit={handleSubmit}>
           {message ? <FormMessage type={message.type} message={message.text} /> : null}
-          <div className="grid gap-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" value={formData.name} onChange={(event) => setFormData((current) => ({ ...current, name: event.target.value }))} placeholder="Nome completo" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" value={formData.email} onChange={(event) => setFormData((current) => ({ ...current, email: event.target.value }))} placeholder="usuario@empresa.com" />
-          </div>
-          <div className="grid gap-2 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(event) => setFormData((current) => ({ ...current, password: event.target.value }))}
-                placeholder={user ? "Deixe em branco para manter" : "Defina uma senha"}
-              />
+
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-base font-semibold text-slate-950">Dados de acesso</h2>
+              <p className="mt-1 text-sm text-slate-600">Cadastre a pessoa e defina o nível de acesso ao sistema.</p>
             </div>
+
             <div className="grid gap-2">
-              <Label htmlFor="role">Perfil</Label>
-              <Select id="role" value={formData.role} onChange={(event) => setFormData((current) => ({ ...current, role: event.target.value as AppUser["role"] }))}>
-                <option value="ADMIN">Administrador</option>
-                <option value="ATTENDANT">Atendente</option>
-                <option value="TECHNICIAN">Técnico</option>
-              </Select>
+              <Label htmlFor="name">Nome</Label>
+              <Input id="name" value={formData.name} onChange={(event) => setFormData((current) => ({ ...current, name: event.target.value }))} placeholder="Nome completo" />
             </div>
-          </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" value={formData.email} onChange={(event) => setFormData((current) => ({ ...current, email: event.target.value }))} placeholder="usuario@empresa.com" />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(event) => setFormData((current) => ({ ...current, password: event.target.value }))}
+                  placeholder={user ? "Deixe em branco para manter" : "Defina uma senha"}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="role">Perfil</Label>
+                <Select id="role" value={formData.role} onChange={(event) => setFormData((current) => ({ ...current, role: event.target.value as AppUser["role"] }))}>
+                  <option value="ADMIN">Administrador</option>
+                  <option value="ATTENDANT">Atendente</option>
+                  <option value="TECHNICIAN">Técnico</option>
+                </Select>
+              </div>
+            </div>
+          </section>
+
           <div className="flex justify-end">
-            <Button type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
               {isPending ? "Salvando..." : "Salvar usuário"}
             </Button>
           </div>

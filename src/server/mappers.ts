@@ -16,6 +16,7 @@ import type {
   Ticket,
   TicketAttachment,
   TicketBilling,
+  TicketCategory,
   TicketHistoryItem
 } from "@/types";
 import { normalizeBrazilianPhone } from "@/lib/utils";
@@ -52,6 +53,7 @@ interface ClientBillingProfileRecord {
   defaultDiscountPercent: PrismaDecimalLike | null;
   hasActiveContract: boolean;
   contractNotes: string | null;
+  contractCoveredCategories: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -471,6 +473,7 @@ export function mapClientBillingProfile(record: ClientBillingProfileRecord): Cli
     defaultDiscountPercent: record.defaultDiscountPercent?.toNumber() ?? undefined,
     hasActiveContract: record.hasActiveContract,
     contractNotes: record.contractNotes ?? undefined,
+    contractCoveredCategories: record.contractCoveredCategories,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString()
   };
@@ -613,6 +616,30 @@ export const saleInclude = {
   createdBy: true,
   items: { orderBy: { createdAt: "asc" as const } }
 } as const;
+
+interface TicketCategoryRecord {
+  id: string;
+  name: string;
+  label: string;
+  suggestedRole: string | null;
+  active: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export function mapTicketCategory(record: TicketCategoryRecord): TicketCategory {
+  return {
+    id: record.id,
+    name: record.name,
+    label: record.label,
+    suggestedRole: (record.suggestedRole as TicketCategory["suggestedRole"]) ?? undefined,
+    active: record.active,
+    sortOrder: record.sortOrder,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString()
+  };
+}
 
 export const serviceOrderInclude = {
   assignedTechnician: true,

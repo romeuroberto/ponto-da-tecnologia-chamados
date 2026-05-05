@@ -13,7 +13,8 @@ export const clientSchema = z.object({
     travelRate: z.coerce.number().min(0, "Deslocamento não pode ser negativo").optional(),
     defaultDiscountPercent: z.coerce.number().min(0, "Desconto não pode ser negativo").max(100, "Desconto máximo de 100%").optional(),
     hasActiveContract: z.boolean(),
-    contractNotes: z.string().optional()
+    contractNotes: z.string().optional(),
+    contractCoveredCategories: z.array(z.string()).optional()
   }).optional()
 });
 

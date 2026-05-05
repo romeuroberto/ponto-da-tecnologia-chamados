@@ -143,6 +143,7 @@ export function TicketServiceOrdersPanel({
 
   if (ticket.attendanceType === "REMOTE") return null;
 
+  const ticketIsFinished = ticket.status === "CLOSED" || ticket.status === "CANCELED";
   const canManage = (role === "ADMIN" || role === "ATTENDANT") && canOperateOnTicket(role, currentUserId, ticket.assigneeId);
   const createServiceSelection = getCatalogSelection(createFields.serviceType, serviceCatalogItems);
   const editServiceSelection = getCatalogSelection(editFields.serviceType, serviceCatalogItems);
@@ -395,6 +396,27 @@ export function TicketServiceOrdersPanel({
     });
   }
 
+  function deleteServiceOrder(serviceOrderId: string) {
+    setMessage(null);
+
+    startTransition(async () => {
+      const response = await fetch(`/api/tickets/${ticket.id}/service-orders/${serviceOrderId}`, {
+        method: "DELETE"
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage({ type: "error", text: result.message ?? "Não foi possível excluir a ordem de serviço." });
+        return;
+      }
+
+      setServiceOrders((current) => current.filter((so) => so.id !== serviceOrderId));
+      setMessage({ type: "success", text: "Ordem de serviço excluída." });
+      router.refresh();
+    });
+  }
+
   return (
     <div className="space-y-6">
       {message ? <FormMessage type={message.type} message={message.text} /> : null}
@@ -615,9 +637,22 @@ export function TicketServiceOrdersPanel({
                           </Button>
                         </>
                       ) : (
-                        <Button type="button" variant="outline" className="w-full" disabled={isPending} onClick={() => startEdit(serviceOrder)}>
-                          Editar ordem de serviço
-                        </Button>
+                        <>
+                          <Button type="button" variant="outline" className="flex-1" disabled={isPending} onClick={() => startEdit(serviceOrder)}>
+                            Editar
+                          </Button>
+                          {serviceOrder.status === "PLANNED" ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="flex-1 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                              disabled={isPending}
+                              onClick={() => deleteServiceOrder(serviceOrder.id)}
+                            >
+                              Excluir
+                            </Button>
+                          ) : null}
+                        </>
                       )}
                     </div>
                   ) : null}
@@ -632,7 +667,7 @@ export function TicketServiceOrdersPanel({
         </CardContent>
       </Card>
 
-      {canManage ? (
+      {canManage && !ticketIsFinished ? (
         <Card>
           <CardHeader>
             <CardTitle>Nova ordem de serviço</CardTitle>
