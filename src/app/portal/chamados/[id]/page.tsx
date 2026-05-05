@@ -23,48 +23,50 @@ export default async function PortalTicketDetailPage({ params }: { params: Promi
   const { ticket, documents, paymentInstructions } = data;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div className="flex items-center gap-3">
         <Link href={"/portal/chamados" as Route} className="text-sm font-semibold text-sky-700 hover:text-sky-800">
           ← Meus chamados
         </Link>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{ticket.number}</p>
             <h1 className="mt-2 text-2xl font-semibold text-slate-950">{ticket.title}</h1>
           </div>
-          <span className={`shrink-0 rounded-full border px-3 py-1 text-sm font-semibold ${portalTicketStatusClass[ticket.status]}`}>
-            {portalTicketStatusLabel[ticket.status]}
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <span className={`shrink-0 rounded-full border px-3 py-1 text-sm font-semibold ${portalTicketStatusClass[ticket.status]}`}>
+              {portalTicketStatusLabel[ticket.status]}
+            </span>
+          </div>
         </div>
 
         <p className="mt-5 whitespace-pre-wrap text-sm leading-7 text-slate-600">{ticket.description}</p>
 
-        <div className="mt-6 grid gap-4 border-t border-slate-100 pt-5 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Aberto em</p>
-            <p className="mt-0.5 text-slate-700">{formatDate(ticket.createdAt)}</p>
+        <div className="mt-6 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Aberto em</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(ticket.createdAt)}</p>
           </div>
           {ticket.assigneeName ? (
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Responsável</p>
-              <p className="mt-0.5 text-slate-700">{ticket.assigneeName}</p>
+            <div className="rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Responsável</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{ticket.assigneeName}</p>
             </div>
           ) : null}
           {ticket.resolvedAt ? (
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Resolvido em</p>
-              <p className="mt-0.5 text-slate-700">{formatDate(ticket.resolvedAt)}</p>
+            <div className="rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Resolvido em</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(ticket.resolvedAt)}</p>
             </div>
           ) : null}
         </div>
       </div>
 
       {ticket.billing ? (
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-950">Resumo financeiro deste chamado</h2>
@@ -120,7 +122,7 @@ export default async function PortalTicketDetailPage({ params }: { params: Promi
       ) : null}
 
       {ticket.billing ? (
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           <h2 className="text-xl font-semibold text-slate-950">Como pagar</h2>
           <p className="mt-1 text-sm text-slate-500">Quando aplicável, use qualquer uma das opções abaixo para efetuar o pagamento.</p>
           <div className="mt-6">
@@ -130,7 +132,7 @@ export default async function PortalTicketDetailPage({ params }: { params: Promi
       ) : null}
 
       {documents.length > 0 ? (
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           <h2 className="text-xl font-semibold text-slate-950">Documentos relacionados</h2>
           <p className="mt-1 text-sm text-slate-500">Notas fiscais e demais documentos liberados para este chamado.</p>
           <div className="mt-6">
@@ -139,19 +141,16 @@ export default async function PortalTicketDetailPage({ params }: { params: Promi
         </div>
       ) : null}
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <h2 className="text-xl font-semibold text-slate-950">Histórico</h2>
         {ticket.history.length > 0 ? (
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 space-y-3">
             {ticket.history.map((item) => (
-              <div key={item.id} className="flex gap-3">
-                <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-300" />
-                <div>
-                  <p className="text-sm text-slate-700">{item.message}</p>
-                  <p className="mt-0.5 text-xs text-slate-400">
-                    {item.authorName} · {formatDate(item.createdAt)}
-                  </p>
-                </div>
+              <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+                <p className="text-sm leading-6 text-slate-700">{item.message}</p>
+                <p className="mt-2 text-xs text-slate-400">
+                  {item.authorName} • {formatDate(item.createdAt)}
+                </p>
               </div>
             ))}
           </div>
@@ -161,7 +160,7 @@ export default async function PortalTicketDetailPage({ params }: { params: Promi
       </div>
 
       {ticket.status !== "CLOSED" && ticket.status !== "CANCELED" ? (
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           <h2 className="text-xl font-semibold text-slate-950">Enviar mensagem</h2>
           <p className="mt-1 text-sm text-slate-500">Use este campo para complementar informações ou responder ao time.</p>
           <div className="mt-6">

@@ -22,7 +22,7 @@ import { userService } from "@/server/services/user-service";
 
 const financialStatusLabels: Record<string, { label: string; className: string }> = {
   PENDENTE: { label: "Pendente", className: "bg-slate-100 text-slate-700" },
-  EM_ANALISE: { label: "Em analise", className: "bg-blue-100 text-blue-700" },
+  EM_ANALISE: { label: "Em análise", className: "bg-blue-100 text-blue-700" },
   APROVADO: { label: "Aprovado", className: "bg-emerald-100 text-emerald-700" },
   FATURADO: { label: "Faturado", className: "bg-violet-100 text-violet-700" },
   PAGO: { label: "Pago", className: "bg-green-100 text-green-800" },
@@ -49,7 +49,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
     <div className="space-y-6">
       <PageHeader
         title={ticket.title}
-        description={`${ticket.number} - ${ticket.clientName}`}
+        description={`${ticket.number} • ${ticket.clientName}`}
         action={
           <div className="flex flex-wrap gap-2">
             <PriorityBadge priority={ticket.priority} />
@@ -58,15 +58,36 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
         }
       />
 
-      <TicketFlowOverview ticket={ticket} />
+      <div className="grid gap-3 sm:grid-cols-2 xl:hidden">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Responsável</p>
+          <p className="mt-1 text-sm font-semibold text-slate-950">{ticket.assigneeName ?? "Não atribuído"}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Atualizado</p>
+          <p className="mt-1 text-sm font-semibold text-slate-950">{formatDate(ticket.updatedAt)}</p>
+        </div>
+      </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <div className="space-y-6">
+      <div className="grid gap-6 xl:grid-cols-[0.72fr_1.28fr]">
+        <div className="space-y-6 xl:order-2">
+          <TicketFlowOverview ticket={ticket} />
+
+          {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && ticket.billing?.financialStatus === "PENDENTE" ? (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <span className="font-semibold">Financeiro pendente.</span>{" "}
+              Este chamado está {ticket.status === "RESOLVED" ? "resolvido" : "encerrado"} mas o ciclo financeiro ainda não foi avançado.{" "}
+              <a href={`/chamados/${ticket.id}/financeiro`} className="font-semibold underline">
+                Acessar financeiro →
+              </a>
+            </div>
+          ) : null}
+
           <Card>
             <CardHeader>
-              <CardTitle>Dados do chamado</CardTitle>
+              <CardTitle>Resumo do chamado</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid gap-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cliente</p>
                 <p className="mt-1 text-sm text-slate-900">{ticket.clientName}</p>
@@ -79,11 +100,11 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de atendimento</p>
                 <p className="mt-1 text-sm text-slate-900">{getAttendanceTypeLabel(ticket.attendanceType)}</p>
               </div>
-              <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Responsável</p>
-                <p className="mt-1 text-sm text-slate-900">{ticket.assigneeName ?? "Nao atribuido"}</p>
+              <div className="hidden xl:block">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Responsável</p>
+                <p className="mt-1 text-sm text-slate-900">{ticket.assigneeName ?? "Não atribuído"}</p>
               </div>
-              <div>
+              <div className="hidden xl:block">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizado</p>
                 <p className="mt-1 text-sm text-slate-900">{formatDate(ticket.updatedAt)}</p>
               </div>
@@ -100,14 +121,14 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 </div>
               ) : null}
               {ticket.closingReason ? (
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Motivo de encerramento</p>
                   <p className="mt-1 text-sm leading-6 text-slate-700">{ticket.closingReason}</p>
                 </div>
               ) : null}
-              <div className="md:col-span-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</p>
-                <p className="mt-1 text-sm leading-6 text-slate-700">{ticket.description}</p>
+              <div className="sm:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Descrição</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">{ticket.description}</p>
               </div>
             </CardContent>
           </Card>
@@ -123,16 +144,16 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
 
           <Card>
             <CardHeader>
-              <CardTitle>Historico</CardTitle>
+              <CardTitle>Histórico</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {ticket.history.map((item) => (
-                <div key={item.id} className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex items-center justify-between gap-4">
+                <div key={item.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <p className="font-semibold text-slate-950">{item.authorName}</p>
                     <p className="text-xs text-slate-500">{formatDate(item.createdAt)}</p>
                   </div>
-                  <p className="mt-2 text-sm text-slate-700">{item.message}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">{item.message}</p>
                 </div>
               ))}
             </CardContent>
@@ -141,7 +162,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
           <TicketAttachments attachments={ticket.attachments} />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 xl:order-1">
           {currentUser.role === "ADMIN" ? (
             <TicketDetailActions ticket={ticket} users={users} role={currentUser.role} currentUserId={currentUser.id} />
           ) : (
@@ -156,10 +177,15 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
               <CardContent className="space-y-4">
                 {ticket.billing ? (
                   <>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
-                        <span className={cn("mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold", financialStatusLabels[ticket.billing.financialStatus]?.className)}>
+                        <span
+                          className={cn(
+                            "mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold",
+                            financialStatusLabels[ticket.billing.financialStatus]?.className
+                          )}
+                        >
                           {financialStatusLabels[ticket.billing.financialStatus]?.label}
                         </span>
                       </div>
@@ -168,13 +194,13 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                         <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrency(ticket.billing.totalAmount)}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500">{ticket.billing.entries.length} lancamento(s) registrado(s)</p>
+                    <p className="text-xs text-slate-500">{ticket.billing.entries.length} lançamento(s) registrado(s)</p>
                   </>
                 ) : (
                   <p className="text-sm text-slate-500">Nenhum financeiro iniciado para este chamado.</p>
                 )}
                 <Link href={`/chamados/${id}/financeiro` as Route} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
-                  {ticket.billing ? "Gerenciar financeiro ->" : "Iniciar financeiro ->"}
+                  {ticket.billing ? "Gerenciar financeiro" : "Iniciar financeiro"}
                 </Link>
               </CardContent>
             </Card>

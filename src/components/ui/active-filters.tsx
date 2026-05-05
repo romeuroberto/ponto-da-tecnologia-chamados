@@ -22,14 +22,14 @@ export function ActiveFilters({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
       <span className="text-sm font-medium text-slate-600">Filtros ativos:</span>
       {filters.map((filter) => (
         <span key={`${filter.label}-${filter.value}`} className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
           {filter.label}: {filter.value}
         </span>
       ))}
-      <Link href={buildResetHref(pathname)} className="text-sm font-semibold text-sky-700">
+      <Link href={buildResetHref(pathname)} className="ml-auto text-sm font-semibold text-sky-700">
         Limpar tudo
       </Link>
     </div>

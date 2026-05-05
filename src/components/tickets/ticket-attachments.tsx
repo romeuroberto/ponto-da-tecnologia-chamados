@@ -17,10 +17,10 @@ export function TicketAttachments({ attachments }: { attachments: TicketAttachme
       <CardContent className="space-y-3">
         {attachments.length > 0 ? (
           attachments.map((attachment) => (
-            <div key={attachment.id} className="rounded-xl border border-slate-200 p-4">
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="font-semibold text-slate-950">{attachment.fileName}</p>
+            <div key={attachment.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-950">{attachment.fileName}</p>
                   <p className="text-sm text-slate-600">
                     {formatSize(attachment.sizeBytes)} • {formatDate(attachment.createdAt)}
                   </p>

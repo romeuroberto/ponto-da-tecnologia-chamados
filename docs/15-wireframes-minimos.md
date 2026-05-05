@@ -27,6 +27,10 @@ Mobile:
 - menu em drawer
 - conteudo em coluna unica
 
+Decisao registrada:
+- area interna: navegacao mobile em drawer
+- portal do cliente: navegacao mobile em bottom nav
+
 Itens da navegacao:
 - dashboard
 - chamados

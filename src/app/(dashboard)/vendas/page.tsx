@@ -46,7 +46,7 @@ export default async function VendasPage({
     <div className="space-y-6">
       <PageHeader
         title="Vendas"
-        description="Registro de vendas de peças e produtos para clientes."
+        description="Registro de vendas de materiais e produtos para clientes."
         action={
           <Link href={"/vendas/nova" as Route}>
             <Button>Nova venda</Button>

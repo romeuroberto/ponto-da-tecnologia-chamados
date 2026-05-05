@@ -83,6 +83,11 @@ Mensagens de erro devem orientar o usuario com linguagem simples e objetiva.
 - formularios com campos em coluna unica
 - acoes principais fixas ou de facil acesso
 
+### Decisao de navegacao mobile
+
+- area interna: usar menu em drawer
+- portal do cliente: usar bottom nav
+
 ### Em tablet
 
 - composicao intermediaria com bom aproveitamento horizontal

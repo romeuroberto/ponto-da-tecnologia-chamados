@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PortalDocumentList } from "@/components/portal/portal-document-list";
@@ -19,14 +20,14 @@ export default async function PortalSaleDetailPage({ params }: { params: Promise
   const { sale, documents, paymentInstructions } = data;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div>
-        <a href="/portal/vendas" className="text-sm font-semibold text-sky-700 hover:text-sky-800">
+        <Link href="/portal/vendas" className="text-sm font-semibold text-sky-700 hover:text-sky-800">
           ← Voltar para vendas
-        </a>
+        </Link>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{sale.number}</p>
@@ -55,7 +56,7 @@ export default async function PortalSaleDetailPage({ params }: { params: Promise
 
         <div className="mt-6 divide-y divide-slate-100 rounded-[1.5rem] border border-slate-200">
           {sale.items.map((item) => (
-            <div key={item.id} className="grid gap-2 px-5 py-4 md:grid-cols-[2fr_0.8fr_0.8fr_0.8fr]">
+            <div key={item.id} className="grid gap-2 px-4 py-4 sm:px-5 md:grid-cols-[2fr_0.8fr_0.8fr_0.8fr]">
               <div>
                 <p className="font-semibold text-slate-950">{item.partName}</p>
                 {item.partCode ? <p className="text-xs text-slate-400">{item.partCode}</p> : null}
@@ -68,7 +69,7 @@ export default async function PortalSaleDetailPage({ params }: { params: Promise
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <h2 className="text-xl font-semibold text-slate-950">Dados para pagamento</h2>
         <p className="mt-1 text-sm text-slate-500">Use estes dados se esta venda ainda estiver pendente.</p>
         <div className="mt-6">
@@ -76,7 +77,7 @@ export default async function PortalSaleDetailPage({ params }: { params: Promise
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
         <h2 className="text-xl font-semibold text-slate-950">Documentos relacionados</h2>
         <div className="mt-6">
           <PortalDocumentList documents={documents} />

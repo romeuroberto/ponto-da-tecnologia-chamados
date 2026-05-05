@@ -1,4 +1,5 @@
 import type { ClientInput } from "@/lib/validations/client";
+import { normalizeBrazilianPhone } from "@/lib/utils";
 import { isDatabaseConfigured } from "@/server/db-support";
 import { clientRepository } from "@/server/repositories/client-repository";
 import type { ClientSearchInput } from "@/server/repositories/client-repository";
@@ -21,6 +22,7 @@ export const clientService = {
     return clientRepository.create({
       ...input,
       email: input.email || undefined,
+      phone: normalizeBrazilianPhone(input.phone),
       billingProfile: input.billingProfile
         ? {
             ...input.billingProfile,
@@ -40,6 +42,7 @@ export const clientService = {
     return clientRepository.update(id, {
       ...input,
       email: input.email || undefined,
+      phone: normalizeBrazilianPhone(input.phone),
       billingProfile: input.billingProfile
         ? {
             ...input.billingProfile,

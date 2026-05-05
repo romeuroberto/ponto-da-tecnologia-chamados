@@ -14,10 +14,9 @@ export async function Topbar() {
   const user = session?.user;
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b-2 border-slate-100 bg-white px-4 shadow-md lg:px-8">
-      {/* Mobile: mostra a marca; Desktop: mostra contexto */}
+    <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:px-8">
       <div className="flex items-center gap-3">
-        <div className="lg:hidden rounded-xl px-3 py-1.5" style={{ backgroundColor: "#1B2D5E" }}>
+        <div className="rounded-xl px-3 py-1.5 lg:hidden" style={{ backgroundColor: "#1B2D5E" }}>
           <BrandMark />
         </div>
         <div className="hidden lg:flex lg:flex-col">
@@ -26,15 +25,12 @@ export async function Topbar() {
         </div>
       </div>
 
-      {/* Usuário + sair */}
       <div className="flex items-center gap-3">
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-slate-800">{user?.name ?? "Sem sessão"}</p>
-          <p className="text-xs text-slate-400">
-            {user ? roleLabels[user.role] : "Não autenticado"}
-          </p>
+          <p className="text-xs text-slate-400">{user ? roleLabels[user.role] : "Não autenticado"}</p>
         </div>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: "#1B2D5E" }}>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: "#1B2D5E" }}>
           {user?.name?.charAt(0).toUpperCase() ?? "?"}
         </div>
         <SignOutButton />

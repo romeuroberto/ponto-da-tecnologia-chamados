@@ -6,6 +6,9 @@
       "Bash(npx tsc *)",
       "Bash(del \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\")",
       "PowerShell(Remove-Item \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\" -Confirm:$false)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]"
     ]
   }
 }

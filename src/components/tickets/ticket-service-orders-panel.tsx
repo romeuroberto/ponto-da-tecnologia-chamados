@@ -141,6 +141,8 @@ export function TicketServiceOrdersPanel({
 
   const partOptions = useMemo(() => [...partCatalogItems].sort((a, b) => a.name.localeCompare(b.name)), [partCatalogItems]);
 
+  if (ticket.attendanceType === "REMOTE") return null;
+
   const canManage = (role === "ADMIN" || role === "ATTENDANT") && canOperateOnTicket(role, currentUserId, ticket.assigneeId);
   const createServiceSelection = getCatalogSelection(createFields.serviceType, serviceCatalogItems);
   const editServiceSelection = getCatalogSelection(editFields.serviceType, serviceCatalogItems);
@@ -230,11 +232,11 @@ export function TicketServiceOrdersPanel({
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-slate-950">Peças da OS</p>
+            <p className="text-sm font-semibold text-slate-950">Materiais da OS</p>
             <p className="text-xs text-slate-500">Use o catálogo para registrar material previsto ou aplicado nesta ordem.</p>
           </div>
           <Button type="button" variant="outline" onClick={() => setParts([...parts, emptyPartDraft()])}>
-            Adicionar peça
+            Adicionar material
           </Button>
         </div>
 
@@ -245,13 +247,13 @@ export function TicketServiceOrdersPanel({
             <div key={`${part.partCatalogItemId}-${index}`} className="grid gap-3 rounded-xl border border-slate-200 p-3">
               <div className="grid gap-3 md:grid-cols-[1.6fr_0.7fr_0.9fr]">
                 <div className="grid gap-2">
-                  <Label htmlFor={`part-${index}`}>Peça do catálogo</Label>
+                  <Label htmlFor={`part-${index}`}>Material do catálogo</Label>
                   <Select
                     id={`part-${index}`}
                     value={part.partCatalogItemId}
                     onChange={(event) => setParts(handlePartSelection(parts, index, event.target.value))}
                   >
-                    <option value="">Selecione uma peça</option>
+                    <option value="">Selecione um material</option>
                     {partOptions.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.code ? `${item.name} (${item.code})` : item.name}
@@ -261,12 +263,13 @@ export function TicketServiceOrdersPanel({
                   {selectedPart ? (
                     <p className="text-xs text-slate-500">
                       {selectedPart.code ? `Código: ${selectedPart.code} · ` : ""}
-                      Valor de referência: {formatCurrency(selectedPart.unitPrice)}
+                      Venda: {formatCurrency(selectedPart.unitPrice)}
+                      {selectedPart.resalePrice != null ? ` · Revenda: ${formatCurrency(selectedPart.resalePrice)}` : ""}
                     </p>
                   ) : null}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor={`quantity-${index}`}>Quantidade</Label>
+                  <Label htmlFor={`quantity-${index}`}>Qtd ({selectedPart?.unit ?? "un"})</Label>
                   <Input
                     id={`quantity-${index}`}
                     inputMode="decimal"
@@ -276,7 +279,18 @@ export function TicketServiceOrdersPanel({
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor={`unit-price-${index}`}>Valor de referência</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={`unit-price-${index}`}>Valor de referência</Label>
+                    {selectedPart?.resalePrice != null ? (
+                      <button
+                        type="button"
+                        className="text-xs text-sky-600 hover:underline"
+                        onClick={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(selectedPart.resalePrice!) }))}
+                      >
+                        Revenda
+                      </button>
+                    ) : null}
+                  </div>
                   <Input
                     id={`unit-price-${index}`}
                     value={part.unitPrice}
@@ -293,7 +307,7 @@ export function TicketServiceOrdersPanel({
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor={`part-notes-${index}`}>Observações da peça</Label>
+                <Label htmlFor={`part-notes-${index}`}>Observações do material</Label>
                 <Textarea
                   id={`part-notes-${index}`}
                   value={part.notes}
@@ -308,7 +322,7 @@ export function TicketServiceOrdersPanel({
                   variant="outline"
                   onClick={() => setParts(parts.length === 1 ? [emptyPartDraft()] : parts.filter((_, currentIndex) => currentIndex !== index))}
                 >
-                  Remover peça
+                  Remover material
                 </Button>
               </div>
             </div>
@@ -434,7 +448,7 @@ export function TicketServiceOrdersPanel({
                       ) : null}
                       {serviceOrder.parts.length > 0 ? (
                         <div className="md:col-span-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Peças vinculadas</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Materiais vinculados</p>
                           <div className="mt-2 space-y-2">
                             {serviceOrder.parts.map((part) => (
                               <div key={part.id} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">

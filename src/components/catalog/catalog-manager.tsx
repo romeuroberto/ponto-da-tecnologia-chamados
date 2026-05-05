@@ -7,9 +7,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency, formatCurrencyInput, parseCurrencyInput } from "@/lib/utils";
 import type { PartCatalogItem, ServiceCatalogItem } from "@/types";
+
+const UNIT_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "un", label: "un — Unidade" },
+  { value: "m", label: "m — Metro" },
+  { value: "kg", label: "kg — Quilograma" },
+  { value: "l", label: "l — Litro" },
+  { value: "cx", label: "cx — Caixa" },
+  { value: "pc", label: "pc — Pacote" },
+  { value: "rolo", label: "rolo — Rolo" },
+  { value: "par", label: "par — Par" }
+];
 
 type Mode = "services" | "parts" | "all";
 
@@ -17,14 +29,17 @@ type ServiceFormState = {
   name: string;
   description: string;
   defaultPrice: string;
+  resalePrice: string;
   active: boolean;
 };
 
 type PartFormState = {
   name: string;
   description: string;
+  unit: string;
   costPrice: string;
   unitPrice: string;
+  resalePrice: string;
   initialQuantity: string;
   active: boolean;
 };
@@ -37,14 +52,17 @@ const emptyServiceForm: ServiceFormState = {
   name: "",
   description: "",
   defaultPrice: formatCurrencyInput(0),
+  resalePrice: "",
   active: true
 };
 
 const emptyPartForm: PartFormState = {
   name: "",
   description: "",
+  unit: "un",
   costPrice: formatCurrencyInput(0),
   unitPrice: formatCurrencyInput(0),
+  resalePrice: "",
   initialQuantity: "0",
   active: true
 };
@@ -78,6 +96,7 @@ export function CatalogManager({
           name: item.name,
           description: item.description ?? "",
           defaultPrice: formatCurrencyInput(item.defaultPrice),
+          resalePrice: item.resalePrice != null ? formatCurrencyInput(item.resalePrice) : "",
           active: item.active
         }
       ])
@@ -90,8 +109,10 @@ export function CatalogManager({
         {
           name: item.name,
           description: item.description ?? "",
+          unit: item.unit,
           costPrice: formatCurrencyInput(item.costPrice),
           unitPrice: formatCurrencyInput(item.unitPrice),
+          resalePrice: item.resalePrice != null ? formatCurrencyInput(item.resalePrice) : "",
           active: item.active
         }
       ])
@@ -116,7 +137,7 @@ export function CatalogManager({
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message ?? "Nao foi possivel salvar.");
+      throw new Error(result.message ?? "Não foi possível salvar.");
     }
 
     return result.data;
@@ -126,7 +147,8 @@ export function CatalogManager({
     const draft = id ? serviceDrafts[id] : newService;
     const payload = {
       ...draft,
-      defaultPrice: parseCurrencyInput(draft.defaultPrice)
+      defaultPrice: parseCurrencyInput(draft.defaultPrice),
+      resalePrice: draft.resalePrice ? parseCurrencyInput(draft.resalePrice) : null
     };
 
     startTransition(async () => {
@@ -152,11 +174,12 @@ export function CatalogManager({
               name: data.name,
               description: data.description ?? "",
               defaultPrice: formatCurrencyInput(data.defaultPrice),
+              resalePrice: data.resalePrice != null ? formatCurrencyInput(data.resalePrice) : "",
               active: data.active
             }
           }));
           setEditingServiceId(null);
-          setMessage({ type: "success", text: "Servico atualizado com sucesso." });
+          setMessage({ type: "success", text: "Serviço atualizado com sucesso." });
           return;
         }
 
@@ -167,13 +190,14 @@ export function CatalogManager({
             name: data.name,
             description: data.description ?? "",
             defaultPrice: formatCurrencyInput(data.defaultPrice),
+            resalePrice: data.resalePrice != null ? formatCurrencyInput(data.resalePrice) : "",
             active: data.active
           }
         }));
         setNewService(emptyServiceForm);
-        setMessage({ type: "success", text: `Servico cadastrado com sucesso. Codigo gerado: ${data.code}.` });
+        setMessage({ type: "success", text: `Serviço cadastrado com sucesso. Código gerado: ${data.code}.` });
       } catch (error) {
-        const nextError = { message: error instanceof Error ? error.message : "Nao foi possivel salvar o servico." };
+        const nextError = { message: error instanceof Error ? error.message : "Não foi possível salvar o serviço." };
         if (id) {
           setServiceEditErrors((current) => ({ ...current, [id]: nextError }));
         } else {
@@ -190,6 +214,7 @@ export function CatalogManager({
       ...draft,
       costPrice: parseCurrencyInput(draft.costPrice),
       unitPrice: parseCurrencyInput(draft.unitPrice),
+      resalePrice: draft.resalePrice ? parseCurrencyInput(draft.resalePrice) : null,
       ...(id ? {} : { initialQuantity: Number(newPart.initialQuantity || "0") })
     };
 
@@ -215,13 +240,15 @@ export function CatalogManager({
             [id]: {
               name: data.name,
               description: data.description ?? "",
+              unit: data.unit,
               costPrice: formatCurrencyInput(data.costPrice),
               unitPrice: formatCurrencyInput(data.unitPrice),
+              resalePrice: data.resalePrice != null ? formatCurrencyInput(data.resalePrice) : "",
               active: data.active
             }
           }));
           setEditingPartId(null);
-          setMessage({ type: "success", text: "Peca atualizada com sucesso." });
+          setMessage({ type: "success", text: "Material atualizado com sucesso." });
           return;
         }
 
@@ -231,15 +258,17 @@ export function CatalogManager({
           [data.id]: {
             name: data.name,
             description: data.description ?? "",
+            unit: data.unit,
             costPrice: formatCurrencyInput(data.costPrice),
             unitPrice: formatCurrencyInput(data.unitPrice),
+            resalePrice: data.resalePrice != null ? formatCurrencyInput(data.resalePrice) : "",
             active: data.active
           }
         }));
         setNewPart(emptyPartForm);
-        setMessage({ type: "success", text: `Peca cadastrada com sucesso. Codigo gerado: ${data.code}.` });
+        setMessage({ type: "success", text: `Material cadastrado com sucesso. Código gerado: ${data.code}.` });
       } catch (error) {
-        const nextError = { message: error instanceof Error ? error.message : "Nao foi possivel salvar a peca." };
+        const nextError = { message: error instanceof Error ? error.message : "Não foi possível salvar o material." };
         if (id) {
           setPartEditErrors((current) => ({ ...current, [id]: nextError }));
         } else {
@@ -261,7 +290,7 @@ export function CatalogManager({
         {showServices ? (
           <Card>
             <CardHeader>
-              <CardTitle>Servicos</CardTitle>
+              <CardTitle>Serviços</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -271,7 +300,7 @@ export function CatalogManager({
                     <Input id="service-name" value={newService.name} onChange={(event) => setNewService((current) => ({ ...current, name: event.target.value }))} />
                   </div>
                   <div className="grid gap-2">
-                    <Label>Codigo</Label>
+                    <Label>Código</Label>
                     <div className="flex h-10 items-center rounded-lg border border-dashed border-slate-300 bg-white px-3 text-sm text-slate-500">
                       Gerado automaticamente no cadastro
                     </div>
@@ -279,7 +308,7 @@ export function CatalogManager({
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="service-price">Valor padrao</Label>
+                    <Label htmlFor="service-price">Valor padrão</Label>
                     <Input
                       id="service-price"
                       value={newService.defaultPrice}
@@ -292,18 +321,35 @@ export function CatalogManager({
                       }
                     />
                   </div>
-                  <label className="flex items-end gap-2 pb-2 text-sm text-slate-700">
+                  <div className="grid gap-2">
+                    <Label htmlFor="service-resale-price">Preço revenda <span className="text-slate-400 font-normal">(opcional)</span></Label>
+                    <Input
+                      id="service-resale-price"
+                      placeholder="—"
+                      value={newService.resalePrice}
+                      onChange={(event) => setNewService((current) => ({ ...current, resalePrice: event.target.value }))}
+                      onBlur={() =>
+                        setNewService((current) => ({
+                          ...current,
+                          resalePrice: current.resalePrice ? formatCurrencyInput(parseCurrencyInput(current.resalePrice)) : ""
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <label className="flex items-center gap-2 text-sm text-slate-700">
                     <input type="checkbox" checked={newService.active} onChange={(event) => setNewService((current) => ({ ...current, active: event.target.checked }))} />
-                    Servico ativo
+                    Serviço ativo
                   </label>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="service-description">Descricao</Label>
+                  <Label htmlFor="service-description">Descrição</Label>
                   <Textarea id="service-description" value={newService.description} onChange={(event) => setNewService((current) => ({ ...current, description: event.target.value }))} />
                   {newServiceError ? <p className="text-xs text-rose-600">{newServiceError.message}</p> : null}
                 </div>
                 <Button type="button" disabled={isPending} onClick={() => saveServiceItem()}>
-                  {isPending ? "Salvando..." : "Cadastrar servico"}
+                  {isPending ? "Salvando..." : "Cadastrar serviço"}
                 </Button>
               </div>
 
@@ -320,27 +366,41 @@ export function CatalogManager({
                           <div className="grid gap-4 md:grid-cols-2">
                             <Input value={draft.name} onChange={(event) => setServiceDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], name: event.target.value } }))} />
                             <div className="flex h-10 items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
-                              {item.code ?? "Codigo indisponivel"}
+                              {item.code ?? "Código indisponível"}
                             </div>
                           </div>
-                          <Input
-                            value={draft.defaultPrice}
-                            onChange={(event) => setServiceDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], defaultPrice: event.target.value } }))}
-                            onBlur={() =>
-                              setServiceDrafts((current) => ({
-                                ...current,
-                                [item.id]: {
-                                  ...current[item.id],
-                                  defaultPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].defaultPrice))
-                                }
-                              }))
-                            }
-                          />
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <Input
+                              placeholder="Valor padrão"
+                              value={draft.defaultPrice}
+                              onChange={(event) => setServiceDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], defaultPrice: event.target.value } }))}
+                              onBlur={() =>
+                                setServiceDrafts((current) => ({
+                                  ...current,
+                                  [item.id]: { ...current[item.id], defaultPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].defaultPrice)) }
+                                }))
+                              }
+                            />
+                            <Input
+                              placeholder="Preço revenda (opcional)"
+                              value={draft.resalePrice}
+                              onChange={(event) => setServiceDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], resalePrice: event.target.value } }))}
+                              onBlur={() =>
+                                setServiceDrafts((current) => ({
+                                  ...current,
+                                  [item.id]: {
+                                    ...current[item.id],
+                                    resalePrice: current[item.id].resalePrice ? formatCurrencyInput(parseCurrencyInput(current[item.id].resalePrice)) : ""
+                                  }
+                                }))
+                              }
+                            />
+                          </div>
                           <Textarea value={draft.description} onChange={(event) => setServiceDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], description: event.target.value } }))} />
                           {fieldError ? <p className="text-xs text-rose-600">{fieldError.message}</p> : null}
                           <label className="flex items-center gap-2 text-sm text-slate-700">
                             <input type="checkbox" checked={draft.active} onChange={(event) => setServiceDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], active: event.target.checked } }))} />
-                            Servico ativo
+                            Serviço ativo
                           </label>
                           <div className="flex gap-2">
                             <Button type="button" className="flex-1" disabled={isPending} onClick={() => saveServiceItem(item.id)}>
@@ -356,7 +416,8 @@ export function CatalogManager({
                           <div>
                             <p className="font-semibold text-slate-950">{item.name}</p>
                             <p className="mt-1 text-sm text-slate-600">
-                              {item.code ?? "Sem codigo"} · {item.active ? "Ativo" : "Inativo"} · {formatCurrency(item.defaultPrice)}
+                              {item.code ?? "Sem código"} · {item.active ? "Ativo" : "Inativo"} · {formatCurrency(item.defaultPrice)}
+                              {item.resalePrice != null ? <span className="ml-2 text-slate-400">· revenda {formatCurrency(item.resalePrice)}</span> : null}
                             </p>
                             {item.description ? <p className="mt-2 text-sm text-slate-600">{item.description}</p> : null}
                           </div>
@@ -376,7 +437,7 @@ export function CatalogManager({
         {showParts ? (
           <Card>
             <CardHeader>
-              <CardTitle>Pecas</CardTitle>
+              <CardTitle>Materiais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -386,15 +447,34 @@ export function CatalogManager({
                     <Input id="part-name" value={newPart.name} onChange={(event) => setNewPart((current) => ({ ...current, name: event.target.value }))} />
                   </div>
                   <div className="grid gap-2">
-                    <Label>Codigo</Label>
+                    <Label>Código</Label>
                     <div className="flex h-10 items-center rounded-lg border border-dashed border-slate-300 bg-white px-3 text-sm text-slate-500">
                       Gerado automaticamente no cadastro
                     </div>
                   </div>
                 </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="part-unit">Unidade</Label>
+                    <Select id="part-unit" value={newPart.unit} onChange={(event) => setNewPart((current) => ({ ...current, unit: event.target.value }))}>
+                      {UNIT_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="part-quantity">Quantidade inicial</Label>
+                    <Input
+                      id="part-quantity"
+                      inputMode="decimal"
+                      value={newPart.initialQuantity}
+                      onChange={(event) => setNewPart((current) => ({ ...current, initialQuantity: event.target.value }))}
+                    />
+                  </div>
+                </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="grid gap-2">
-                    <Label htmlFor="part-cost">Custo padrao</Label>
+                    <Label htmlFor="part-cost">Custo padrão</Label>
                     <Input
                       id="part-cost"
                       value={newPart.costPrice}
@@ -422,26 +502,32 @@ export function CatalogManager({
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="part-quantity">Quantidade inicial</Label>
+                    <Label htmlFor="part-resale-price">Preço revenda <span className="text-slate-400 font-normal">(opcional)</span></Label>
                     <Input
-                      id="part-quantity"
-                      inputMode="decimal"
-                      value={newPart.initialQuantity}
-                      onChange={(event) => setNewPart((current) => ({ ...current, initialQuantity: event.target.value }))}
+                      id="part-resale-price"
+                      placeholder="—"
+                      value={newPart.resalePrice}
+                      onChange={(event) => setNewPart((current) => ({ ...current, resalePrice: event.target.value }))}
+                      onBlur={() =>
+                        setNewPart((current) => ({
+                          ...current,
+                          resalePrice: current.resalePrice ? formatCurrencyInput(parseCurrencyInput(current.resalePrice)) : ""
+                        }))
+                      }
                     />
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="part-description">Descricao</Label>
+                  <Label htmlFor="part-description">Descrição</Label>
                   <Textarea id="part-description" value={newPart.description} onChange={(event) => setNewPart((current) => ({ ...current, description: event.target.value }))} />
                   {newPartError ? <p className="text-xs text-rose-600">{newPartError.message}</p> : null}
                 </div>
                 <label className="flex items-center gap-2 text-sm text-slate-700">
                   <input type="checkbox" checked={newPart.active} onChange={(event) => setNewPart((current) => ({ ...current, active: event.target.checked }))} />
-                  Peca ativa
+                  Material ativo
                 </label>
                 <Button type="button" disabled={isPending} onClick={() => savePartItem()}>
-                  {isPending ? "Salvando..." : "Cadastrar peca"}
+                  {isPending ? "Salvando..." : "Cadastrar material"}
                 </Button>
               </div>
 
@@ -458,43 +544,61 @@ export function CatalogManager({
                           <div className="grid gap-4 md:grid-cols-2">
                             <Input value={draft.name} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], name: event.target.value } }))} />
                             <div className="flex h-10 items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
-                              {item.code ?? "Codigo indisponivel"}
+                              {item.code ?? "Código indisponível"}
                             </div>
                           </div>
-                          <div className="grid gap-4 md:grid-cols-2">
+                          <div className="grid gap-4 md:grid-cols-3">
                             <Input
+                              placeholder="Custo padrão"
                               value={draft.costPrice}
                               onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], costPrice: event.target.value } }))}
                               onBlur={() =>
                                 setPartDrafts((current) => ({
                                   ...current,
-                                  [item.id]: {
-                                    ...current[item.id],
-                                    costPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].costPrice))
-                                  }
+                                  [item.id]: { ...current[item.id], costPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].costPrice)) }
                                 }))
                               }
                             />
                             <Input
+                              placeholder="Valor de venda"
                               value={draft.unitPrice}
                               onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unitPrice: event.target.value } }))}
                               onBlur={() =>
                                 setPartDrafts((current) => ({
                                   ...current,
+                                  [item.id]: { ...current[item.id], unitPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].unitPrice)) }
+                                }))
+                              }
+                            />
+                            <Input
+                              placeholder="Preço revenda (opcional)"
+                              value={draft.resalePrice}
+                              onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], resalePrice: event.target.value } }))}
+                              onBlur={() =>
+                                setPartDrafts((current) => ({
+                                  ...current,
                                   [item.id]: {
                                     ...current[item.id],
-                                    unitPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].unitPrice))
+                                    resalePrice: current[item.id].resalePrice ? formatCurrencyInput(parseCurrencyInput(current[item.id].resalePrice)) : ""
                                   }
                                 }))
                               }
                             />
                           </div>
+                          <Select
+                            value={draft.unit}
+                            onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unit: event.target.value } }))}
+                          >
+                            {UNIT_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </Select>
                           <Textarea value={draft.description} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], description: event.target.value } }))} />
                           {fieldError ? <p className="text-xs text-rose-600">{fieldError.message}</p> : null}
-                          <p className="text-xs text-slate-500">Saldo atual: {item.stockQuantity}. Ajustes de estoque continuam sendo feitos no modulo de estoque.</p>
+                          <p className="text-xs text-slate-500">Saldo atual: {item.stockQuantity} {item.unit}. Ajustes de estoque continuam sendo feitos no módulo de estoque.</p>
                           <label className="flex items-center gap-2 text-sm text-slate-700">
                             <input type="checkbox" checked={draft.active} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], active: event.target.checked } }))} />
-                            Peca ativa
+                            Material ativo
                           </label>
                           <div className="flex gap-2">
                             <Button type="button" className="flex-1" disabled={isPending} onClick={() => savePartItem(item.id)}>
@@ -510,10 +614,11 @@ export function CatalogManager({
                           <div>
                             <p className="font-semibold text-slate-950">{item.name}</p>
                             <p className="mt-1 text-sm text-slate-600">
-                              {item.code ?? "Sem codigo"} · {item.active ? "Ativa" : "Inativa"} · venda {formatCurrency(item.unitPrice)}
+                              {item.code ?? "Sem código"} · {item.active ? "Ativo" : "Inativo"} · {item.unit} · venda {formatCurrency(item.unitPrice)}
+                              {item.resalePrice != null ? <span className="ml-1 text-slate-400">· revenda {formatCurrency(item.resalePrice)}</span> : null}
                             </p>
                             <p className="mt-1 text-sm text-slate-600">
-                              custo {formatCurrency(item.costPrice)} · estoque {item.stockQuantity}
+                              custo {formatCurrency(item.costPrice)} · estoque {item.stockQuantity} {item.unit}
                             </p>
                             {item.description ? <p className="mt-2 text-sm text-slate-600">{item.description}</p> : null}
                           </div>

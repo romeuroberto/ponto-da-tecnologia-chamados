@@ -36,7 +36,7 @@ export const saleService = {
 
     const items = input.items.map((item) => {
       const part = partMap.get(item.partCatalogItemId);
-      if (!part) throw new Error(`Peça ${item.partCatalogItemId} não encontrada.`);
+      if (!part) throw new Error(`Material ${item.partCatalogItemId} não encontrado.`);
       return {
         partCatalogItemId: item.partCatalogItemId,
         partName: part.name,

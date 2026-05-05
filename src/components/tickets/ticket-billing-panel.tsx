@@ -68,10 +68,10 @@ function getFlowActions(status: FinancialStatus): FlowAction[] {
     case "PENDENTE":
       return [
         {
-          targetStatus: "FATURADO",
-          label: "Faturar diretamente",
+          targetStatus: "APROVADO",
+          label: "Aprovar valores",
           variant: "default",
-          description: "Caminho rápido: pula análise e aprovação. Ideal para equipes pequenas.",
+          description: "Confirma os valores e libera para faturamento.",
           isQuickPath: true
         },
         {
@@ -80,12 +80,6 @@ function getFlowActions(status: FinancialStatus): FlowAction[] {
           variant: "outline",
           description: "Use quando o pagamento já ocorreu. Encerra o ciclo completo de uma vez.",
           isQuickPath: true
-        },
-        {
-          targetStatus: "EM_ANALISE",
-          label: "Submeter para análise",
-          variant: "outline",
-          description: "Fluxo completo com revisão e aprovação separadas."
         },
         {
           targetStatus: "CANCELADO",
@@ -100,7 +94,7 @@ function getFlowActions(status: FinancialStatus): FlowAction[] {
           targetStatus: "APROVADO",
           label: "Aprovar valores",
           variant: "default",
-          description: "Confirma os valores e bloqueia os lançamentos para edição."
+          description: "Confirma os valores e libera para faturamento."
         },
         {
           targetStatus: "FATURADO",
@@ -493,27 +487,9 @@ export function TicketBillingPanel({
               ) : (
                 /* Botões de ação */
                 <div className="space-y-2">
-                  {/* Caminhos rápidos em destaque */}
-                  {quickPathActions.map((action) => (
-                    <Button key={action.targetStatus} type="button" variant="default" className="w-full" disabled={isPending}
-                      onClick={() => setPendingTransition(emptyTransition(action))}>
-                      {action.label}
-                    </Button>
-                  ))}
-
-                  {/* Separador entre rápido e detalhado */}
-                  {quickPathActions.length > 0 && detailedActions.length > 0 ? (
-                    <div className="relative py-1">
-                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
-                      <div className="relative flex justify-center">
-                        <span className="bg-white px-2 text-xs text-slate-400">ou fluxo detalhado</span>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {/* Fluxo detalhado */}
-                  {detailedActions.map((action) => (
-                    <Button key={action.targetStatus} type="button" variant="outline" className="w-full" disabled={isPending}
+                  {/* Ações principais */}
+                  {[...quickPathActions, ...detailedActions].map((action) => (
+                    <Button key={action.targetStatus} type="button" variant={action.variant === "default" ? "default" : "outline"} className="w-full" disabled={isPending}
                       onClick={() => setPendingTransition(emptyTransition(action))}>
                       {action.label}
                     </Button>
@@ -591,7 +567,7 @@ export function TicketBillingPanel({
                   <Select id="entryType" value={entryFields.entryType} disabled={isPending}
                     onChange={(e) => setEntryFields((c) => ({ ...c, entryType: e.target.value as BillingEntryType }))}>
                     <option value="LABOR">Horas</option>
-                    <option value="PART">Peça</option>
+                    <option value="PART">Material</option>
                     <option value="TRAVEL">Deslocamento</option>
                     <option value="EXTRA">Extra</option>
                   </Select>

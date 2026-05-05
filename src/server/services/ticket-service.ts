@@ -39,7 +39,7 @@ export const ticketService = {
   },
   async updateTicketFields(
     id: string,
-    input: { status: TicketStatus; priority: TicketPriority; assigneeId?: string; closingReason?: string },
+    input: { status: TicketStatus; priority: TicketPriority; assigneeId?: string; closingReason?: string; title?: string },
     authorId: string
   ) {
     if (!isDatabaseConfigured()) {
@@ -68,9 +68,50 @@ export const ticketService = {
       ...input,
       status: shouldStartTechnicalExecutionAutomatically ? "IN_PROGRESS" : input.status,
       assigneeId: input.assigneeId || undefined,
+      title: input.title || undefined,
       authorId
     });
   },
+  async checkIn(id: string, authorId: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL nao configurada.");
+    }
+
+    const author = await userRepository.findById(authorId);
+
+    if (!author?.active) {
+      throw new Error("Sua sessao nao corresponde mais a um usuario ativo. Entre novamente.");
+    }
+
+    const result = await ticketRepository.checkIn(id, authorId);
+
+    if (result === null) {
+      throw new Error("Chamado não encontrado ou check-in já registrado.");
+    }
+
+    return result;
+  },
+
+  async checkOut(id: string, authorId: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL nao configurada.");
+    }
+
+    const author = await userRepository.findById(authorId);
+
+    if (!author?.active) {
+      throw new Error("Sua sessao nao corresponde mais a um usuario ativo. Entre novamente.");
+    }
+
+    const result = await ticketRepository.checkOut(id, authorId);
+
+    if (result === null) {
+      throw new Error("Chamado não encontrado, check-in não realizado ou check-out já registrado.");
+    }
+
+    return result;
+  },
+
   async addComment(id: string, message: string, authorId: string) {
     if (!isDatabaseConfigured()) {
       throw new Error("DATABASE_URL nao configurada. Configure o banco antes de comentar em chamados reais.");

@@ -7,7 +7,7 @@ export default async function PortalDocumentsPage() {
   const documents = await portalService.listDocuments(user.clientId);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Documentos</p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-950">Notas fiscais e anexos financeiros</h1>

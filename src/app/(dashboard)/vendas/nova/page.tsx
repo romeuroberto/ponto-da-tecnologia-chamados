@@ -14,7 +14,7 @@ export default async function NovaVendaPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Nova venda" description="Registre a venda de peças para um cliente." />
+      <PageHeader title="Nova venda" description="Registre a venda de materiais para um cliente." />
       <SaleForm clients={clients} parts={parts} />
     </div>
   );

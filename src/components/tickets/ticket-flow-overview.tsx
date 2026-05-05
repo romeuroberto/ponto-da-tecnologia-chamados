@@ -36,12 +36,12 @@ export function TicketFlowOverview({ ticket }: { ticket: Ticket }) {
   return (
     <Card className="border-blue-100 bg-gradient-to-br from-white via-slate-50 to-blue-50/60">
       <CardHeader className="space-y-3">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-4">
           <div>
             <CardTitle>Fluxo do chamado</CardTitle>
             <p className="mt-2 text-sm leading-6 text-slate-600">{flow.overallDescription}</p>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[420px]">
+          <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status geral</p>
               <p className="mt-1 text-sm font-semibold text-slate-950">{flow.overallLabel}</p>
@@ -63,15 +63,12 @@ export function TicketFlowOverview({ ticket }: { ticket: Ticket }) {
           <p className="mt-1 text-sm font-medium text-amber-950">{flow.nextAction}</p>
         </div>
 
-        <div className="grid gap-3 xl:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {flow.stages.map((stage) => {
             const tone = stageTone(stage.state);
 
             return (
-              <div
-                key={stage.id}
-                className={cn("rounded-2xl border p-4 transition-colors", tone.border, tone.bg)}
-              >
+              <div key={stage.id} className={cn("rounded-2xl border p-4 transition-colors", tone.border, tone.bg)}>
                 <div className="flex items-center gap-3">
                   <span className={cn("h-3 w-3 rounded-full", tone.dot)} />
                   <p className={cn("text-sm font-semibold", tone.text)}>{stage.label}</p>

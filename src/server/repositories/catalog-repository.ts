@@ -10,6 +10,7 @@ interface ServiceCatalogRecord {
   code: string | null;
   description: string | null;
   defaultPrice: { toNumber(): number };
+  resalePrice: { toNumber(): number } | null;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -20,8 +21,10 @@ interface PartCatalogRecord {
   name: string;
   code: string | null;
   description: string | null;
+  unit: string;
   costPrice: { toNumber(): number };
   unitPrice: { toNumber(): number };
+  resalePrice: { toNumber(): number } | null;
   stockQuantity: { toNumber(): number };
   active: boolean;
   createdAt: Date;
@@ -36,14 +39,17 @@ export interface ServiceCatalogUpsertInput {
   name: string;
   description?: string;
   defaultPrice: number;
+  resalePrice?: number | null;
   active: boolean;
 }
 
 export interface PartCatalogUpsertInput {
   name: string;
   description?: string;
+  unit: "un" | "m" | "kg" | "l" | "cx" | "pc" | "rolo" | "par";
   costPrice: number;
   unitPrice: number;
+  resalePrice?: number | null;
   active: boolean;
 }
 
@@ -52,8 +58,10 @@ export interface PartCatalogLookup {
   name: string;
   code?: string;
   description?: string;
+  unit: string;
   costPrice: number;
   unitPrice: number;
+  resalePrice?: number;
   stockQuantity: number;
   active: boolean;
 }
@@ -91,6 +99,7 @@ function mapServiceCatalogItem(record: ServiceCatalogRecord): ServiceCatalogItem
     code: record.code ?? undefined,
     description: record.description ?? undefined,
     defaultPrice: record.defaultPrice.toNumber(),
+    resalePrice: record.resalePrice?.toNumber() ?? undefined,
     active: record.active,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString()
@@ -103,8 +112,10 @@ function mapPartCatalogItem(record: PartCatalogRecord): PartCatalogItem {
     name: record.name,
     code: record.code ?? undefined,
     description: record.description ?? undefined,
+    unit: record.unit,
     costPrice: record.costPrice.toNumber(),
     unitPrice: record.unitPrice.toNumber(),
+    resalePrice: record.resalePrice?.toNumber() ?? undefined,
     stockQuantity: record.stockQuantity.toNumber(),
     active: record.active,
     createdAt: record.createdAt.toISOString(),
@@ -182,6 +193,7 @@ export const catalogRepository = {
         code: extractNextCode(existingCodes.map((item) => item.code), "SRV"),
         description: normalizeOptionalString(input.description),
         defaultPrice: input.defaultPrice,
+        resalePrice: input.resalePrice ?? null,
         active: input.active
       }
     });
@@ -207,6 +219,7 @@ export const catalogRepository = {
         name: input.name,
         description: normalizeOptionalString(input.description),
         defaultPrice: input.defaultPrice,
+        resalePrice: input.resalePrice ?? null,
         active: input.active
       }
     });
@@ -218,7 +231,7 @@ export const catalogRepository = {
     const delegate = getPartCatalogDelegate();
 
     if (!delegate) {
-      throw new Error("Catalogo de pecas indisponivel. Reinicie a aplicacao e atualize o Prisma Client.");
+      throw new Error("Catalogo de materiais indisponivel. Reinicie a aplicacao e atualize o Prisma Client.");
     }
 
     const existingCodes = await delegate.findMany({
@@ -230,8 +243,10 @@ export const catalogRepository = {
         name: input.name,
         code: extractNextCode(existingCodes.map((item) => item.code), "PEC"),
         description: normalizeOptionalString(input.description),
+        unit: input.unit,
         costPrice: input.costPrice,
         unitPrice: input.unitPrice,
+        resalePrice: input.resalePrice ?? null,
         active: input.active
       }
     });
@@ -243,7 +258,7 @@ export const catalogRepository = {
     const delegate = getPartCatalogDelegate();
 
     if (!delegate) {
-      throw new Error("Catalogo de pecas indisponivel. Reinicie a aplicacao e atualize o Prisma Client.");
+      throw new Error("Catalogo de materiais indisponivel. Reinicie a aplicacao e atualize o Prisma Client.");
     }
 
     const existing = await delegate.findUnique({ where: { id }, select: { id: true } });
@@ -256,8 +271,10 @@ export const catalogRepository = {
       data: {
         name: input.name,
         description: normalizeOptionalString(input.description),
+        unit: input.unit,
         costPrice: input.costPrice,
         unitPrice: input.unitPrice,
+        resalePrice: input.resalePrice ?? null,
         active: input.active
       }
     });
@@ -290,6 +307,7 @@ export const catalogRepository = {
         name: record.name,
         code: record.code ?? undefined,
         description: record.description ?? undefined,
+        unit: record.unit,
         costPrice: record.costPrice.toNumber(),
         unitPrice: record.unitPrice.toNumber(),
         stockQuantity: record.stockQuantity.toNumber(),

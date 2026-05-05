@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
     if (!result.success) {
       return NextResponse.json(
-        { success: false, message: "Dados inválidos para cadastrar peça.", errors: result.error.flatten() },
+        { success: false, message: "Dados inválidos para cadastrar material.", errors: result.error.flatten() },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao cadastrar peça.";
+    const message = error instanceof Error ? error.message : "Falha ao cadastrar material.";
     return NextResponse.json({ success: false, message }, { status: message.includes("já está em uso") ? 409 : 500 });
   }
 }

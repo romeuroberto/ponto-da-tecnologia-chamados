@@ -11,8 +11,8 @@ export default async function ServiceCatalogPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Catalogo de servicos"
-        description="Cadastre servicos com codigo automatico e valor padrao para reutilizar no atendimento e no financeiro."
+        title="Catálogo de serviços"
+        description="Cadastre serviços com código automático e valor padrão para reutilizar no atendimento e no financeiro."
       />
       <CatalogManager initialServiceItems={serviceItems} mode="services" />
     </div>

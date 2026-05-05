@@ -17,7 +17,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
     if (!result.success) {
       return NextResponse.json(
-        { success: false, message: "Dados inválidos para atualizar peça.", errors: result.error.flatten() },
+        { success: false, message: "Dados inválidos para atualizar material.", errors: result.error.flatten() },
         { status: 400 }
       );
     }
@@ -26,12 +26,12 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     const data = await catalogService.updatePartItem(id, result.data);
 
     if (!data) {
-      return NextResponse.json({ success: false, message: "Peça não encontrada." }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Material não encontrado." }, { status: 404 });
     }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao atualizar peça.";
+    const message = error instanceof Error ? error.message : "Falha ao atualizar material.";
     return NextResponse.json({ success: false, message }, { status: message.includes("já está em uso") ? 409 : 500 });
   }
 }

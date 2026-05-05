@@ -3,15 +3,13 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { PageHeader } from "@/components/layout/page-header";
 import { TicketCard } from "@/components/tickets/ticket-card";
+import { TicketFilters } from "@/components/tickets/ticket-filters";
 import { TicketTable } from "@/components/tickets/ticket-table";
 import { ActiveFilters } from "@/components/ui/active-filters";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ResultsSummary } from "@/components/ui/results-summary";
-import { Select } from "@/components/ui/select";
 import { getSlaInfo } from "@/lib/sla";
 import { canCreateTicket } from "@/server/auth/permissions";
 import { getParam } from "@/server/search-params";
@@ -61,103 +59,56 @@ export default async function TicketsPage({
   ].filter((item): item is { label: string; value: string } => Boolean(item));
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <PageHeader
         title="Chamados"
         description="Tela principal da operação com foco em busca, filtros e acompanhamento."
         action={
           canCreate ? (
             <Link href="/chamados/novo">
-              <Button>Novo chamado</Button>
+              <Button className="w-full sm:w-auto">Novo chamado</Button>
             </Link>
           ) : null
         }
       />
+
       <ResultsSummary label="chamados" total={result.total} page={result.page} totalPages={result.totalPages} />
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-rose-200 bg-rose-50/60">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-rose-700">SLA vencido nesta página</p>
-            <p className="mt-2 text-3xl font-semibold text-rose-950">{currentPageSlaBreached}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-amber-200 bg-amber-50/60">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-amber-700">SLA em risco nesta página</p>
-            <p className="mt-2 text-3xl font-semibold text-amber-950">{currentPageSlaWarning}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-sky-200 bg-sky-50/60">
-          <CardContent className="p-4">
-            <p className="text-sm font-medium text-sky-700">Atalhos operacionais</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link href="/chamados?priority=CRITICAL&sort=priority_desc" className="text-sm font-semibold text-sky-700">
-                Críticos
-              </Link>
-              <span className="text-slate-300">|</span>
-              <Link href="/chamados?status=OPEN&sort=updated_desc" className="text-sm font-semibold text-sky-700">
-                Abertos
-              </Link>
-              <span className="text-slate-300">|</span>
-              <Link href="/chamados?status=WAITING_CUSTOMER&sort=updated_desc" className="text-sm font-semibold text-sky-700">
-                Aguardando cliente
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">SLA vencido</p>
+          <p className="mt-2 text-3xl font-semibold text-rose-950">{currentPageSlaBreached}</p>
+          <p className="mt-1 text-sm text-rose-700">Chamados desta página fora do prazo.</p>
+        </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">SLA em risco</p>
+          <p className="mt-2 text-3xl font-semibold text-amber-950">{currentPageSlaWarning}</p>
+          <p className="mt-1 text-sm text-amber-700">Acompanhe antes de estourar o prazo.</p>
+        </div>
+        <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Atalhos</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/chamados?priority=CRITICAL&sort=priority_desc" className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm">
+              Críticos
+            </Link>
+            <Link href="/chamados?status=OPEN&sort=updated_desc" className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm">
+              Abertos
+            </Link>
+            <Link href="/chamados?status=WAITING_CUSTOMER&sort=updated_desc" className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm">
+              Aguardando cliente
+            </Link>
+          </div>
+        </div>
       </div>
+
       <ActiveFilters pathname="/chamados" filters={activeFilters} />
-      <form action="/chamados">
-        <Card>
-          <CardContent className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-7">
-            <Input name="q" defaultValue={q} placeholder="Buscar por número, título ou cliente" />
-            <Select name="status" defaultValue={status}>
-              <option value="">Todos os status</option>
-              <option value="OPEN">Aberto</option>
-              <option value="IN_PROGRESS">Em atendimento</option>
-              <option value="WAITING_CUSTOMER">Aguardando cliente</option>
-              <option value="RESOLVED">Resolvido</option>
-              <option value="CLOSED">Encerrado</option>
-            </Select>
-            <Select name="priority" defaultValue={priority}>
-              <option value="">Todas as prioridades</option>
-              <option value="LOW">Baixa</option>
-              <option value="MEDIUM">Média</option>
-              <option value="HIGH">Alta</option>
-              <option value="CRITICAL">Crítica</option>
-            </Select>
-            <Select name="client" defaultValue={client}>
-              <option value="">Todos os clientes</option>
-              {clients.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-            <Input name="from" type="date" defaultValue={from} />
-            <Input name="to" type="date" defaultValue={to} />
-            <Select name="sort" defaultValue={sort}>
-              <option value="updated_desc">Atualização mais recente</option>
-              <option value="updated_asc">Atualização mais antiga</option>
-              <option value="created_desc">Abertura mais recente</option>
-              <option value="created_asc">Abertura mais antiga</option>
-              <option value="priority_desc">Maior prioridade</option>
-              <option value="priority_asc">Menor prioridade</option>
-            </Select>
-            <div className="flex gap-2">
-              <input type="hidden" name="page" value="1" />
-              <Button type="submit" variant="secondary">
-                Aplicar filtros
-              </Button>
-              <Link href="/chamados">
-                <Button type="button" variant="outline">
-                  Limpar
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
+
+      <TicketFilters
+        clients={clients}
+        defaults={{ q, status, priority, client, from, to, sort }}
+        activeFiltersCount={activeFilters.length}
+      />
+
       <div className="space-y-4 lg:hidden">
         {result.items.length > 0 ? (
           result.items.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
@@ -165,7 +116,11 @@ export default async function TicketsPage({
           <EmptyState title="Nenhum chamado encontrado" description="Ajuste os filtros ou limpe a busca para ver outros resultados." />
         )}
       </div>
-      {result.items.length > 0 ? <TicketTable tickets={result.items} currentSort={sort} params={{ q, status, priority, client, from, to }} /> : null}
+
+      {result.items.length > 0 ? (
+        <TicketTable tickets={result.items} currentSort={sort} params={{ q, status, priority, client, from, to }} />
+      ) : null}
+
       <PaginationControls pathname="/chamados" page={result.page} totalPages={result.totalPages} params={{ q, status, priority, client, from, to, sort }} />
     </div>
   );

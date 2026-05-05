@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FormMessage } from "./form-message";
@@ -143,7 +144,7 @@ export function ClientForm({ client }: { client?: Client }) {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" value={formData.phone} onChange={(event) => handleChange("phone", event.target.value)} placeholder="(00) 00000-0000" />
+              <PhoneInput id="phone" value={formData.phone} onValueChange={(value) => handleChange("phone", value)} placeholder="(00) 00000-0000" />
             </div>
           </div>
           <div className="grid gap-2">

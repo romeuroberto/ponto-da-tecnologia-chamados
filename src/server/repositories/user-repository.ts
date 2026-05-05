@@ -44,7 +44,7 @@ export const userRepository = {
   async listAssignable() {
     if (!isDatabaseConfigured()) {
       return users
-        .filter((user) => user.active && (user.role === "ATTENDANT" || user.role === "TECHNICIAN"))
+        .filter((user) => user.active && (user.role === "ADMIN" || user.role === "ATTENDANT" || user.role === "TECHNICIAN"))
         .sort((left, right) => left.name.localeCompare(right.name));
     }
 
@@ -52,7 +52,7 @@ export const userRepository = {
       where: {
         active: true,
         role: {
-          in: ["ATTENDANT", "TECHNICIAN"]
+          in: ["ADMIN", "ATTENDANT", "TECHNICIAN"]
         }
       },
       orderBy: [{ role: "asc" }, { name: "asc" }]

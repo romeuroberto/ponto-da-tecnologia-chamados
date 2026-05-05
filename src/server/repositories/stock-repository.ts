@@ -16,6 +16,7 @@ export const stockRepository = {
       name: r.name,
       code: r.code ?? undefined,
       description: r.description ?? undefined,
+      unit: r.unit,
       costPrice: Number(r.costPrice),
       unitPrice: Number(r.unitPrice),
       stockQuantity: Number(r.stockQuantity),

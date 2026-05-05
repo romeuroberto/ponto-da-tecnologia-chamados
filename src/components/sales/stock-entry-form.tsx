@@ -50,7 +50,7 @@ export function StockEntryForm({ parts }: { parts: PartCatalogItem[] }) {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid gap-1.5">
-            <Label>Peça</Label>
+            <Label>Material</Label>
             <Select value={partId} onChange={(e) => setPartId(e.target.value)}>
               <option value="">Selecione</option>
               {parts.map((p) => (

@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { FormMessage } from "@/components/forms/form-message";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { companyProfileSchema } from "@/lib/validations/portal-admin";
@@ -106,7 +107,7 @@ export default async function CompanyPage({
               </div>
               <div className="grid gap-2">
                 <label htmlFor="phone" className="text-sm font-medium text-slate-700">Telefone</label>
-                <Input id="phone" name="phone" defaultValue={profile?.phone ?? ""} />
+                <PhoneInput id="phone" name="phone" defaultValue={profile?.phone ?? ""} placeholder="(00) 00000-0000" />
               </div>
               <div className="grid gap-2">
                 <label htmlFor="website" className="text-sm font-medium text-slate-700">Site</label>

@@ -19,7 +19,7 @@ export async function requireActivePartCatalogItems(
     const catalogItem = catalogById.get(part.partCatalogItemId);
 
     if (!catalogItem) {
-      throw new Error("Uma das peças selecionadas não foi encontrada no catálogo.");
+      throw new Error("Um dos materiais selecionados não foi encontrado no catálogo.");
     }
 
     return {

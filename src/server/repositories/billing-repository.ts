@@ -61,7 +61,7 @@ function buildFinancialTimestamps(
 function getEntryTypeLabel(type: BillingEntryType) {
   const labels: Record<BillingEntryType, string> = {
     LABOR: "Horas",
-    PART: "Peça",
+    PART: "Material",
     TRAVEL: "Deslocamento",
     EXTRA: "Extra"
   };

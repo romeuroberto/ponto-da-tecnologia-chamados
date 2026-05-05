@@ -5,6 +5,34 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function extractDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+export function formatBrazilianPhone(value: string) {
+  const digits = extractDigits(value).slice(0, 11);
+
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+export function normalizeBrazilianPhone(value?: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const digits = extractDigits(value);
+  if (digits.length === 0) {
+    return undefined;
+  }
+
+  return formatBrazilianPhone(digits);
+}
+
 export function formatDate(value: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",

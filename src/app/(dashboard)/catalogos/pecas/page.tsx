@@ -11,8 +11,8 @@ export default async function PartCatalogPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Catalogo de pecas"
-        description="Cadastre pecas com codigo automatico, custo, valor de venda e saldo inicial para alimentar vendas e estoque."
+        title="Catálogo de materiais"
+        description="Cadastre materiais com código automático, custo, valor de venda e saldo inicial para alimentar vendas e estoque."
       />
       <CatalogManager initialPartItems={partItems} mode="parts" />
     </div>

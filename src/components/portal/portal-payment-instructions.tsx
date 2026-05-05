@@ -6,7 +6,7 @@ import type { PaymentInstruction } from "@/types";
 export function PortalPaymentInstructions({ instructions }: { instructions: PaymentInstruction[] }) {
   if (instructions.length === 0) {
     return (
-      <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
+      <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 p-6 text-sm text-slate-500">
         Nenhuma instrução de pagamento cadastrada no momento.
       </div>
     );
@@ -15,7 +15,7 @@ export function PortalPaymentInstructions({ instructions }: { instructions: Paym
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {instructions.map((instruction) => (
-        <div key={instruction.id} className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div key={instruction.id} className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">{instruction.paymentChannel}</p>
@@ -36,7 +36,7 @@ export function PortalPaymentInstructions({ instructions }: { instructions: Paym
                 <img
                   src={instruction.qrCodeImagePath}
                   alt={`QR Code ${instruction.title}`}
-                  className="mt-3 h-48 w-48 rounded-2xl border border-slate-200 bg-white object-contain"
+                  className="mt-3 h-48 w-full rounded-2xl border border-slate-200 bg-white object-contain sm:w-48"
                 />
               </div>
             ) : null}

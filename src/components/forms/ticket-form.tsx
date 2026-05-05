@@ -122,7 +122,7 @@ export function TicketForm({ clients, users }: { clients: Client[]; users: AppUs
               placeholder="Descreva o problema com o máximo de contexto útil"
             />
           </div>
-          <div className="grid gap-2 md:grid-cols-2">
+          <div className="grid gap-2 md:grid-cols-2 md:items-start">
             <div className="grid gap-2">
               <Label htmlFor="category">Categoria</Label>
               <Select id="category" value={formData.category} onChange={(event) => updateField("category", event.target.value)}>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { FieldVisitCheckin } from "@/components/tickets/field-visit-checkin";
 import { FormMessage } from "@/components/forms/form-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,8 @@ import type { AppUser, Ticket } from "@/types";
 export function TicketDetailActions({
   ticket,
   users,
-  role
+  role,
+  currentUserId = ""
 }: {
   ticket: Ticket;
   users: AppUser[];
@@ -32,13 +34,15 @@ export function TicketDetailActions({
     status: ticket.status,
     priority: ticket.priority,
     assigneeId: ticket.assigneeId ?? "",
-    closingReason: ticket.closingReason ?? ""
+    closingReason: ticket.closingReason ?? "",
+    title: ticket.title
   });
   const [comment, setComment] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const canEditStatus = canEditTicketStatus(role);
   const canEditPriorityValue = canEditTicketPriority(role);
   const canEditAssignment = canEditTicketAssignment(role);
+  const canEditTitle = role === "ADMIN" || role === "ATTENDANT";
   const canComment = canCommentTicket(role);
   const canSaveFields = canEditStatus || canEditPriorityValue || canEditAssignment;
   const requiresClosingReason = fields.status === "CLOSED" || fields.status === "CANCELED";
@@ -52,65 +56,41 @@ export function TicketDetailActions({
     startTransition(async () => {
       const response = await fetch(`/api/tickets/${ticket.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(fields)
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setMessage({
-          type: "error",
-          text: result.message ?? "Não foi possível atualizar o chamado."
-        });
+        setMessage({ type: "error", text: result.message ?? "Não foi possível atualizar o chamado." });
         return;
       }
 
-      setMessage({
-        type: "success",
-        text: "Chamado atualizado com sucesso."
-      });
+      setMessage({ type: "success", text: "Chamado atualizado com sucesso." });
       router.refresh();
     });
   }
 
   function reopenTicket() {
-    setFields((current) => ({
-      ...current,
-      status: "OPEN",
-      closingReason: ""
-    }));
+    setFields((current) => ({ ...current, status: "OPEN", closingReason: "" }));
     setMessage(null);
 
     startTransition(async () => {
       const response = await fetch(`/api/tickets/${ticket.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          ...fields,
-          status: "OPEN",
-          closingReason: ""
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...fields, status: "OPEN", closingReason: "" })
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setMessage({
-          type: "error",
-          text: result.message ?? "Não foi possível reabrir o chamado."
-        });
+        setMessage({ type: "error", text: result.message ?? "Não foi possível reabrir o chamado." });
         return;
       }
 
-      setMessage({
-        type: "success",
-        text: "Chamado reaberto com sucesso."
-      });
+      setMessage({ type: "success", text: "Chamado reaberto com sucesso." });
       router.refresh();
     });
   }
@@ -121,37 +101,26 @@ export function TicketDetailActions({
     startTransition(async () => {
       const response = await fetch(`/api/tickets/${ticket.id}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: comment })
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        setMessage({
-          type: "error",
-          text: result.message ?? "Não foi possível registrar o comentário."
-        });
+        setMessage({ type: "error", text: result.message ?? "Não foi possível registrar o comentário." });
         return;
       }
 
       setComment("");
-      setMessage({
-        type: "success",
-        text: "Comentário adicionado ao histórico."
-      });
+      setMessage({ type: "success", text: "Comentário adicionado ao histórico." });
       router.refresh();
     });
   }
 
   function submitAttachment() {
     if (!attachment) {
-      setMessage({
-        type: "error",
-        text: "Selecione um arquivo antes de enviar."
-      });
+      setMessage({ type: "error", text: "Selecione um arquivo antes de enviar." });
       return;
     }
 
@@ -169,18 +138,12 @@ export function TicketDetailActions({
       const result = await response.json();
 
       if (!response.ok) {
-        setMessage({
-          type: "error",
-          text: result.message ?? "Não foi possível enviar o anexo."
-        });
+        setMessage({ type: "error", text: result.message ?? "Não foi possível enviar o anexo." });
         return;
       }
 
       setAttachment(null);
-      setMessage({
-        type: "success",
-        text: "Anexo enviado com sucesso."
-      });
+      setMessage({ type: "success", text: "Anexo enviado com sucesso." });
       router.refresh();
     });
   }
@@ -188,8 +151,10 @@ export function TicketDetailActions({
   return (
     <div className="space-y-6">
       {message ? <FormMessage type={message.type} message={message.text} /> : null}
+      <FieldVisitCheckin ticket={ticket} role={role} currentUserId={currentUserId} />
+
       {canSaveFields ? (
-        <Card>
+        <Card className="xl:sticky xl:top-24">
           <CardHeader>
             <CardTitle>Ações rápidas</CardTitle>
           </CardHeader>
@@ -198,6 +163,12 @@ export function TicketDetailActions({
               <p className="font-semibold text-slate-950">Etapa atual: {flow.currentStageLabel}</p>
               <p className="mt-1">{flow.nextAction}</p>
             </div>
+            {canEditTitle ? (
+              <div className="grid gap-2">
+                <Label htmlFor="title">Título</Label>
+                <Input id="title" value={fields.title} onChange={(event) => setFields((current) => ({ ...current, title: event.target.value }))} placeholder="Título do chamado" />
+              </div>
+            ) : null}
             {canEditStatus ? (
               <div className="grid gap-2">
                 <Label htmlFor="status">Status técnico</Label>
@@ -252,12 +223,7 @@ export function TicketDetailActions({
             {requiresClosingReason ? (
               <div className="grid gap-2">
                 <Label htmlFor="closingReason">Motivo do encerramento</Label>
-                <Textarea
-                  id="closingReason"
-                  value={fields.closingReason}
-                  onChange={(event) => setFields((current) => ({ ...current, closingReason: event.target.value }))}
-                  placeholder="Descreva por que o chamado foi encerrado ou cancelado"
-                />
+                <Textarea id="closingReason" value={fields.closingReason} onChange={(event) => setFields((current) => ({ ...current, closingReason: event.target.value }))} placeholder="Descreva por que o chamado foi encerrado ou cancelado" />
               </div>
             ) : null}
             <Button type="button" className="w-full" disabled={isPending} onClick={saveFields}>
@@ -271,6 +237,7 @@ export function TicketDetailActions({
           </CardContent>
         </Card>
       ) : null}
+
       {canComment ? (
         <Card>
           <CardHeader>
@@ -278,12 +245,13 @@ export function TicketDetailActions({
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Registrar comentário, retorno do cliente ou tratativa executada" />
-            <Button type="button" className="w-full" disabled={isPending} onClick={submitComment}>
+            <Button type="button" className="w-full" disabled={isPending || !comment.trim()} onClick={submitComment}>
               {isPending ? "Enviando..." : "Adicionar ao histórico"}
             </Button>
           </CardContent>
         </Card>
       ) : null}
+
       {canComment ? (
         <Card>
           <CardHeader>

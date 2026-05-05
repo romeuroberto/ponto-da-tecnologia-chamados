@@ -38,7 +38,7 @@ export default async function VendaDetailPage({ params }: { params: Promise<{ id
             <CardContent className="p-0">
               <div className="divide-y divide-slate-100">
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-6 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <span>Peça</span><span>Qtd</span><span>Unit.</span><span className="text-right">Total</span>
+                  <span>Material</span><span>Qtd</span><span>Unit.</span><span className="text-right">Total</span>
                 </div>
                 {sale.items.map((item) => (
                   <div key={item.id} className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-6 py-3 text-sm">

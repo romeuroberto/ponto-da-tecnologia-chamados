@@ -18,6 +18,7 @@ import type {
   TicketBilling,
   TicketHistoryItem
 } from "@/types";
+import { normalizeBrazilianPhone } from "@/lib/utils";
 
 interface UserRecord {
   id: string;
@@ -145,6 +146,8 @@ interface TicketRecord {
   resolvedAt: Date | null;
   closedAt: Date | null;
   closingReason: string | null;
+  checkedInAt: Date | null;
+  checkedOutAt: Date | null;
   client: ClientRecord;
   assignee: UserRecord | null;
   openedBy: UserRecord;
@@ -314,7 +317,7 @@ export function mapClient(record: ClientRecord): Client {
     document: record.document ?? undefined,
     contactName: record.contactName,
     email: record.email ?? undefined,
-    phone: record.phone ?? undefined,
+    phone: normalizeBrazilianPhone(record.phone),
     notes: record.notes ?? undefined,
     active: record.active,
     ticketCount: record._count?.tickets ?? 0,
@@ -331,7 +334,7 @@ export function mapCompanyProfile(record: CompanyProfileRecord): CompanyProfile 
     stateRegistration: record.stateRegistration ?? undefined,
     municipalRegistration: record.municipalRegistration ?? undefined,
     financialEmail: record.financialEmail ?? undefined,
-    phone: record.phone ?? undefined,
+    phone: normalizeBrazilianPhone(record.phone),
     website: record.website ?? undefined,
     addressLine1: record.addressLine1 ?? undefined,
     addressLine2: record.addressLine2 ?? undefined,
@@ -495,6 +498,8 @@ export function mapTicket(record: TicketRecord): Ticket {
     resolvedAt: record.resolvedAt?.toISOString() ?? undefined,
     closedAt: record.closedAt?.toISOString() ?? undefined,
     closingReason: record.closingReason ?? undefined,
+    checkedInAt: record.checkedInAt?.toISOString() ?? undefined,
+    checkedOutAt: record.checkedOutAt?.toISOString() ?? undefined,
     history: record.history.map(mapTicketHistory),
     attachments: (record.attachments ?? []).map(mapTicketAttachment),
     billing: record.billing ? mapTicketBilling(record.billing) : undefined,

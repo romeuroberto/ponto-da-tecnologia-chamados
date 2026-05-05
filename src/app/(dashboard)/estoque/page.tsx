@@ -35,13 +35,13 @@ export default async function EstoquePage() {
     <div className="space-y-6">
       <PageHeader
         title="Estoque"
-        description="Posição atual de peças e histórico de movimentações."
+        description="Posição atual de materiais e histórico de movimentações."
       />
 
       {lowStock.length > 0 && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
           <p className="text-sm font-semibold text-rose-700">
-            {lowStock.length} peça(s) com estoque zerado ou negativo:{" "}
+            {lowStock.length} material(is) com estoque zerado ou negativo:{" "}
             <span className="font-normal">{lowStock.map((p) => p.name).join(", ")}</span>
           </p>
         </div>
@@ -55,7 +55,7 @@ export default async function EstoquePage() {
               {parts.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-6 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <span>Peça</span><span>Código</span><span className="text-right">Preço unit.</span><span className="text-right">Em estoque</span>
+                    <span>Material</span><span>Código</span><span className="text-right">Preço unit.</span><span className="text-right">Em estoque</span>
                   </div>
                   {parts.filter((p) => p.active).map((part) => (
                     <div key={part.id} className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center gap-3 px-6 py-3 text-sm">
@@ -63,14 +63,14 @@ export default async function EstoquePage() {
                       <span className="text-slate-500">{part.code ?? "—"}</span>
                       <span className="text-right text-slate-600">{formatCurrency(part.unitPrice)}</span>
                       <span className={`text-right font-semibold ${part.stockQuantity > 0 ? "text-slate-950" : "text-rose-600"}`}>
-                        {Number(part.stockQuantity)}
+                        {Number(part.stockQuantity)} {part.unit}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="p-6">
-                  <EmptyState title="Sem peças cadastradas" description="Cadastre peças no módulo de Catálogos." />
+                  <EmptyState title="Sem materiais cadastrados" description="Cadastre materiais no módulo de Catálogos." />
                 </div>
               )}
             </CardContent>
@@ -82,7 +82,7 @@ export default async function EstoquePage() {
               {movements.length > 0 ? (
                 <div className="divide-y divide-slate-100">
                   <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-3 px-6 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <span>Peça</span><span>Tipo</span><span className="text-right">Qtd</span><span className="text-right">Data</span>
+                    <span>Material</span><span>Tipo</span><span className="text-right">Qtd</span><span className="text-right">Data</span>
                   </div>
                   {movements.map((m) => (
                     <div key={m.id} className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center gap-3 px-6 py-3 text-sm">

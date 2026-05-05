@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { FormMessage } from "@/components/forms/form-message";
+import { FieldVisitCheckin } from "@/components/tickets/field-visit-checkin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -59,9 +60,7 @@ function getFlowActions(status: Ticket["status"], role: AppUser["role"]): FlowAc
 
     case "CLOSED":
     case "CANCELED":
-      return [
-        { label: "Reabrir chamado", targetStatus: "OPEN", variant: "outline", requiresReason: false }
-      ];
+      return [{ label: "Reabrir chamado", targetStatus: "OPEN", variant: "outline", requiresReason: false }];
 
     default:
       return [];
@@ -85,8 +84,6 @@ export function TicketFlowActions({
   const [comment, setComment] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [assigneeId, setAssigneeId] = useState(ticket.assigneeId ?? "");
-
-  // Pending action - when set, shows the confirmation step
   const [pendingAction, setPendingAction] = useState<FlowAction | null>(null);
   const [closingReason, setClosingReason] = useState("");
 
@@ -220,24 +217,21 @@ export function TicketFlowActions({
   return (
     <div className="space-y-6">
       {message ? <FormMessage type={message.type} message={message.text} /> : null}
+      <FieldVisitCheckin ticket={ticket} role={role} currentUserId={currentUserId ?? ""} />
 
-      <Card>
+      <Card className="xl:sticky xl:top-24">
         <CardHeader>
           <CardTitle>Ações rápidas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Etapa atual */}
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             <p className="font-semibold text-slate-950">Etapa atual: {flow.currentStageLabel}</p>
             <p className="mt-1">{flow.nextAction}</p>
           </div>
 
-          {/* Confirmação de ação com motivo */}
           {pendingAction ? (
             <div className="space-y-3 rounded-xl border border-sky-200 bg-sky-50 p-4">
-              <p className="text-sm font-semibold text-sky-950">
-                Confirmar: {pendingAction.label}
-              </p>
+              <p className="text-sm font-semibold text-sky-950">Confirmar: {pendingAction.label}</p>
               {pendingAction.requiresReason ? (
                 <div className="grid gap-2">
                   <Label htmlFor="closingReason">
@@ -252,7 +246,7 @@ export function TicketFlowActions({
                   />
                 </div>
               ) : null}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   type="button"
                   className="flex-1"
@@ -261,20 +255,13 @@ export function TicketFlowActions({
                 >
                   {isPending ? "Salvando..." : "Confirmar"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  disabled={isPending}
-                  onClick={cancelPendingAction}
-                >
+                <Button type="button" variant="outline" className="flex-1" disabled={isPending} onClick={cancelPendingAction}>
                   Voltar
                 </Button>
               </div>
             </div>
           ) : (
-            /* Botões de ação do fluxo */
-            <div className="flex flex-col gap-2">
+            <div className="grid gap-2">
               {actions.length > 0 ? (
                 actions.map((action) => (
                   <Button
@@ -283,11 +270,7 @@ export function TicketFlowActions({
                     variant={action.variant}
                     disabled={isPending}
                     onClick={() => startAction(action)}
-                    className={
-                      action.targetStatus === "CANCELED"
-                        ? "border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                        : ""
-                    }
+                    className={action.targetStatus === "CANCELED" ? "border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800" : ""}
                   >
                     {action.label}
                   </Button>
@@ -298,15 +281,10 @@ export function TicketFlowActions({
             </div>
           )}
 
-          {/* Atribuição - apenas ATTENDANT */}
           {canAssign ? (
             <div className="space-y-3 border-t border-slate-200 pt-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Responsável</p>
-              <Select
-                value={assigneeId}
-                disabled={isPending}
-                onChange={(e) => setAssigneeId(e.target.value)}
-              >
+              <Select value={assigneeId} disabled={isPending} onChange={(e) => setAssigneeId(e.target.value)}>
                 <option value="">Não atribuído</option>
                 {groupedUsers.suggestedUsers.length > 0 ? (
                   <optgroup label={groupedUsers.suggestion.label}>
@@ -328,13 +306,7 @@ export function TicketFlowActions({
                 ) : null}
               </Select>
               <p className="text-xs text-slate-500">{groupedUsers.suggestion.description}</p>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                disabled={isPending || assigneeId === (ticket.assigneeId ?? "")}
-                onClick={saveAssignment}
-              >
+              <Button type="button" variant="outline" className="w-full" disabled={isPending || assigneeId === (ticket.assigneeId ?? "")} onClick={saveAssignment}>
                 {isPending ? "Salvando..." : "Salvar responsável"}
               </Button>
             </div>
@@ -342,18 +314,13 @@ export function TicketFlowActions({
         </CardContent>
       </Card>
 
-      {/* Comentário */}
       {canComment ? (
         <Card>
           <CardHeader>
             <CardTitle>Nova interação</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Registrar comentário, retorno do cliente ou tratativa executada"
-            />
+            <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Registrar comentário, retorno do cliente ou tratativa executada" />
             <Button type="button" className="w-full" disabled={isPending || !comment.trim()} onClick={submitComment}>
               {isPending ? "Enviando..." : "Adicionar ao histórico"}
             </Button>
@@ -361,7 +328,6 @@ export function TicketFlowActions({
         </Card>
       ) : null}
 
-      {/* Anexo */}
       {canComment ? (
         <Card>
           <CardHeader>
@@ -370,11 +336,7 @@ export function TicketFlowActions({
           <CardContent className="space-y-4">
             <div className="grid gap-2">
               <Label htmlFor="attachment">Arquivo</Label>
-              <Input
-                id="attachment"
-                type="file"
-                onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
-              />
+              <Input id="attachment" type="file" onChange={(e) => setAttachment(e.target.files?.[0] ?? null)} />
               <p className="text-xs text-slate-500">Limite de 5 MB por arquivo.</p>
             </div>
             <Button type="button" className="w-full" disabled={isPending} onClick={submitAttachment}>
@@ -386,5 +348,3 @@ export function TicketFlowActions({
     </div>
   );
 }
-
-

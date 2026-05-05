@@ -14,9 +14,9 @@ export default async function PortalDashboardPage() {
   const dashboard = await portalService.getDashboard(user.clientId);
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,_#0f172a_0%,_#1d4ed8_55%,_#38bdf8_100%)] p-8 text-white shadow-[0_30px_120px_-48px_rgba(15,23,42,0.55)]">
-        <div className="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+    <div className="space-y-6 lg:space-y-8">
+      <section className="rounded-[1.75rem] border border-white/70 bg-[linear-gradient(135deg,_#0f172a_0%,_#1d4ed8_55%,_#38bdf8_100%)] p-5 text-white shadow-[0_30px_120px_-48px_rgba(15,23,42,0.55)] sm:p-8">
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-100">Área do cliente</p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight lg:text-4xl">{dashboard.client?.name ?? "Portal do cliente"}</h1>
@@ -25,17 +25,17 @@ export default async function PortalDashboardPage() {
               confira o financeiro e acesse documentos sempre que precisar.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={"/portal/chamados/novo" as Route}
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-transform hover:-translate-y-0.5"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-slate-950 transition-transform hover:-translate-y-0.5"
               >
                 Abrir novo chamado
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href={"/portal/financeiro" as Route}
-                className="inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/25 px-5 text-sm font-semibold text-white hover:bg-white/10"
               >
                 Ver financeiro
               </Link>
@@ -71,7 +71,7 @@ export default async function PortalDashboardPage() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <div key={item.label} className="rounded-[1.75rem] border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
+                <div key={item.label} className="rounded-[1.5rem] border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-sky-50/90">{item.label}</p>
                     <Icon className="h-5 w-5 text-sky-100" />
@@ -86,17 +86,17 @@ export default async function PortalDashboardPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6">
+        <div className="rounded-[1.75rem] border border-amber-200 bg-amber-50 p-5 sm:p-6">
           <p className="text-sm font-semibold text-amber-900">Valores vencidos</p>
           <p className="mt-3 text-3xl font-semibold text-amber-950">{formatCurrency(dashboard.summary.overdueAmount)}</p>
           <p className="mt-2 text-sm text-amber-800">Cobranças já faturadas e aguardando confirmação.</p>
         </div>
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <p className="text-sm font-semibold text-slate-900">Documentos disponíveis</p>
           <p className="mt-3 text-3xl font-semibold text-slate-950">{dashboard.summary.documentCount}</p>
           <p className="mt-2 text-sm text-slate-600">Notas fiscais e documentos relacionados às suas cobranças.</p>
         </div>
-        <div className="rounded-[2rem] border border-sky-200 bg-sky-50 p-6">
+        <div className="rounded-[1.75rem] border border-sky-200 bg-sky-50 p-5 sm:p-6">
           <p className="text-sm font-semibold text-sky-900">Contato principal</p>
           <p className="mt-3 text-lg font-semibold text-sky-950">{dashboard.client?.contactName ?? user.name}</p>
           <p className="mt-2 text-sm text-sky-800">{dashboard.client?.email ?? user.email}</p>
@@ -104,7 +104,7 @@ export default async function PortalDashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-950">Movimentações financeiras</h2>
@@ -118,22 +118,22 @@ export default async function PortalDashboardPage() {
           <div className="mt-6 space-y-3">
             {dashboard.financialRecords.slice(0, 6).map((record) => (
               <div key={`${record.kind}-${record.id}`} className="rounded-[1.5rem] border border-slate-200 p-4">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                      {record.kind === "ticket" ? "Chamado" : "Venda"} · {record.number}
+                      {record.kind === "ticket" ? "Chamado" : "Venda"} • {record.number}
                     </p>
                     <p className="mt-1 font-semibold text-slate-950">{record.title}</p>
                     <p className="mt-1 text-sm text-slate-500">
                       Atualizado em {formatDate(record.createdAt)}
-                      {record.documentCount > 0 ? ` · ${record.documentCount} documento(s)` : ""}
+                      {record.documentCount > 0 ? ` • ${record.documentCount} documento(s)` : ""}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-start gap-2 sm:items-end">
                     <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${financialStatusClass[record.status]}`}>
                       {financialStatusLabel[record.status]}
                     </span>
-                    <p className="mt-3 text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
+                    <p className="text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
                   </div>
                 </div>
               </div>
@@ -141,7 +141,7 @@ export default async function PortalDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-950">Chamados recentes</h2>
@@ -159,7 +159,7 @@ export default async function PortalDashboardPage() {
                 href={`/portal/chamados/${ticket.id}` as Route}
                 className="block rounded-[1.5rem] border border-slate-200 p-4 transition-colors hover:border-sky-200 hover:bg-sky-50/40"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">{ticket.number}</p>
                     <p className="mt-1 font-semibold text-slate-950">{ticket.title}</p>
@@ -176,7 +176,7 @@ export default async function PortalDashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <h2 className="text-xl font-semibold text-slate-950">Dados para pagamento</h2>
           <p className="mt-1 text-sm text-slate-500">Use estas informações para quitar cobranças quando necessário.</p>
           <div className="mt-6">
@@ -184,7 +184,7 @@ export default async function PortalDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-950">Documentos recentes</h2>

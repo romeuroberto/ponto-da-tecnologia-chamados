@@ -25,6 +25,7 @@ export interface UpdateTicketFieldsInput {
   priority: TicketPriority;
   assigneeId?: string;
   closingReason?: string;
+  title?: string;
   authorId: string;
 }
 
@@ -391,6 +392,7 @@ export const ticketRepository = {
     const current = await prisma.ticket.findUnique({
       where: { id },
       select: {
+        title: true,
         status: true,
         priority: true,
         assigneeId: true,
@@ -437,6 +439,14 @@ export const ticketRepository = {
       });
     }
 
+    if (input.title && input.title !== current.title) {
+      historyEntries.push({
+        authorId: input.authorId,
+        eventType: "COMMENT" as const,
+        message: `Título alterado para: "${input.title}".`
+      });
+    }
+
     if ((input.status === "CLOSED" || input.status === "CANCELED") && input.closingReason && input.closingReason !== current.closingReason) {
       historyEntries.push({
         authorId: input.authorId,
@@ -446,6 +456,7 @@ export const ticketRepository = {
     }
 
     const baseData = {
+      ...(input.title ? { title: input.title } : {}),
       status: input.status,
       priority: input.priority,
       assigneeId: normalizeOptionalString(input.assigneeId),
@@ -459,6 +470,79 @@ export const ticketRepository = {
       () => prisma.ticket.update({ where: { id }, data: baseData, include: ticketInclude }),
       () => prisma.ticket.update({ where: { id }, data: baseData, include: ticketIncludeWithoutServiceOrderParts }),
       () => prisma.ticket.update({ where: { id }, data: baseData, include: ticketIncludeWithoutServiceOrders })
+    );
+
+    return mapTicket(record);
+  },
+
+  async checkIn(id: string, authorId: string) {
+    const ticket = await prisma.ticket.findUnique({ where: { id }, select: { id: true, checkedInAt: true } });
+
+    if (!ticket) return null;
+    if (ticket.checkedInAt) return null;
+
+    const record = await runTicketQuery(
+      () => prisma.ticket.update({
+        where: { id },
+        data: {
+          checkedInAt: new Date(),
+          history: { create: { authorId, eventType: "COMMENT", message: "Check-in registrado." } }
+        },
+        include: ticketInclude
+      }),
+      () => prisma.ticket.update({
+        where: { id },
+        data: {
+          checkedInAt: new Date(),
+          history: { create: { authorId, eventType: "COMMENT", message: "Check-in registrado." } }
+        },
+        include: ticketIncludeWithoutServiceOrderParts
+      }),
+      () => prisma.ticket.update({
+        where: { id },
+        data: {
+          checkedInAt: new Date(),
+          history: { create: { authorId, eventType: "COMMENT", message: "Check-in registrado." } }
+        },
+        include: ticketIncludeWithoutServiceOrders
+      })
+    );
+
+    return mapTicket(record);
+  },
+
+  async checkOut(id: string, authorId: string) {
+    const ticket = await prisma.ticket.findUnique({ where: { id }, select: { id: true, checkedInAt: true, checkedOutAt: true } });
+
+    if (!ticket) return null;
+    if (!ticket.checkedInAt) return null;
+    if (ticket.checkedOutAt) return null;
+
+    const record = await runTicketQuery(
+      () => prisma.ticket.update({
+        where: { id },
+        data: {
+          checkedOutAt: new Date(),
+          history: { create: { authorId, eventType: "COMMENT", message: "Check-out registrado." } }
+        },
+        include: ticketInclude
+      }),
+      () => prisma.ticket.update({
+        where: { id },
+        data: {
+          checkedOutAt: new Date(),
+          history: { create: { authorId, eventType: "COMMENT", message: "Check-out registrado." } }
+        },
+        include: ticketIncludeWithoutServiceOrderParts
+      }),
+      () => prisma.ticket.update({
+        where: { id },
+        data: {
+          checkedOutAt: new Date(),
+          history: { create: { authorId, eventType: "COMMENT", message: "Check-out registrado." } }
+        },
+        include: ticketIncludeWithoutServiceOrders
+      })
     );
 
     return mapTicket(record);

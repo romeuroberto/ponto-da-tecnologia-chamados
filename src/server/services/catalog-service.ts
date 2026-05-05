@@ -21,6 +21,7 @@ export const catalogService = {
       name: input.name,
       description: input.description || undefined,
       defaultPrice: input.defaultPrice,
+      resalePrice: input.resalePrice ?? null,
       active: input.active
     });
   },
@@ -34,20 +35,23 @@ export const catalogService = {
       name: input.name,
       description: input.description || undefined,
       defaultPrice: input.defaultPrice,
+      resalePrice: input.resalePrice ?? null,
       active: input.active
     });
   },
 
   async createPartItem(input: PartCatalogItemInput & { createdById: string }) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de cadastrar pecas.");
+      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de cadastrar materiais.");
     }
 
     const item = await catalogRepository.createPartItem({
       name: input.name,
       description: input.description || undefined,
+      unit: input.unit,
       costPrice: input.costPrice,
       unitPrice: input.unitPrice,
+      resalePrice: input.resalePrice ?? null,
       active: input.active
     });
 
@@ -55,7 +59,7 @@ export const catalogService = {
       await stockRepository.addEntry({
         partCatalogItemId: item.id,
         quantity: input.initialQuantity,
-        notes: "Saldo inicial definido no cadastro da peca.",
+        notes: "Saldo inicial definido no cadastro do material.",
         createdById: input.createdById
       });
 
@@ -71,14 +75,16 @@ export const catalogService = {
 
   async updatePartItem(id: string, input: PartCatalogItemUpdateInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar pecas.");
+      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar materiais.");
     }
 
     return catalogRepository.updatePartItem(id, {
       name: input.name,
       description: input.description || undefined,
+      unit: input.unit,
       costPrice: input.costPrice,
       unitPrice: input.unitPrice,
+      resalePrice: input.resalePrice ?? null,
       active: input.active
     });
   }

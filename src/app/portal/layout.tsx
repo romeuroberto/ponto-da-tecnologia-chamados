@@ -14,29 +14,29 @@ export default async function PortalLayout({ children }: { children: ReactNode }
       <header className="border-b border-white/70 bg-white/80 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="rounded-[1.25rem] bg-slate-950 p-3 text-white shadow-sm">
-                <Building2 className="h-6 w-6" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="rounded-2xl bg-slate-950 p-2.5 text-white shadow-sm sm:p-3">
+                <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700">Portal do Cliente</p>
                 <p className="mt-1 text-lg font-semibold text-slate-950">Ponto da Tecnologia</p>
-                <p className="text-sm text-slate-500">Acompanhe chamados, vendas, cobranças e documentos em um só lugar.</p>
+                <p className="hidden text-sm text-slate-500 sm:block">Acompanhe chamados, vendas, cobranças e documentos em um só lugar.</p>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 lg:items-end">
               {isLoggedIn ? (
-                <div className="flex items-center gap-3 text-sm text-slate-600">
+                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
                   <span className="rounded-full bg-slate-100 px-3 py-1.5 font-medium">{session.user.name}</span>
                   <form action="/api/auth/signout" method="POST">
-                    <button type="submit" className="rounded-full border border-slate-200 px-3 py-1.5 font-medium text-slate-600 hover:bg-slate-50">
+                    <button type="submit" className="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 font-medium text-slate-600 hover:bg-slate-50">
                       Sair
                     </button>
                   </form>
                 </div>
               ) : (
-                <Link href="/portal" className="rounded-full border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                <Link href="/portal" className="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-sm font-medium text-slate-600 hover:bg-slate-50">
                   Acessar portal
                 </Link>
               )}
@@ -45,7 +45,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-24 lg:py-8 lg:pb-8">{children}</main>
     </div>
   );
 }

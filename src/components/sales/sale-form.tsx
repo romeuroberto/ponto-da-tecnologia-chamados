@@ -112,18 +112,18 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
 
           <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 md:grid-cols-[2fr_1fr_1fr_auto]">
             <div className="grid gap-1">
-              <Label className="text-xs">Peça</Label>
+              <Label className="text-xs">Material</Label>
               <Select value={selectedPartId} onChange={(e) => handlePartChange(e.target.value)}>
-                <option value="">Selecione uma peça</option>
+                <option value="">Selecione um material</option>
                 {parts.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}{p.code ? ` (${p.code})` : ""} — estoque: {p.stockQuantity}
+                    {p.name}{p.code ? ` (${p.code})` : ""} — estoque: {p.stockQuantity} {p.unit}
                   </option>
                 ))}
               </Select>
             </div>
             <div className="grid gap-1">
-              <Label className="text-xs">Quantidade</Label>
+              <Label className="text-xs">Quantidade ({parts.find((p) => p.id === selectedPartId)?.unit ?? "un"})</Label>
               <input
                 type="number"
                 min="0.01"
@@ -134,7 +134,21 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
               />
             </div>
             <div className="grid gap-1">
-              <Label className="text-xs">Preço unit. (R$)</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Preço unit. (R$)</Label>
+                {(() => {
+                  const selected = parts.find((p) => p.id === selectedPartId);
+                  return selected?.resalePrice != null ? (
+                    <button
+                      type="button"
+                      className="text-xs text-sky-600 hover:underline"
+                      onClick={() => setUnitPrice(String(selected.resalePrice))}
+                    >
+                      Revenda
+                    </button>
+                  ) : null;
+                })()}
+              </div>
               <input
                 type="number"
                 min="0"
@@ -155,7 +169,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
           {items.length > 0 ? (
             <div className="space-y-1">
               <div className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-3 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <span>Peça</span><span>Qtd</span><span>Unit.</span><span>Total</span><span />
+                <span>Material</span><span>Qtd</span><span>Unit.</span><span>Total</span><span />
               </div>
               {items.map((item, i) => (
                 <div key={i} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] items-center gap-3 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm">

@@ -128,6 +128,7 @@ export interface ServiceCatalogItem {
   code?: string;
   description?: string;
   defaultPrice: number;
+  resalePrice?: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -138,8 +139,10 @@ export interface PartCatalogItem {
   name: string;
   code?: string;
   description?: string;
+  unit: string;
   costPrice: number;
   unitPrice: number;
+  resalePrice?: number;
   stockQuantity: number;
   active: boolean;
   createdAt: string;
@@ -331,6 +334,8 @@ export interface Ticket {
   resolvedAt?: string;
   closedAt?: string;
   closingReason?: string;
+  checkedInAt?: string;
+  checkedOutAt?: string;
   history: TicketHistoryItem[];
   attachments: TicketAttachment[];
   billing?: TicketBilling;

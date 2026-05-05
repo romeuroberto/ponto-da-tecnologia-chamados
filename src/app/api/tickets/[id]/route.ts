@@ -84,8 +84,17 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         return NextResponse.json(
           {
             success: false,
-        message: "Seu perfil não pode alterar prioridade ou responsável."
+            message: "Seu perfil não pode alterar prioridade ou responsável."
           },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (result.data.title && result.data.title !== current.title) {
+      if (guard.user.role !== "ADMIN" && guard.user.role !== "ATTENDANT") {
+        return NextResponse.json(
+          { success: false, message: "Seu perfil não pode alterar o título do chamado." },
           { status: 403 }
         );
       }
