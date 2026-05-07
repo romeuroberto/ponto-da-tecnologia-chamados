@@ -44,10 +44,9 @@ export function TicketDetailActions({
   const canEditStatus = canEditTicketStatus(role);
   const canEditPriorityValue = canEditTicketPriority(role);
   const canEditAssignment = canEditTicketAssignment(role);
-  const canEditTitle = role === "ADMIN" || role === "ATTENDANT";
   const canComment = canCommentTicket(role);
   const canSaveFields = canEditStatus || canEditPriorityValue || canEditAssignment;
-  const requiresClosingReason = fields.status === "CLOSED" || fields.status === "CANCELED";
+  const requiresClosingReason = fields.status === "CANCELED";
   const canReopen = canEditStatus && (ticket.status === "RESOLVED" || ticket.status === "CLOSED" || ticket.status === "CANCELED");
   const flow = getTicketFlowSummary(ticket);
   const groupedUsers = groupAssignableUsers(users, ticket.category);
@@ -84,7 +83,7 @@ export function TicketDetailActions({
         body: JSON.stringify({
           ...fields,
           status: "CLOSED",
-          closingReason: "Encerrado sem cobrança — categoria coberta pelo contrato."
+          closingReason: "Encerrado sem cobrança - categoria coberta pelo contrato."
         })
       });
 
@@ -193,19 +192,13 @@ export function TicketDetailActions({
               <p className="mt-1">{flow.nextAction}</p>
             </div>
 
-            {contractCoversCategory && ticket.status === "RESOLVED" ? (
+            {contractCoversCategory && (ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_CUSTOMER" || ticket.status === "RESOLVED") ? (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 <p className="font-semibold">Coberto pelo contrato</p>
-                <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Você pode encerrar sem gerar cobrança.</p>
+                <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Ao concluir o atendimento, você pode encerrar sem gerar cobrança.</p>
                 <Button type="button" className="mt-3 w-full bg-emerald-700 text-white hover:bg-emerald-800" disabled={isPending} onClick={closeByContract}>
                   {isPending ? "Encerrando..." : "Encerrar sem cobrança"}
                 </Button>
-              </div>
-            ) : null}
-            {canEditTitle ? (
-              <div className="grid gap-2">
-                <Label htmlFor="title">Título</Label>
-                <Input id="title" value={fields.title} onChange={(event) => setFields((current) => ({ ...current, title: event.target.value }))} placeholder="Título do chamado" />
               </div>
             ) : null}
             {canEditStatus ? (
@@ -215,8 +208,8 @@ export function TicketDetailActions({
                   <option value="OPEN">Aberto</option>
                   <option value="IN_PROGRESS">Em atendimento</option>
                   <option value="WAITING_CUSTOMER">Aguardando cliente</option>
-                  <option value="RESOLVED">Resolvido</option>
-                  <option value="CLOSED">Encerrado</option>
+                  {ticket.status === "RESOLVED" ? <option value="RESOLVED">Resolvido (legado)</option> : null}
+                  <option value="CLOSED">Concluído técnico</option>
                   <option value="CANCELED">Cancelado</option>
                 </Select>
               </div>
@@ -261,8 +254,8 @@ export function TicketDetailActions({
             ) : null}
             {requiresClosingReason ? (
               <div className="grid gap-2">
-                <Label htmlFor="closingReason">Motivo do encerramento</Label>
-                <Textarea id="closingReason" value={fields.closingReason} onChange={(event) => setFields((current) => ({ ...current, closingReason: event.target.value }))} placeholder="Descreva por que o chamado foi encerrado ou cancelado" />
+                <Label htmlFor="closingReason">Motivo do cancelamento</Label>
+                <Textarea id="closingReason" value={fields.closingReason} onChange={(event) => setFields((current) => ({ ...current, closingReason: event.target.value }))} placeholder="Descreva por que o chamado foi cancelado" />
               </div>
             ) : null}
             <Button type="button" className="w-full" disabled={isPending} onClick={saveFields}>

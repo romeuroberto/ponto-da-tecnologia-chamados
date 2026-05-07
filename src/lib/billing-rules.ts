@@ -1,10 +1,10 @@
 import type { FinancialStatus } from "@/types";
 
-// APROVADO em diante: lançamentos bloqueados (valores aprovados não podem mudar)
+// Valores aprovados ou faturados não devem mais mudar diretamente.
 const ENTRIES_LOCKED: FinancialStatus[] = ["APROVADO", "FATURADO", "PAGO", "CANCELADO"];
 
-// Apenas PAGO é completamente imutável — CANCELADO permite reabrir
-const SUMMARY_LOCKED: FinancialStatus[] = ["PAGO"];
+// O resumo também trava a partir da aprovação para evitar divergência entre total e lançamentos.
+const SUMMARY_LOCKED: FinancialStatus[] = ["APROVADO", "FATURADO", "PAGO"];
 
 export function areBillingEntriesLocked(status: FinancialStatus): boolean {
   return ENTRIES_LOCKED.includes(status);
@@ -17,8 +17,8 @@ export function isBillingSummaryLocked(status: FinancialStatus): boolean {
 export const LOCKED_STATUS_LABELS: Record<FinancialStatus, string | null> = {
   PENDENTE: null,
   EM_ANALISE: null,
-  APROVADO: "Os lançamentos estão bloqueados após a aprovação. Para corrigir valores, cancele o financeiro e reinicie.",
-  FATURADO: "Os lançamentos estão bloqueados após o faturamento. Para corrigir valores, cancele o financeiro e reinicie.",
+  APROVADO: "Valores aprovados ficam bloqueados. Para corrigir, reabra ou reinicie o ciclo financeiro.",
+  FATURADO: "Valores faturados ficam bloqueados. Para corrigir, cancele ou reabra o ciclo financeiro.",
   PAGO: "Este financeiro foi pago e está totalmente bloqueado.",
   CANCELADO: "Este financeiro foi cancelado. É possível reabri-lo para um novo ciclo."
 };

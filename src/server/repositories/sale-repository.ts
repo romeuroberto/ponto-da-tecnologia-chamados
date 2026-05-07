@@ -29,11 +29,17 @@ function toMoney(value: number) {
 }
 
 export const saleRepository = {
-  async list(input: { financialStatus?: FinancialStatus; clientId?: string } = {}): Promise<Sale[]> {
+  async list(input: { financialStatus?: FinancialStatus; clientId?: string; q?: string; from?: string; to?: string } = {}): Promise<Sale[]> {
     const records = await prisma.sale.findMany({
       where: {
         ...(input.financialStatus ? { financialStatus: input.financialStatus } : {}),
-        ...(input.clientId ? { clientId: input.clientId } : {})
+        ...(input.clientId ? { clientId: input.clientId } : {}),
+        ...(input.q
+          ? { OR: [{ number: { contains: input.q, mode: "insensitive" } }, { client: { name: { contains: input.q, mode: "insensitive" } } }] }
+          : {}),
+        ...(input.from || input.to
+          ? { createdAt: { ...(input.from ? { gte: new Date(input.from) } : {}), ...(input.to ? { lte: new Date(input.to + "T23:59:59.999Z") } : {}) } }
+          : {})
       },
       include: saleInclude,
       orderBy: { createdAt: "desc" }

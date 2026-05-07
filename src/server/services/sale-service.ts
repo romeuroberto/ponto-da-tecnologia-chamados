@@ -5,7 +5,7 @@ import { saleRepository, type UpdateSaleStatusInput } from "@/server/repositorie
 import { stockRepository } from "@/server/repositories/stock-repository";
 
 export const saleService = {
-  async listSales(input: { financialStatus?: FinancialStatus; clientId?: string } = {}) {
+  async listSales(input: { financialStatus?: FinancialStatus; clientId?: string; q?: string; from?: string; to?: string } = {}) {
     if (!isDatabaseConfigured()) {
       return [];
     }

@@ -16,7 +16,7 @@ import { formatUserWithRole, groupAssignableUsers } from "@/lib/users";
 import { canCommentTicket, canEditTicketAssignment } from "@/server/auth/permissions";
 import type { AppUser, Ticket } from "@/types";
 
-const CONTRACT_CLOSE_REASON = "Encerrado sem cobrança — categoria coberta pelo contrato.";
+const CONTRACT_CLOSE_REASON = "Encerrado sem cobrança - categoria coberta pelo contrato.";
 
 type FlowAction = {
   label: string;
@@ -28,6 +28,13 @@ type FlowAction = {
 
 function getFlowActions(status: Ticket["status"], role: AppUser["role"], contractCoversCategory?: boolean): FlowAction[] {
   const isAttendant = role === "ATTENDANT";
+  const concludeAction: FlowAction = {
+    label: contractCoversCategory ? "Concluir atendimento sem cobrança" : "Concluir atendimento",
+    targetStatus: "CLOSED",
+    variant: "default",
+    requiresReason: false,
+    autoClosingReason: contractCoversCategory ? CONTRACT_CLOSE_REASON : undefined
+  };
 
   switch (status) {
     case "OPEN":
@@ -41,7 +48,7 @@ function getFlowActions(status: Ticket["status"], role: AppUser["role"], contrac
     case "IN_PROGRESS":
       return [
         { label: "Aguardar resposta do cliente", targetStatus: "WAITING_CUSTOMER", variant: "outline", requiresReason: false },
-        { label: "Marcar como resolvido", targetStatus: "RESOLVED", variant: "default", requiresReason: false },
+        concludeAction,
         ...(isAttendant
           ? [{ label: "Cancelar chamado", targetStatus: "CANCELED" as const, variant: "outline" as const, requiresReason: true }]
           : [])
@@ -50,17 +57,12 @@ function getFlowActions(status: Ticket["status"], role: AppUser["role"], contrac
     case "WAITING_CUSTOMER":
       return [
         { label: "Retomar atendimento", targetStatus: "IN_PROGRESS", variant: "default", requiresReason: false },
-        { label: "Marcar como resolvido", targetStatus: "RESOLVED", variant: "outline", requiresReason: false }
+        { ...concludeAction, variant: "outline" }
       ];
 
     case "RESOLVED":
       return [
-        ...(contractCoversCategory
-          ? [{ label: "Encerrar sem cobrança", targetStatus: "CLOSED" as const, variant: "default" as const, requiresReason: false, autoClosingReason: CONTRACT_CLOSE_REASON }]
-          : []),
-        ...(isAttendant
-          ? [{ label: contractCoversCategory ? "Encerrar com cobrança" : "Encerrar chamado", targetStatus: "CLOSED" as const, variant: contractCoversCategory ? "outline" as const : "default" as const, requiresReason: true }]
-          : []),
+        concludeAction,
         { label: "Reabrir chamado", targetStatus: "OPEN", variant: "outline", requiresReason: false }
       ];
 
@@ -237,10 +239,10 @@ export function TicketFlowActions({
             <p className="mt-1">{flow.nextAction}</p>
           </div>
 
-          {contractCoversCategory && ticket.status === "RESOLVED" ? (
+          {contractCoversCategory && (ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_CUSTOMER" || ticket.status === "RESOLVED") ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               <p className="font-semibold">Coberto pelo contrato</p>
-              <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Você pode encerrar sem gerar cobrança.</p>
+              <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Ao concluir o atendimento, você pode encerrar sem gerar cobrança.</p>
             </div>
           ) : null}
 
@@ -249,9 +251,7 @@ export function TicketFlowActions({
               <p className="text-sm font-semibold text-sky-950">Confirmar: {pendingAction.label}</p>
               {pendingAction.requiresReason ? (
                 <div className="grid gap-2">
-                  <Label htmlFor="closingReason">
-                    Motivo {pendingAction.targetStatus === "CANCELED" ? "do cancelamento" : "do encerramento"}
-                  </Label>
+                  <Label htmlFor="closingReason">Motivo do cancelamento</Label>
                   <Textarea
                     id="closingReason"
                     value={closingReason}

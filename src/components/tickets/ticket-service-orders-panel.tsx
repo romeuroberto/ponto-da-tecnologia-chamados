@@ -34,7 +34,7 @@ const emptyPartDraft = (): PartDraft => ({
 const statusLabels: Record<ServiceOrderStatus, string> = {
   PLANNED: "Planejada",
   IN_EXECUTION: "Em execução",
-  PAUSED: "Pausada",
+  PAUSED: "Em pausa",
   COMPLETED: "Concluída",
   CANCELED: "Cancelada"
 };
@@ -115,6 +115,7 @@ export function TicketServiceOrdersPanel({
   const [serviceOrders, setServiceOrders] = useState<ServiceOrder[]>(ticket.serviceOrders ?? []);
   const [createFields, setCreateFields] = useState({
     serviceType: "",
+    servicePrice: "",
     assignedTechnicianId: "",
     scheduledStartAt: "",
     executionNotes: ""
@@ -124,6 +125,7 @@ export function TicketServiceOrdersPanel({
   const [editFields, setEditFields] = useState({
     status: "PLANNED" as ServiceOrderStatus,
     serviceType: "",
+    servicePrice: "",
     assignedTechnicianId: "",
     scheduledStartAt: "",
     startedAt: "",
@@ -134,11 +136,7 @@ export function TicketServiceOrdersPanel({
   });
   const [editParts, setEditParts] = useState<PartDraft[]>([emptyPartDraft()]);
 
-  const technicianOptions = useMemo(
-    () => users.filter((user) => user.role === "TECHNICIAN" && user.active).sort((a, b) => a.name.localeCompare(b.name)),
-    [users]
-  );
-
+  const technicianOptions = useMemo(() => users.filter((user) => user.active).sort((a, b) => a.name.localeCompare(b.name)), [users]);
   const partOptions = useMemo(() => [...partCatalogItems].sort((a, b) => a.name.localeCompare(b.name)), [partCatalogItems]);
 
   if (ticket.attendanceType === "REMOTE") return null;
@@ -164,6 +162,7 @@ export function TicketServiceOrdersPanel({
   function resetCreateForm() {
     setCreateFields({
       serviceType: "",
+      servicePrice: "",
       assignedTechnicianId: "",
       scheduledStartAt: "",
       executionNotes: ""
@@ -176,6 +175,7 @@ export function TicketServiceOrdersPanel({
     setEditFields({
       status: serviceOrder.status,
       serviceType: serviceOrder.serviceType ?? "",
+      servicePrice: serviceOrder.servicePrice != null ? formatCurrencyInput(serviceOrder.servicePrice) : "",
       assignedTechnicianId: serviceOrder.assignedTechnicianId ?? "",
       scheduledStartAt: toDateInput(serviceOrder.scheduledStartAt),
       startedAt: toDateInput(serviceOrder.startedAt),
@@ -200,6 +200,7 @@ export function TicketServiceOrdersPanel({
     setCreateFields((current) => ({
       ...current,
       serviceType: serviceName,
+      servicePrice: selectedItem?.defaultPrice != null ? formatCurrencyInput(selectedItem.defaultPrice) : current.servicePrice,
       executionNotes: current.executionNotes || selectedItem?.description || ""
     }));
   }
@@ -210,6 +211,7 @@ export function TicketServiceOrdersPanel({
     setEditFields((current) => ({
       ...current,
       serviceType: serviceName,
+      servicePrice: selectedItem?.defaultPrice != null ? formatCurrencyInput(selectedItem.defaultPrice) : current.servicePrice,
       executionNotes: current.executionNotes || selectedItem?.description || ""
     }));
   }
@@ -234,7 +236,7 @@ export function TicketServiceOrdersPanel({
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-slate-950">Materiais da OS</p>
-            <p className="text-xs text-slate-500">Use o catálogo para registrar material previsto ou aplicado nesta ordem.</p>
+            <p className="text-xs text-slate-500">Registre apenas os itens relevantes para este atendimento.</p>
           </div>
           <Button type="button" variant="outline" onClick={() => setParts([...parts, emptyPartDraft()])}>
             Adicionar material
@@ -249,11 +251,7 @@ export function TicketServiceOrdersPanel({
               <div className="grid gap-3 md:grid-cols-[1.6fr_0.7fr_0.9fr]">
                 <div className="grid gap-2">
                   <Label htmlFor={`part-${index}`}>Material do catálogo</Label>
-                  <Select
-                    id={`part-${index}`}
-                    value={part.partCatalogItemId}
-                    onChange={(event) => setParts(handlePartSelection(parts, index, event.target.value))}
-                  >
+                  <Select id={`part-${index}`} value={part.partCatalogItemId} onChange={(event) => setParts(handlePartSelection(parts, index, event.target.value))}>
                     <option value="">Selecione um material</option>
                     {partOptions.map((item) => (
                       <option key={item.id} value={item.id}>
@@ -271,23 +269,13 @@ export function TicketServiceOrdersPanel({
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor={`quantity-${index}`}>Qtd ({selectedPart?.unit ?? "un"})</Label>
-                  <Input
-                    id={`quantity-${index}`}
-                    inputMode="decimal"
-                    value={part.quantity}
-                    onChange={(event) => setParts(updatePartDraft(parts, index, { quantity: event.target.value }))}
-                    placeholder="1"
-                  />
+                  <Input id={`quantity-${index}`} inputMode="decimal" value={part.quantity} onChange={(event) => setParts(updatePartDraft(parts, index, { quantity: event.target.value }))} placeholder="1" />
                 </div>
                 <div className="grid gap-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`unit-price-${index}`}>Valor de referência</Label>
                     {selectedPart?.resalePrice != null ? (
-                      <button
-                        type="button"
-                        className="text-xs text-sky-600 hover:underline"
-                        onClick={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(selectedPart.resalePrice!) }))}
-                      >
+                      <button type="button" className="text-xs text-sky-600 hover:underline" onClick={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(selectedPart.resalePrice!) }))}>
                         Revenda
                       </button>
                     ) : null}
@@ -296,33 +284,18 @@ export function TicketServiceOrdersPanel({
                     id={`unit-price-${index}`}
                     value={part.unitPrice}
                     onChange={(event) => setParts(updatePartDraft(parts, index, { unitPrice: event.target.value }))}
-                    onBlur={() =>
-                      setParts(
-                        updatePartDraft(parts, index, {
-                          unitPrice: formatCurrencyInput(parseCurrencyInput(parts[index]?.unitPrice ?? "0"))
-                        })
-                      )
-                    }
+                    onBlur={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(parseCurrencyInput(parts[index]?.unitPrice ?? "0")) }))}
                   />
                 </div>
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor={`part-notes-${index}`}>Observações do material</Label>
-                <Textarea
-                  id={`part-notes-${index}`}
-                  value={part.notes}
-                  onChange={(event) => setParts(updatePartDraft(parts, index, { notes: event.target.value }))}
-                  placeholder="Ex.: aplicado em bancada, trocado em garantia, item aprovado pelo cliente"
-                />
+                <Label htmlFor={`part-notes-${index}`}>Observações</Label>
+                <Textarea id={`part-notes-${index}`} value={part.notes} onChange={(event) => setParts(updatePartDraft(parts, index, { notes: event.target.value }))} placeholder="Ex.: item aplicado na bancada ou trocado em garantia" />
               </div>
 
               <div className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setParts(parts.length === 1 ? [emptyPartDraft()] : parts.filter((_, currentIndex) => currentIndex !== index))}
-                >
+                <Button type="button" variant="outline" onClick={() => setParts(parts.length === 1 ? [emptyPartDraft()] : parts.filter((_, currentIndex) => currentIndex !== index))}>
                   Remover material
                 </Button>
               </div>
@@ -342,6 +315,7 @@ export function TicketServiceOrdersPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           serviceType: createFields.serviceType,
+          servicePrice: parseCurrencyInput(createFields.servicePrice) || undefined,
           assignedTechnicianId: createFields.assignedTechnicianId,
           scheduledStartAt: createFields.scheduledStartAt ? new Date(createFields.scheduledStartAt).toISOString() : "",
           executionNotes: createFields.executionNotes,
@@ -372,6 +346,7 @@ export function TicketServiceOrdersPanel({
         body: JSON.stringify({
           status: editFields.status,
           serviceType: editFields.serviceType,
+          servicePrice: parseCurrencyInput(editFields.servicePrice) || undefined,
           assignedTechnicianId: editFields.assignedTechnicianId,
           scheduledStartAt: editFields.scheduledStartAt ? new Date(editFields.scheduledStartAt).toISOString() : "",
           startedAt: editFields.startedAt ? new Date(editFields.startedAt).toISOString() : "",
@@ -411,7 +386,7 @@ export function TicketServiceOrdersPanel({
         return;
       }
 
-      setServiceOrders((current) => current.filter((so) => so.id !== serviceOrderId));
+      setServiceOrders((current) => current.filter((serviceOrder) => serviceOrder.id !== serviceOrderId));
       setMessage({ type: "success", text: "Ordem de serviço excluída." });
       router.refresh();
     });
@@ -426,6 +401,10 @@ export function TicketServiceOrdersPanel({
           <CardTitle>Ordens de serviço</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            A ordem de serviço é opcional neste fluxo. Use quando houver atendimento físico, planejamento ou controle de materiais.
+          </div>
+
           {serviceOrders.length > 0 ? (
             serviceOrders.map((serviceOrder) => {
               const isEditing = editingId === serviceOrder.id;
@@ -435,7 +414,7 @@ export function TicketServiceOrdersPanel({
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-950">{serviceOrder.number}</p>
-                      <p className="text-sm text-slate-600">{serviceOrder.serviceType || "Sem tipo definido"}</p>
+                      <p className="text-sm text-slate-600">{serviceOrder.serviceType || "Serviço sem tipo definido"}</p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[serviceOrder.status]}`}>
                       {statusLabels[serviceOrder.status]}
@@ -443,33 +422,35 @@ export function TicketServiceOrdersPanel({
                   </div>
 
                   {!isEditing ? (
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Técnico</p>
-                        <p className="mt-1 text-sm text-slate-900">{serviceOrder.assignedTechnicianName ?? "Não definido"}</p>
+                    <div className="space-y-4">
+                      <div className="grid gap-3 md:grid-cols-4">
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Técnico</p>
+                          <p className="mt-1 text-sm text-slate-900">{serviceOrder.assignedTechnicianName ?? "Não definido"}</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Agendamento</p>
+                          <p className="mt-1 text-sm text-slate-900">{serviceOrder.scheduledStartAt ? formatDate(serviceOrder.scheduledStartAt) : "Não agendado"}</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Valor</p>
+                          <p className="mt-1 text-sm text-slate-900">{serviceOrder.servicePrice != null ? formatCurrency(serviceOrder.servicePrice) : "Não informado"}</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Materiais</p>
+                          <p className="mt-1 text-sm text-slate-900">{serviceOrder.parts.length} item(ns)</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Criada por</p>
-                        <p className="mt-1 text-sm text-slate-900">{serviceOrder.createdByName}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Agendamento</p>
-                        <p className="mt-1 text-sm text-slate-900">
-                          {serviceOrder.scheduledStartAt ? formatDate(serviceOrder.scheduledStartAt) : "Não agendado"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Atualizada</p>
-                        <p className="mt-1 text-sm text-slate-900">{formatDate(serviceOrder.updatedAt)}</p>
-                      </div>
+
                       {serviceOrder.executionNotes ? (
-                        <div className="md:col-span-2">
+                        <div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Observações</p>
                           <p className="mt-1 text-sm leading-6 text-slate-700">{serviceOrder.executionNotes}</p>
                         </div>
                       ) : null}
+
                       {serviceOrder.parts.length > 0 ? (
-                        <div className="md:col-span-2">
+                        <div>
                           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Materiais vinculados</p>
                           <div className="mt-2 space-y-2">
                             {serviceOrder.parts.map((part) => (
@@ -487,29 +468,16 @@ export function TicketServiceOrdersPanel({
                           </div>
                         </div>
                       ) : null}
-                      {serviceOrder.customerApprovalName ? (
-                        <div className="md:col-span-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Aprovação do cliente</p>
-                          <p className="mt-1 text-sm text-slate-700">
-                            {serviceOrder.customerApprovalName}
-                            {serviceOrder.customerApprovalAt ? ` em ${formatDate(serviceOrder.customerApprovalAt)}` : ""}
-                          </p>
-                        </div>
-                      ) : null}
                     </div>
                   ) : (
                     <div className="space-y-4">
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
                           <Label htmlFor={`status-${serviceOrder.id}`}>Status</Label>
-                          <Select
-                            id={`status-${serviceOrder.id}`}
-                            value={editFields.status}
-                            onChange={(event) => setEditFields((current) => ({ ...current, status: event.target.value as ServiceOrderStatus }))}
-                          >
+                          <Select id={`status-${serviceOrder.id}`} value={editFields.status} onChange={(event) => setEditFields((current) => ({ ...current, status: event.target.value as ServiceOrderStatus }))}>
                             <option value="PLANNED">Planejada</option>
                             <option value="IN_EXECUTION">Em execução</option>
-                            <option value="PAUSED">Pausada</option>
+                            {serviceOrder.status === "PAUSED" ? <option value="PAUSED">Em pausa (legado)</option> : null}
                             <option value="COMPLETED">Concluída</option>
                             <option value="CANCELED">Cancelada</option>
                           </Select>
@@ -537,23 +505,18 @@ export function TicketServiceOrdersPanel({
                           {selectedEditCatalogItem ? <p className="text-xs text-slate-500">{getCatalogMeta(selectedEditCatalogItem)}</p> : null}
                         </div>
                         {editServiceSelection === MANUAL_SERVICE_OPTION ? (
-                          <div className="grid gap-2 md:col-span-2">
+                          <div className="grid gap-2">
                             <Label htmlFor={`serviceType-${serviceOrder.id}`}>Tipo de serviço</Label>
-                            <Input
-                              id={`serviceType-${serviceOrder.id}`}
-                              value={editFields.serviceType}
-                              onChange={(event) => setEditFields((current) => ({ ...current, serviceType: event.target.value }))}
-                              placeholder="Ex.: bancada, visita, diagnóstico"
-                            />
+                            <Input id={`serviceType-${serviceOrder.id}`} value={editFields.serviceType} onChange={(event) => setEditFields((current) => ({ ...current, serviceType: event.target.value }))} placeholder="Ex.: bancada, visita, diagnóstico" />
                           </div>
                         ) : null}
                         <div className="grid gap-2">
+                          <Label htmlFor={`servicePrice-${serviceOrder.id}`}>Valor do serviço <span className="text-slate-400">(opcional)</span></Label>
+                          <Input id={`servicePrice-${serviceOrder.id}`} value={editFields.servicePrice} onChange={(event) => setEditFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setEditFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
+                        </div>
+                        <div className="grid gap-2">
                           <Label htmlFor={`technician-${serviceOrder.id}`}>Técnico</Label>
-                          <Select
-                            id={`technician-${serviceOrder.id}`}
-                            value={editFields.assignedTechnicianId}
-                            onChange={(event) => setEditFields((current) => ({ ...current, assignedTechnicianId: event.target.value }))}
-                          >
+                          <Select id={`technician-${serviceOrder.id}`} value={editFields.assignedTechnicianId} onChange={(event) => setEditFields((current) => ({ ...current, assignedTechnicianId: event.target.value }))}>
                             <option value="">Definir depois</option>
                             {technicianOptions.map((user) => (
                               <option key={user.id} value={user.id}>
@@ -564,64 +527,15 @@ export function TicketServiceOrdersPanel({
                         </div>
                         <div className="grid gap-2">
                           <Label htmlFor={`scheduled-${serviceOrder.id}`}>Agendada para</Label>
-                          <Input
-                            id={`scheduled-${serviceOrder.id}`}
-                            type="date"
-                            value={editFields.scheduledStartAt}
-                            onChange={(event) => setEditFields((current) => ({ ...current, scheduledStartAt: event.target.value }))}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor={`started-${serviceOrder.id}`}>Início</Label>
-                          <Input
-                            id={`started-${serviceOrder.id}`}
-                            type="date"
-                            value={editFields.startedAt}
-                            onChange={(event) => setEditFields((current) => ({ ...current, startedAt: event.target.value }))}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor={`finished-${serviceOrder.id}`}>Fim</Label>
-                          <Input
-                            id={`finished-${serviceOrder.id}`}
-                            type="date"
-                            value={editFields.finishedAt}
-                            onChange={(event) => setEditFields((current) => ({ ...current, finishedAt: event.target.value }))}
-                          />
+                          <Input id={`scheduled-${serviceOrder.id}`} type="date" value={editFields.scheduledStartAt} onChange={(event) => setEditFields((current) => ({ ...current, scheduledStartAt: event.target.value }))} />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                           <Label htmlFor={`notes-${serviceOrder.id}`}>Observações</Label>
-                          <Textarea
-                            id={`notes-${serviceOrder.id}`}
-                            value={editFields.executionNotes}
-                            onChange={(event) => setEditFields((current) => ({ ...current, executionNotes: event.target.value }))}
-                            placeholder="Descreva a execução planejada ou realizada"
-                          />
+                          <Textarea id={`notes-${serviceOrder.id}`} value={editFields.executionNotes} onChange={(event) => setEditFields((current) => ({ ...current, executionNotes: event.target.value }))} placeholder="Descreva o escopo ou o resultado principal da OS" />
                         </div>
                       </div>
 
                       {renderPartsEditor(editParts, setEditParts)}
-
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="grid gap-2">
-                          <Label htmlFor={`approvalName-${serviceOrder.id}`}>Aprovação do cliente</Label>
-                          <Input
-                            id={`approvalName-${serviceOrder.id}`}
-                            value={editFields.customerApprovalName}
-                            onChange={(event) => setEditFields((current) => ({ ...current, customerApprovalName: event.target.value }))}
-                            placeholder="Nome do aprovador"
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label htmlFor={`approvalAt-${serviceOrder.id}`}>Data da aprovação</Label>
-                          <Input
-                            id={`approvalAt-${serviceOrder.id}`}
-                            type="date"
-                            value={editFields.customerApprovalAt}
-                            onChange={(event) => setEditFields((current) => ({ ...current, customerApprovalAt: event.target.value }))}
-                          />
-                        </div>
-                      </div>
                     </div>
                   )}
 
@@ -642,13 +556,7 @@ export function TicketServiceOrdersPanel({
                             Editar
                           </Button>
                           {serviceOrder.status === "PLANNED" ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="flex-1 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
-                              disabled={isPending}
-                              onClick={() => deleteServiceOrder(serviceOrder.id)}
-                            >
+                            <Button type="button" variant="outline" className="flex-1 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800" disabled={isPending} onClick={() => deleteServiceOrder(serviceOrder.id)}>
                               Excluir
                             </Button>
                           ) : null}
@@ -699,11 +607,7 @@ export function TicketServiceOrdersPanel({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="new-technician">Técnico</Label>
-                <Select
-                  id="new-technician"
-                  value={createFields.assignedTechnicianId}
-                  onChange={(event) => setCreateFields((current) => ({ ...current, assignedTechnicianId: event.target.value }))}
-                >
+                <Select id="new-technician" value={createFields.assignedTechnicianId} onChange={(event) => setCreateFields((current) => ({ ...current, assignedTechnicianId: event.target.value }))}>
                   <option value="">Definir depois</option>
                   {technicianOptions.map((user) => (
                     <option key={user.id} value={user.id}>
@@ -716,33 +620,22 @@ export function TicketServiceOrdersPanel({
             {createServiceSelection === MANUAL_SERVICE_OPTION ? (
               <div className="grid gap-2">
                 <Label htmlFor="new-service-type">Tipo de serviço</Label>
-                <Input
-                  id="new-service-type"
-                  value={createFields.serviceType}
-                  onChange={(event) => setCreateFields((current) => ({ ...current, serviceType: event.target.value }))}
-                  placeholder="Ex.: bancada, visita, diagnóstico"
-                />
+                <Input id="new-service-type" value={createFields.serviceType} onChange={(event) => setCreateFields((current) => ({ ...current, serviceType: event.target.value }))} placeholder="Ex.: bancada, visita, diagnóstico" />
               </div>
             ) : null}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
+                <Label htmlFor="new-service-price">Valor do serviço <span className="text-slate-400">(opcional)</span></Label>
+                <Input id="new-service-price" value={createFields.servicePrice} onChange={(event) => setCreateFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setCreateFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="new-scheduled">Agendada para</Label>
-                <Input
-                  id="new-scheduled"
-                  type="date"
-                  value={createFields.scheduledStartAt}
-                  onChange={(event) => setCreateFields((current) => ({ ...current, scheduledStartAt: event.target.value }))}
-                />
+                <Input id="new-scheduled" type="date" value={createFields.scheduledStartAt} onChange={(event) => setCreateFields((current) => ({ ...current, scheduledStartAt: event.target.value }))} />
               </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="new-notes">Observações</Label>
-              <Textarea
-                id="new-notes"
-                value={createFields.executionNotes}
-                onChange={(event) => setCreateFields((current) => ({ ...current, executionNotes: event.target.value }))}
-                placeholder="Descreva o escopo inicial da OS"
-              />
+              <Textarea id="new-notes" value={createFields.executionNotes} onChange={(event) => setCreateFields((current) => ({ ...current, executionNotes: event.target.value }))} placeholder="Descreva apenas o escopo principal desta OS" />
             </div>
 
             {renderPartsEditor(createParts, setCreateParts)}

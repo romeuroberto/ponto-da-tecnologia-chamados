@@ -74,7 +74,7 @@ export default async function TicketsPage({
 
       <ResultsSummary label="chamados" total={result.total} page={result.page} totalPages={result.totalPages} />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">SLA vencido</p>
           <p className="mt-2 text-3xl font-semibold text-rose-950">{currentPageSlaBreached}</p>
@@ -84,20 +84,6 @@ export default async function TicketsPage({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">SLA em risco</p>
           <p className="mt-2 text-3xl font-semibold text-amber-950">{currentPageSlaWarning}</p>
           <p className="mt-1 text-sm text-amber-700">Acompanhe antes de estourar o prazo.</p>
-        </div>
-        <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Atalhos</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link href="/chamados?priority=CRITICAL&sort=priority_desc" className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm">
-              Críticos
-            </Link>
-            <Link href="/chamados?status=OPEN&sort=updated_desc" className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm">
-              Abertos
-            </Link>
-            <Link href="/chamados?status=WAITING_CUSTOMER&sort=updated_desc" className="rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-sky-700 shadow-sm">
-              Aguardando cliente
-            </Link>
-          </div>
         </div>
       </div>
 

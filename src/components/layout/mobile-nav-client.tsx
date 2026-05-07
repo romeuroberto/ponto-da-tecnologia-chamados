@@ -1,9 +1,10 @@
 "use client";
 
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
 
 import { BrandMark } from "@/components/layout/brand-mark";
 import type { NavigationItem } from "@/components/layout/navigation-config";
@@ -25,7 +26,17 @@ function findCurrentLabel(pathname: string, items: NavigationItem[]) {
   return "Menu";
 }
 
-export function MobileNavClient({ items }: { items: NavigationItem[] }) {
+export function MobileNavClient({
+  items,
+  eyebrowLabel = "Navegação",
+  footerHref = "/chamados",
+  footerLabel = "Ir para chamados"
+}: {
+  items: NavigationItem[];
+  eyebrowLabel?: string;
+  footerHref?: Route;
+  footerLabel?: string;
+}) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const currentLabel = useMemo(() => findCurrentLabel(pathname, items), [items, pathname]);
@@ -52,7 +63,7 @@ export function MobileNavClient({ items }: { items: NavigationItem[] }) {
       <div className="border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Navegação</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{eyebrowLabel}</p>
             <p className="truncate text-sm font-semibold text-slate-900">{currentLabel}</p>
           </div>
           <button
@@ -97,15 +108,17 @@ export function MobileNavClient({ items }: { items: NavigationItem[] }) {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <NavLinks items={items} />
+          <Suspense fallback={<div className="flex-1" />}>
+            <NavLinks items={items} />
+          </Suspense>
         </div>
 
         <div className="border-t border-white/10 px-4 py-4">
           <Link
-            href="/chamados"
+            href={footerHref}
             className="flex h-11 items-center justify-center rounded-xl bg-white/10 px-4 text-sm font-semibold text-white transition hover:bg-white/15"
           >
-            Ir para chamados
+            {footerLabel}
           </Link>
         </div>
       </aside>

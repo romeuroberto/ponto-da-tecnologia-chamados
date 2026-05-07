@@ -16,24 +16,20 @@ export default async function PortalDashboardPage() {
 
   return (
     <div className="space-y-6 lg:space-y-8">
-
-      {/* Cabeçalho */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-slate-500">Bem-vindo ao portal</p>
-          <h1 className="mt-0.5 text-2xl font-semibold text-slate-950">
-            {dashboard.client?.name ?? "Portal do cliente"}
-          </h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Dashboard</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.client?.name ?? "Portal do cliente"}</h1>
+          <p className="mt-2 text-sm text-slate-500">Visão consolidada de atendimento, financeiro, vendas e documentos.</p>
         </div>
         <Link
           href={"/portal/chamados/novo" as Route}
-          className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white transition hover:bg-sky-700 sm:w-auto"
         >
           Abrir novo chamado
         </Link>
       </div>
 
-      {/* Métricas */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {
@@ -67,7 +63,7 @@ export default async function PortalDashboardPage() {
         ].map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.label}>
+            <Card key={item.label} className="border-slate-200 shadow-sm">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-slate-500">{item.label}</p>
@@ -81,28 +77,26 @@ export default async function PortalDashboardPage() {
         })}
       </div>
 
-      {/* Resumo secundário */}
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Valores vencidos</p>
           <p className="mt-2 text-2xl font-semibold text-amber-950">{formatCurrency(dashboard.summary.overdueAmount)}</p>
           <p className="mt-1 text-sm text-amber-700">Cobranças faturadas aguardando confirmação.</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Documentos disponíveis</p>
           <p className="mt-2 text-2xl font-semibold text-slate-950">{dashboard.summary.documentCount}</p>
           <p className="mt-1 text-sm text-slate-500">Notas fiscais e documentos.</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Contato principal</p>
           <p className="mt-2 font-semibold text-slate-950">{dashboard.client?.contactName ?? user.name}</p>
           <p className="mt-1 text-sm text-slate-500">{dashboard.client?.email ?? user.email}</p>
         </div>
       </div>
 
-      {/* Movimentações + Chamados recentes */}
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -116,7 +110,7 @@ export default async function PortalDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {dashboard.financialRecords.slice(0, 5).map((record) => (
-              <div key={`${record.kind}-${record.id}`} className="rounded-xl border border-slate-200 p-3">
+              <div key={`${record.kind}-${record.id}`} className="rounded-2xl border border-slate-200 p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -143,7 +137,7 @@ export default async function PortalDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -160,7 +154,7 @@ export default async function PortalDashboardPage() {
               <Link
                 key={ticket.id}
                 href={`/portal/chamados/${ticket.id}` as Route}
-                className="block rounded-xl border border-slate-200 p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40"
+                className="block rounded-2xl border border-slate-200 p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -168,7 +162,7 @@ export default async function PortalDashboardPage() {
                     <p className="mt-0.5 truncate font-medium text-slate-950">{ticket.title}</p>
                     <p className="mt-0.5 text-xs text-slate-500">Atualizado em {formatDate(ticket.updatedAt)}</p>
                   </div>
-                  <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${portalTicketStatusClass[ticket.status]}`}>
+                  <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${portalTicketStatusClass[ticket.status]}`}>
                     {portalTicketStatusLabel[ticket.status]}
                   </span>
                 </div>
@@ -181,9 +175,8 @@ export default async function PortalDashboardPage() {
         </Card>
       </div>
 
-      {/* Pagamento + Documentos */}
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Dados para pagamento</CardTitle>
             <p className="mt-1 text-sm text-slate-500">Use estas informações para quitar cobranças.</p>
@@ -193,7 +186,7 @@ export default async function PortalDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>

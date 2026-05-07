@@ -9,6 +9,7 @@ const serviceOrderPartSchema = z.object({
 
 export const serviceOrderCreateSchema = z.object({
   serviceType: z.string().trim().max(120, "Tipo de serviço muito longo").optional().or(z.literal("")),
+  servicePrice: z.coerce.number().min(0).max(999999).optional(),
   assignedTechnicianId: z.string().trim().optional().or(z.literal("")),
   scheduledStartAt: z.string().datetime().optional().or(z.literal("")),
   executionNotes: z.string().trim().max(5000, "Observações muito longas").optional().or(z.literal("")),
@@ -18,6 +19,7 @@ export const serviceOrderCreateSchema = z.object({
 export const serviceOrderUpdateSchema = z.object({
   status: z.enum(["PLANNED", "IN_EXECUTION", "PAUSED", "COMPLETED", "CANCELED"]),
   serviceType: z.string().trim().max(120, "Tipo de serviço muito longo").optional().or(z.literal("")),
+  servicePrice: z.coerce.number().min(0).max(999999).optional(),
   assignedTechnicianId: z.string().trim().optional().or(z.literal("")),
   scheduledStartAt: z.string().datetime().optional().or(z.literal("")),
   startedAt: z.string().datetime().optional().or(z.literal("")),

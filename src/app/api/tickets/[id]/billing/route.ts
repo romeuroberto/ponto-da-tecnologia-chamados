@@ -49,15 +49,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
 
     const { id } = await context.params;
-
-    const current = await billingService.getTicketBilling(id);
-    if (current && isBillingSummaryLocked(current.financialStatus)) {
-      return NextResponse.json(
-        { success: false, message: "Este financeiro está encerrado e não pode ser alterado." },
-        { status: 422 }
-      );
-    }
-
     const body = await request.json();
     const result = billingSummarySchema.safeParse(body);
 
@@ -65,6 +56,23 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json(
         { success: false, message: "Dados inválidos para o resumo financeiro.", errors: result.error.flatten() },
         { status: 400 }
+      );
+    }
+
+    const current = await billingService.getTicketBilling(id);
+    const nextStatus = result.data.financialStatus;
+
+    if (current?.financialStatus === "PAGO") {
+      return NextResponse.json(
+        { success: false, message: "Este financeiro está encerrado e não pode ser alterado." },
+        { status: 422 }
+      );
+    }
+
+    if (current && isBillingSummaryLocked(current.financialStatus) && current.financialStatus === nextStatus) {
+      return NextResponse.json(
+        { success: false, message: "Os valores deste financeiro estão bloqueados no status atual." },
+        { status: 422 }
       );
     }
 

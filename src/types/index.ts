@@ -87,6 +87,8 @@ export interface CompanyProfile {
   state?: string;
   postalCode?: string;
   notes?: string;
+  logoPath?: string;
+  signaturePath?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -268,6 +270,7 @@ export interface ServiceOrder {
   number: string;
   status: ServiceOrderStatus;
   serviceType?: string;
+  servicePrice?: number;
   assignedTechnicianId?: string;
   assignedTechnicianName?: string;
   scheduledStartAt?: string;

@@ -40,6 +40,7 @@ export const serviceOrderService = {
     ticketId: string,
     input: {
       serviceType?: string;
+      servicePrice?: number;
       assignedTechnicianId?: string;
       scheduledStartAt?: string;
       executionNotes?: string;
@@ -92,6 +93,7 @@ export const serviceOrderService = {
     input: {
       status: "PLANNED" | "IN_EXECUTION" | "PAUSED" | "COMPLETED" | "CANCELED";
       serviceType?: string;
+      servicePrice?: number;
       assignedTechnicianId?: string;
       scheduledStartAt?: string;
       startedAt?: string;

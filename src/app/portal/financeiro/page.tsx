@@ -16,29 +16,30 @@ export default async function PortalFinancialPage() {
   return (
     <div className="space-y-6 lg:space-y-8">
       <div>
-        <p className="text-sm text-slate-500">Financeiro</p>
-        <h1 className="mt-0.5 text-2xl font-semibold text-slate-950">Resumo financeiro</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Financeiro</p>
+        <h1 className="mt-2 text-3xl font-semibold text-slate-950">Resumo financeiro</h1>
+        <p className="mt-2 text-sm text-slate-500">Acompanhe valores em aberto, vencimentos, recebimentos e documentos fiscais.</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Em aberto</p>
           <p className="mt-2 text-2xl font-semibold text-amber-950">{formatCurrency(summary.pendingAmount)}</p>
           <p className="mt-1 text-sm text-amber-700">{summary.pendingCount} lançamento(s) aguardando.</p>
         </div>
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-4">
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Vencido</p>
           <p className="mt-2 text-2xl font-semibold text-rose-950">{formatCurrency(summary.overdueAmount)}</p>
           <p className="mt-1 text-sm text-rose-700">Cobranças sem baixa confirmada.</p>
         </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Já pago</p>
           <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(summary.paidAmount)}</p>
           <p className="mt-1 text-sm text-emerald-700">Valores recebidos e registrados.</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Lançamentos</CardTitle>
           <p className="mt-1 text-sm text-slate-500">Chamados e vendas com situação financeira disponível.</p>
@@ -55,7 +56,7 @@ export default async function PortalFinancialPage() {
                 <Link
                   key={`${record.kind}-${record.id}`}
                   href={href}
-                  className="block rounded-xl border border-slate-200 p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40"
+                  className="block rounded-2xl border border-slate-200 p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40"
                 >
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
@@ -86,7 +87,7 @@ export default async function PortalFinancialPage() {
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Dados para pagamento</CardTitle>
             <p className="mt-1 text-sm text-slate-500">Copie a chave Pix, QR code ou dados bancários.</p>
@@ -96,7 +97,7 @@ export default async function PortalFinancialPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between gap-3">
               <div>

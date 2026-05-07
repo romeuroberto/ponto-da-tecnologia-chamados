@@ -7,15 +7,15 @@ export const ticketUpdateSchema = z.object({
   closingReason: z.string().trim().max(500, "Motivo muito longo").optional().or(z.literal("")),
   title: z.string().trim().min(2, "Título muito curto").max(200, "Título muito longo").optional()
 }).superRefine((data, ctx) => {
-  if ((data.status === "CLOSED" || data.status === "CANCELED") && !data.closingReason?.trim()) {
+  if (data.status === "CANCELED" && !data.closingReason?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["closingReason"],
-      message: "Informe o motivo do encerramento ou cancelamento."
+      message: "Informe o motivo do cancelamento."
     });
   }
 });
 
 export const ticketCommentSchema = z.object({
-  message: z.string().min(3, "Comentario obrigatorio")
+  message: z.string().min(3, "Comentário obrigatório")
 });

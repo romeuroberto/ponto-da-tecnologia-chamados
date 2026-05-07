@@ -66,6 +66,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       {
         status: result.data.status,
         serviceType: result.data.serviceType || undefined,
+        servicePrice: result.data.servicePrice,
         assignedTechnicianId: result.data.assignedTechnicianId || undefined,
         scheduledStartAt: result.data.scheduledStartAt || undefined,
         startedAt: result.data.startedAt || undefined,

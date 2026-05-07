@@ -19,6 +19,8 @@ export interface UpsertCompanyProfileInput {
   state?: string;
   postalCode?: string;
   notes?: string;
+  logoPath?: string;
+  signaturePath?: string;
 }
 
 export const companyProfileRepository = {
@@ -65,7 +67,9 @@ export const companyProfileRepository = {
       city: normalizeOptionalString(input.city) ?? null,
       state: normalizeOptionalString(input.state) ?? null,
       postalCode: normalizeOptionalString(input.postalCode) ?? null,
-      notes: normalizeOptionalString(input.notes) ?? null
+      notes: normalizeOptionalString(input.notes) ?? null,
+      logoPath: normalizeOptionalString(input.logoPath) ?? null,
+      signaturePath: normalizeOptionalString(input.signaturePath) ?? null
     };
 
     const record = current

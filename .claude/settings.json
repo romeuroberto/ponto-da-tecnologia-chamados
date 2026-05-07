@@ -8,7 +8,9 @@
       "PowerShell(Remove-Item \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\middleware.ts\" -Confirm:$false)",
       "Bash(Get-ChildItem \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\prisma\\\\migrations\")",
       "Bash(Sort-Object LastWriteTime -Descending)",
-      "Bash(Select-Object -First 3 Name)"
+      "Bash(Select-Object -First 3 Name)",
+      "Bash(find \"c:\\\\\\\\Users\\\\\\\\User\\\\\\\\Desktop\\\\\\\\Projetos VS\\\\\\\\ponto-da-tecnologia-chamados\\\\\\\\src\\\\\\\\lib\" -name \"*portal*\")",
+      "Bash(mkdir \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\\\\[id]\\\\recibo\" 2>/dev/null; echo \"ok\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

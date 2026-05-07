@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   Boxes,
@@ -25,7 +25,12 @@ const iconMap: Record<string, LucideIcon> = {
   "/empresa": Settings2,
   "/usuarios": Users,
   "/financeiro": Receipt,
-  "/catalogos": Boxes
+  "/catalogos": Boxes,
+  "/portal/dashboard": LayoutDashboard,
+  "/portal/chamados": Ticket,
+  "/portal/financeiro": Receipt,
+  "/portal/vendas": Boxes,
+  "/portal/documentos": Building2
 };
 
 interface NavChild {
@@ -39,8 +44,46 @@ interface NavItem {
   children?: NavChild[];
 }
 
+function parseHref(href: string) {
+  const qIndex = href.indexOf("?");
+  if (qIndex === -1) return { path: href, query: null as URLSearchParams | null };
+  return { path: href.slice(0, qIndex), query: new URLSearchParams(href.slice(qIndex + 1)) };
+}
+
 export function NavLinks({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  function checkIsChildActive(childHref: string, siblings: NavChild[]): boolean {
+    const { path, query } = parseHref(childHref);
+
+    if (query) {
+      if (pathname !== path) return false;
+      for (const [key, value] of query.entries()) {
+        if (searchParams.get(key) !== value) return false;
+      }
+      return true;
+    }
+
+    const hasSamePathQuerySiblings = siblings.some((s) => {
+      const { path: sp, query: sq } = parseHref(s.href as string);
+      return sq !== null && sp === path;
+    });
+
+    if (hasSamePathQuerySiblings && pathname === path) {
+      const anyQuerySiblingActive = siblings.some((s) => {
+        const { path: sp, query: sq } = parseHref(s.href as string);
+        if (!sq || sp !== path) return false;
+        for (const [k, v] of sq.entries()) {
+          if (searchParams.get(k) !== v) return false;
+        }
+        return true;
+      });
+      return !anyQuerySiblingActive;
+    }
+
+    return pathname === path || pathname.startsWith(`${path}/`);
+  }
 
   return (
     <nav className="flex flex-1 flex-col gap-0.5 p-3">
@@ -49,7 +92,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
         const hasChildren = Boolean(item.children?.length);
         const selfActive = pathname === item.href || (!hasChildren && pathname.startsWith(`${item.href}/`));
         const childActive =
-          item.children?.some((c) => pathname === c.href || pathname.startsWith(`${c.href}/`)) ?? false;
+          item.children?.some((c) => checkIsChildActive(c.href as string, item.children!)) ?? false;
         const isActive = selfActive || childActive;
 
         return (
@@ -78,7 +121,7 @@ export function NavLinks({ items }: { items: NavItem[] }) {
             {hasChildren ? (
               <div className="mb-1 ml-4 mt-0.5 flex flex-col gap-0.5 border-l border-white/10 pl-3">
                 {item.children!.map((child) => {
-                  const isChildActive = pathname === child.href || pathname.startsWith(`${child.href}/`);
+                  const isChildActive = checkIsChildActive(child.href as string, item.children!);
                   return (
                     <Link
                       key={child.href}

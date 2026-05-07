@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { LogoUpload } from "@/components/empresa/logo-upload";
+import { SignatureUpload } from "@/components/empresa/signature-upload";
 import { companyProfileSchema } from "@/lib/validations/portal-admin";
 import { requireRole } from "@/server/auth/session";
 import { companyProfileService } from "@/server/services/company-profile-service";
@@ -54,7 +56,12 @@ export default async function CompanyPage({
       redirect("/empresa?status=error&message=Confira%20os%20dados%20obrigat%C3%B3rios%20da%20empresa.");
     }
 
-    await companyProfileService.saveProfile(parsed.data);
+    const current = await companyProfileService.getProfile();
+    await companyProfileService.saveProfile({
+      ...parsed.data,
+      logoPath: current?.logoPath,
+      signaturePath: current?.signaturePath
+    });
     revalidatePath("/empresa");
     redirect("/empresa?status=success&message=Perfil%20da%20empresa%20salvo%20com%20sucesso.");
   }
@@ -67,6 +74,18 @@ export default async function CompanyPage({
       />
 
       {getMessage(status, message)}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Identidade visual</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <LogoUpload currentLogoPath={profile?.logoPath} />
+          <div className="border-t border-slate-100 pt-6">
+            <SignatureUpload currentSignaturePath={profile?.signaturePath} />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

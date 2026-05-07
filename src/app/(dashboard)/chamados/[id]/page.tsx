@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { TicketAttachments } from "@/components/tickets/ticket-attachments";
 import { TicketDetailActions } from "@/components/tickets/ticket-detail-actions";
+import { TicketTitleEditor } from "@/components/tickets/ticket-title-editor";
 import { TicketFlowActions } from "@/components/tickets/ticket-flow-actions";
 import { TicketFlowOverview } from "@/components/tickets/ticket-flow-overview";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
@@ -23,8 +24,8 @@ import { userService } from "@/server/services/user-service";
 
 const financialStatusLabels: Record<string, { label: string; className: string }> = {
   PENDENTE: { label: "Pendente", className: "bg-slate-100 text-slate-700" },
-  EM_ANALISE: { label: "Em análise", className: "bg-blue-100 text-blue-700" },
-  APROVADO: { label: "Aprovado", className: "bg-emerald-100 text-emerald-700" },
+  EM_ANALISE: { label: "Em revisao interna", className: "bg-blue-100 text-blue-700" },
+  APROVADO: { label: "Pronto para faturar", className: "bg-emerald-100 text-emerald-700" },
   FATURADO: { label: "Faturado", className: "bg-violet-100 text-violet-700" },
   PAGO: { label: "Pago", className: "bg-green-100 text-green-800" },
   CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
@@ -54,16 +55,18 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={ticket.title}
-        description={`${ticket.number} • ${ticket.clientName}`}
-        action={
-          <div className="flex flex-wrap gap-2">
-            <PriorityBadge priority={ticket.priority} />
-            <StatusBadge status={ticket.status} />
-          </div>
-        }
-      />
+      <div className="flex flex-col gap-1">
+        {currentUser.role === "ADMIN" || currentUser.role === "ATTENDANT" ? (
+          <TicketTitleEditor ticketId={ticket.id} title={ticket.title} />
+        ) : (
+          <h1 className="text-xl font-bold text-slate-950">{ticket.title}</h1>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-slate-500">{ticket.number} · {ticket.clientName}</span>
+          <PriorityBadge priority={ticket.priority} />
+          <StatusBadge status={ticket.status} />
+        </div>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:hidden">
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
@@ -83,7 +86,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
           {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && ticket.billing?.financialStatus === "PENDENTE" && !contractCoversCategory ? (
             <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <span className="font-semibold">Financeiro pendente.</span>{" "}
-              Este chamado está {ticket.status === "RESOLVED" ? "resolvido" : "encerrado"} mas o ciclo financeiro ainda não foi avançado.{" "}
+              Este chamado já foi concluído tecnicamente, mas o ciclo financeiro ainda não foi avançado.{" "}
               <a href={`/chamados/${ticket.id}/financeiro`} className="font-semibold underline">
                 Acessar financeiro →
               </a>
@@ -131,19 +134,19 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
               </div>
               {ticket.resolvedAt ? (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resolvido em</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Concluído em</p>
                   <p className="mt-1 text-sm text-slate-900">{formatDate(ticket.resolvedAt)}</p>
                 </div>
               ) : null}
               {ticket.closedAt ? (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Encerrado em</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Fechado em</p>
                   <p className="mt-1 text-sm text-slate-900">{formatDate(ticket.closedAt)}</p>
                 </div>
               ) : null}
               {ticket.closingReason ? (
                 <div className="sm:col-span-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Motivo de encerramento</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Motivo do cancelamento</p>
                   <p className="mt-1 text-sm leading-6 text-slate-700">{ticket.closingReason}</p>
                 </div>
               ) : null}
@@ -201,12 +204,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status</p>
-                        <span
-                          className={cn(
-                            "mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold",
-                            financialStatusLabels[ticket.billing.financialStatus]?.className
-                          )}
-                        >
+                        <span className={cn("mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold", financialStatusLabels[ticket.billing.financialStatus]?.className)}>
                           {financialStatusLabels[ticket.billing.financialStatus]?.label}
                         </span>
                       </div>
@@ -215,7 +213,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                         <p className="mt-1 text-sm font-semibold text-slate-950">{formatCurrency(ticket.billing.totalAmount)}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500">{ticket.billing.entries.length} lançamento(s) registrado(s)</p>
+                    <p className="text-xs text-slate-500">{ticket.billing.entries.length} lancamento(s) registrado(s)</p>
                   </>
                 ) : (
                   <p className="text-sm text-slate-500">Nenhum financeiro iniciado para este chamado.</p>

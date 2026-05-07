@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { auth } from "@/auth";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { appNavigation, filterNavigationByRole } from "@/components/layout/navigation-config";
@@ -14,7 +16,9 @@ export async function Sidebar() {
         <BrandMark />
       </div>
 
-      <NavLinks items={filteredNavigation} />
+      <Suspense fallback={<div className="flex-1" />}>
+        <NavLinks items={filteredNavigation} />
+      </Suspense>
 
       <div className="border-t border-white/10 px-4 py-3">
         <p className="text-[10px] font-medium uppercase tracking-widest text-blue-200/40">v0.1.0 interno</p>

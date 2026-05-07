@@ -9,7 +9,7 @@ export default async function PortalDocumentsPage() {
   return (
     <div className="space-y-6 lg:space-y-8">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Documentos</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Documentos</p>
         <h1 className="mt-2 text-3xl font-semibold text-slate-950">Notas fiscais e anexos financeiros</h1>
         <p className="mt-2 text-sm text-slate-500">Quando houver emissão, os documentos ficam disponíveis aqui sem bloquear o uso do portal.</p>
       </div>

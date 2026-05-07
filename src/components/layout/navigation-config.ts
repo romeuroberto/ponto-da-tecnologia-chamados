@@ -23,7 +23,17 @@ export interface NavigationItem {
 
 export const appNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/chamados", label: "Chamados" },
+  {
+    href: "/chamados",
+    label: "Chamados",
+    children: [
+      { href: "/chamados", label: "Todos" },
+      { href: "/chamados?status=OPEN" as Route, label: "Em Aberto" },
+      { href: "/chamados?status=WAITING_CUSTOMER" as Route, label: "Aguardando Cliente" },
+      { href: "/chamados/novo", label: "Novo Chamado" },
+      { href: "/relatorios", label: "Relatórios" }
+    ]
+  },
   {
     href: "/financeiro",
     label: "Financeiro",
@@ -44,7 +54,6 @@ export const appNavigation: NavigationItem[] = [
       { href: "/estoque", label: "Estoque" }
     ]
   },
-  { href: "/relatorios", label: "Relatórios" },
   { href: "/usuarios", label: "Usuários" },
   {
     href: "/catalogos",
@@ -64,7 +73,6 @@ export function filterNavigationByRole(items: NavigationItem[], role?: AppUser["
 
   return items.filter((item) => {
     if (item.href === "/chamados") return canViewTicketsModule(role);
-    if (item.href === "/relatorios") return canViewTicketsModule(role);
     if (item.href === "/clientes") return canViewClientsModule(role);
     if (item.href === "/usuarios") return canViewUsersModule(role);
     if (item.href === "/financeiro") return canViewFinancialModule(role);

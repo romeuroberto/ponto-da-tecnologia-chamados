@@ -74,6 +74,8 @@ interface CompanyProfileRecord {
   state: string | null;
   postalCode: string | null;
   notes: string | null;
+  logoPath: string | null;
+  signaturePath: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -102,6 +104,7 @@ interface ServiceOrderRecord {
   number: string;
   status: ServiceOrder["status"];
   serviceType: string | null;
+  servicePrice: PrismaDecimalLike | null;
   assignedTechnicianId: string | null;
   scheduledStartAt: Date | null;
   startedAt: Date | null;
@@ -344,6 +347,8 @@ export function mapCompanyProfile(record: CompanyProfileRecord): CompanyProfile 
     state: record.state ?? undefined,
     postalCode: record.postalCode ?? undefined,
     notes: record.notes ?? undefined,
+    logoPath: record.logoPath ?? undefined,
+    signaturePath: record.signaturePath ?? undefined,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString()
   };
@@ -378,6 +383,7 @@ export function mapServiceOrder(record: ServiceOrderRecord): ServiceOrder {
     number: record.number,
     status: record.status,
     serviceType: record.serviceType ?? undefined,
+    servicePrice: record.servicePrice ? record.servicePrice.toNumber() : undefined,
     assignedTechnicianId: record.assignedTechnicianId ?? undefined,
     assignedTechnicianName: record.assignedTechnician?.name ?? undefined,
     scheduledStartAt: record.scheduledStartAt?.toISOString() ?? undefined,

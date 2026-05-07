@@ -64,6 +64,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       id,
       {
         serviceType: result.data.serviceType || undefined,
+        servicePrice: result.data.servicePrice,
         assignedTechnicianId: result.data.assignedTechnicianId || undefined,
         scheduledStartAt: result.data.scheduledStartAt || undefined,
         executionNotes: result.data.executionNotes || undefined,

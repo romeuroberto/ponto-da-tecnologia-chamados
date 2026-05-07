@@ -9,6 +9,24 @@ import { requireUser } from "@/server/auth/session";
 import { getParam } from "@/server/search-params";
 import { reportService } from "@/server/services/report-service";
 
+const technicalStatusLabels: Record<string, string> = {
+  OPEN: "Aberto",
+  IN_PROGRESS: "Em atendimento",
+  WAITING_CUSTOMER: "Aguardando cliente",
+  RESOLVED: "Concluído tecnicamente",
+  CLOSED: "Concluído tecnicamente",
+  CANCELED: "Cancelado"
+};
+
+const financialStatusLabels: Record<string, string> = {
+  PENDENTE: "Pendente",
+  EM_ANALISE: "Em revisão interna",
+  APROVADO: "Pronto para faturar",
+  FATURADO: "Faturado",
+  PAGO: "Pago",
+  CANCELADO: "Cancelado"
+};
+
 export default async function ReportsPage({
   searchParams
 }: {
@@ -21,13 +39,8 @@ export default async function ReportsPage({
   const canViewFinancial = canViewFinancialModule(user.role);
   const operationalExportParams = new URLSearchParams();
 
-  if (from) {
-    operationalExportParams.set("from", from);
-  }
-
-  if (to) {
-    operationalExportParams.set("to", to);
-  }
+  if (from) operationalExportParams.set("from", from);
+  if (to) operationalExportParams.set("to", to);
 
   const operationalExportHref = `/api/reports/operational${operationalExportParams.toString() ? `?${operationalExportParams.toString()}` : ""}`;
   const financialExportHref = `/api/reports/financial${operationalExportParams.toString() ? `?${operationalExportParams.toString()}` : ""}`;
@@ -40,27 +53,21 @@ export default async function ReportsPage({
     <div className="space-y-8">
       <PageHeader
         title="Relatórios"
-        description="Primeira camada de relatórios operacionais e financeiros para acompanhar volume, SLA e faturamento."
+        description="Camada operacional e financeira para acompanhar volume, conclusão tecnica, SLA e cobrança."
         action={
           <div className="flex flex-wrap gap-2">
-            <a
-              href={operationalExportHref}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
-            >
+            <a href={operationalExportHref} className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
               Exportar operacional CSV
             </a>
             {canViewFinancial ? (
-              <a
-                href={financialExportHref}
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
-              >
+              <a href={financialExportHref} className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
                 Exportar financeiro CSV
               </a>
             ) : null}
           </div>
         }
       />
-      <form action="/relatorios">
+      <form action="/relatórios">
         <Card>
           <CardContent className="grid gap-4 p-4 md:grid-cols-4">
             <Input name="from" type="date" defaultValue={from} />
@@ -68,7 +75,7 @@ export default async function ReportsPage({
             <Button type="submit" variant="secondary">
               Atualizar relatório
             </Button>
-            <a href="/relatorios" className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
+            <a href="/relatórios" className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
               Limpar período
             </a>
           </CardContent>
@@ -89,7 +96,7 @@ export default async function ReportsPage({
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Concluídos</p>
+            <p className="text-sm text-slate-600">Concluídos técnicos</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{report.summary.completed}</p>
           </CardContent>
         </Card>
@@ -115,14 +122,14 @@ export default async function ReportsPage({
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
           title="Aberturas no período"
-          description="Quantidade diária de chamados abertos nos últimos 7 dias."
+          description="Quantidade diária de chamados abertos nos ultimos 7 dias."
           total={report.trend.reduce((sum, item) => sum + item.opened, 0)}
           data={report.trend.map((item) => ({ label: item.label, value: item.opened }))}
           tone="blue"
         />
         <TrendChart
-          title="Conclusões no período"
-          description="Quantidade diária de chamados resolvidos ou encerrados nos últimos 7 dias."
+          title="Conclusões técnicas no período"
+          description="Quantidade diária de chamados concluídos tecnicamente nos ultimos 7 dias."
           total={report.trend.reduce((sum, item) => sum + item.resolved, 0)}
           data={report.trend.map((item) => ({ label: item.label, value: item.resolved }))}
           tone="green"
@@ -156,7 +163,7 @@ export default async function ReportsPage({
           </Card>
           <Card className="border-rose-200 bg-rose-50/60">
             <CardContent className="p-5">
-              <p className="text-sm text-rose-700">Pendente de recebimento</p>
+              <p className="text-sm text-rose-700">Pendente de cobrança ou recebimento</p>
               <p className="mt-2 text-2xl font-semibold text-rose-950">{formatCurrency(report.financial.pendingTotal)}</p>
             </CardContent>
           </Card>
@@ -165,13 +172,13 @@ export default async function ReportsPage({
       <section className="grid gap-6 xl:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Tempo médio de resolução</CardTitle>
+            <CardTitle>Tempo médio de conclusão tecnica</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-semibold text-slate-950">
               {report.summary.averageResolutionHours !== null ? `${report.summary.averageResolutionHours}h` : "-"}
             </p>
-            <p className="mt-2 text-sm text-slate-600">Média calculada com base nos chamados resolvidos ou encerrados no período filtrado.</p>
+            <p className="mt-2 text-sm text-slate-600">Média calculada com base nos chamados concluídos tecnicamente no período filtrado.</p>
           </CardContent>
         </Card>
         <Card>
@@ -181,7 +188,7 @@ export default async function ReportsPage({
           <CardContent className="space-y-3">
             {report.byStatus.map((item) => (
               <div key={item.status} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
-                <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                <span className="text-sm font-medium text-slate-700">{technicalStatusLabels[item.status] ?? item.label}</span>
                 <span className="text-sm font-semibold text-slate-950">{item.total}</span>
               </div>
             ))}
@@ -213,7 +220,7 @@ export default async function ReportsPage({
                   <span className="font-medium text-slate-900">{item.clientName}</span>
                   <span className="text-sm font-semibold text-slate-950">{item.total}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluídos: {item.completed}</p>
+                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluidos: {item.completed}</p>
               </div>
             ))}
           </CardContent>
@@ -229,7 +236,7 @@ export default async function ReportsPage({
                   <span className="font-medium text-slate-900">{item.assigneeName}</span>
                   <span className="text-sm font-semibold text-slate-950">{item.total}</span>
                 </div>
-                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluídos: {item.completed}</p>
+                <p className="mt-1 text-sm text-slate-600">Ativos: {item.active} | Concluidos: {item.completed}</p>
               </div>
             ))}
           </CardContent>
@@ -261,7 +268,7 @@ export default async function ReportsPage({
               {report.financial.byFinancialStatus.map((item) => (
                 <div key={item.status} className="rounded-xl border border-slate-200 px-4 py-3">
                   <div className="flex items-center justify-between gap-4">
-                    <span className="font-medium text-slate-900">{item.label}</span>
+                    <span className="font-medium text-slate-900">{financialStatusLabels[item.status] ?? item.label}</span>
                     <span className="text-sm font-semibold text-slate-950">{item.total}</span>
                   </div>
                   <p className="mt-1 text-sm text-slate-600">{formatCurrency(item.amount)}</p>

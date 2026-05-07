@@ -5,7 +5,6 @@ export type TicketFlowStageId =
   | "execution"
   | "technical_closure"
   | "financial"
-  | "invoicing"
   | "payment";
 
 export type TicketFlowStageState = "done" | "current" | "upcoming";
@@ -31,15 +30,15 @@ const technicalStatusLabels: Record<Ticket["status"], string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em atendimento",
   WAITING_CUSTOMER: "Aguardando cliente",
-  RESOLVED: "Resolvido",
-  CLOSED: "Encerrado",
+  RESOLVED: "Concluído tecnicamente",
+  CLOSED: "Concluído tecnicamente",
   CANCELED: "Cancelado"
 };
 
 const financialStatusLabels: Record<FinancialStatus, string> = {
   PENDENTE: "Pendente",
-  EM_ANALISE: "Em análise",
-  APROVADO: "Aprovado",
+  EM_ANALISE: "Em revisão interna",
+  APROVADO: "Pronto para faturar",
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
@@ -74,28 +73,23 @@ function buildStages(currentStageId: TicketFlowStageId) {
     },
     {
       id: "execution",
-      label: "Execução técnica",
-      description: "Triagem, atendimento, interações e tratativa do chamado."
+      label: "Atendimento",
+      description: "Triagem, execução técnica, interações e acompanhamento."
     },
     {
       id: "technical_closure",
-      label: "Encerramento técnico",
-      description: "Solução aplicada e validação do fechamento técnico."
+      label: "Conclusão técnica",
+      description: "Solução aplicada e atendimento tecnicamente concluído."
     },
     {
       id: "financial",
       label: "Financeiro",
-      description: "Resumo financeiro, lançamentos e definição da cobrança."
-    },
-    {
-      id: "invoicing",
-      label: "Faturamento",
-      description: "Aprovação e emissão da cobrança para o cliente."
+      description: "Montagem dos valores e definição da cobrança quando aplicável."
     },
     {
       id: "payment",
-      label: "Recebimento",
-      description: "Confirmação do pagamento e conclusão total do fluxo."
+      label: "Finalização",
+      description: "Registro da cobrança emitida ou do pagamento para concluir o fluxo."
     }
   ];
 
@@ -111,62 +105,62 @@ export function getTicketFlowSummary(ticket: Ticket): TicketFlowSummary {
   const financialStatus = ticket.billing?.financialStatus;
   let overallLabel = "Aberto";
   let overallDescription = "Chamado registrado e aguardando início do atendimento.";
-  let nextAction = "Atribuir um responsável e iniciar o atendimento técnico.";
+  let nextAction = "Definir responsável e iniciar o atendimento técnico.";
   let currentStageId: TicketFlowStageId = "opening";
 
   if (ticket.status === "CANCELED") {
     overallLabel = "Cancelado";
-    overallDescription = "O chamado foi encerrado sem continuidade do fluxo técnico e financeiro.";
+    overallDescription = "O chamado foi encerrado sem continuidade técnica ou financeira.";
     nextAction = "Nenhuma ação obrigatória. Reabra o chamado se precisar retomar o atendimento.";
     currentStageId = "technical_closure";
   } else if (ticket.status === "OPEN") {
     overallLabel = "Aberto";
     overallDescription = "Chamado criado e aguardando triagem ou início do atendimento técnico.";
-    nextAction = "Definir responsável, revisar prioridade e mover para atendimento.";
+    nextAction = "Definir responsável, revisar prioridade e iniciar o atendimento.";
     currentStageId = "opening";
   } else if (ticket.status === "IN_PROGRESS") {
     overallLabel = "Em atendimento";
     overallDescription = "Equipe técnica atuando no chamado e registrando tratativas.";
-    nextAction = "Concluir a tratativa técnica ou mover para aguardando cliente, se necessário.";
+    nextAction = "Concluir o atendimento quando a solução estiver pronta ou aguardar retorno do cliente, se necessário.";
     currentStageId = "execution";
   } else if (ticket.status === "WAITING_CUSTOMER") {
     overallLabel = "Aguardando cliente";
-    overallDescription = "A equipe depende de retorno, teste ou validação do cliente para seguir.";
-    nextAction = "Cobrar retorno do cliente ou retomar o atendimento assim que houver resposta.";
+    overallDescription = "O atendimento depende de retorno, teste ou validação do cliente para seguir.";
+    nextAction = "Retomar o atendimento assim que houver resposta ou concluir se a validação já ocorreu.";
     currentStageId = "execution";
-  } else if (ticket.status === "RESOLVED") {
-    overallLabel = "Resolvido aguardando encerramento";
-    overallDescription = "A solução técnica foi aplicada, mas o chamado ainda não foi formalmente encerrado.";
-    nextAction = "Validar com o cliente e encerrar tecnicamente o chamado.";
-    currentStageId = "technical_closure";
-  } else if (ticket.status === "CLOSED" && !ticket.billing) {
-    overallLabel = "Encerrado aguardando financeiro";
-    overallDescription = "O atendimento técnico foi encerrado, mas a etapa financeira ainda não foi iniciada.";
-    nextAction = "Criar o resumo financeiro e registrar os lançamentos do chamado.";
-    currentStageId = "financial";
-  } else if (ticket.status === "CLOSED" && financialStatus && ["PENDENTE", "EM_ANALISE", "APROVADO"].includes(financialStatus)) {
-    overallLabel = "Concluído aguardando faturamento";
-    overallDescription = "O chamado está fechado tecnicamente e o financeiro foi iniciado, mas ainda não foi faturado.";
-    nextAction =
-      financialStatus === "APROVADO"
-        ? "Faturar o chamado e registrar a cobrança enviada ao cliente."
-        : "Revisar valores, validar o financeiro e avançar para aprovação ou faturamento.";
-    currentStageId = financialStatus === "APROVADO" ? "invoicing" : "financial";
-  } else if (ticket.status === "CLOSED" && financialStatus === "FATURADO") {
-    overallLabel = "Faturado aguardando recebimento";
-    overallDescription = "A cobrança já foi emitida e o fluxo aguarda apenas a confirmação de pagamento.";
-    nextAction = "Registrar o recebimento assim que o pagamento for confirmado.";
-    currentStageId = "payment";
-  } else if (ticket.status === "CLOSED" && financialStatus === "PAGO") {
-    overallLabel = "Finalizado";
-    overallDescription = "Chamado concluído tecnicamente e financeiramente, com recebimento confirmado.";
-    nextAction = "Nenhuma ação pendente. O fluxo deste chamado está totalmente concluído.";
-    currentStageId = "payment";
-  } else if (ticket.status === "CLOSED" && financialStatus === "CANCELADO") {
-    overallLabel = "Encerrado com financeiro cancelado";
-    overallDescription = "Chamado encerrado tecnicamente e com trilha financeira cancelada.";
-    nextAction = "Nenhuma ação obrigatória, a menos que seja necessário revisar a cobrança.";
-    currentStageId = "invoicing";
+  } else if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
+    const hasBilling = Boolean(ticket.billing);
+    const financialDone = financialStatus === "PAGO" || financialStatus === "CANCELADO";
+
+    if (!hasBilling) {
+      overallLabel = "Concluído tecnicamente";
+      overallDescription = "O atendimento técnico foi concluído e o financeiro só precisa ser iniciado se houver cobrança.";
+      nextAction = "Iniciar o financeiro se houver cobrança. Caso contrário, o chamado já está operacionalmente concluído.";
+      currentStageId = "technical_closure";
+    } else if (financialStatus && ["PENDENTE", "EM_ANALISE", "APROVADO"].includes(financialStatus)) {
+      overallLabel = "Concluído aguardando financeiro";
+      overallDescription = "O trabalho técnico terminou, mas a definição financeira ainda está em andamento.";
+      nextAction = "Revisar os valores e registrar a cobrança quando estiver tudo pronto.";
+      currentStageId = "financial";
+    } else if (financialStatus === "FATURADO") {
+      overallLabel = "Faturado aguardando recebimento";
+      overallDescription = "O atendimento técnico terminou e a cobrança já foi registrada.";
+      nextAction = "Confirmar o pagamento assim que o recebimento acontecer.";
+      currentStageId = "payment";
+    } else if (financialDone) {
+      overallLabel = financialStatus === "PAGO" ? "Finalizado" : "Concluído sem cobrança";
+      overallDescription =
+        financialStatus === "PAGO"
+          ? "Chamado concluído tecnicamente e financeiramente, com recebimento confirmado."
+          : "Chamado concluído tecnicamente e com ciclo financeiro encerrado sem cobrança.";
+      nextAction = "Nenhuma ação pendente neste chamado.";
+      currentStageId = "payment";
+    } else {
+      overallLabel = "Concluído tecnicamente";
+      overallDescription = "O atendimento técnico foi concluído.";
+      nextAction = "Revise se ainda existe alguma pendência financeira neste chamado.";
+      currentStageId = "technical_closure";
+    }
   }
 
   const stages = buildStages(currentStageId);

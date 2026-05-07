@@ -17,6 +17,7 @@ export interface ServiceOrderPartInput {
 
 export interface CreateServiceOrderInput {
   serviceType?: string;
+  servicePrice?: number;
   assignedTechnicianId?: string;
   scheduledStartAt?: string;
   executionNotes?: string;
@@ -27,6 +28,7 @@ export interface CreateServiceOrderInput {
 export interface UpdateServiceOrderInput {
   status: ServiceOrderStatus;
   serviceType?: string;
+  servicePrice?: number;
   assignedTechnicianId?: string;
   scheduledStartAt?: string;
   startedAt?: string;
@@ -122,6 +124,7 @@ export const serviceOrderRepository = {
       number,
       status: "PLANNED" as const,
       serviceType: normalizeOptionalString(input.serviceType),
+      servicePrice: input.servicePrice ?? null,
       assignedTechnicianId: normalizeOptionalString(input.assignedTechnicianId),
       scheduledStartAt: toOptionalDate(input.scheduledStartAt),
       executionNotes: normalizeOptionalString(input.executionNotes),
@@ -161,6 +164,7 @@ export const serviceOrderRepository = {
     const baseData = {
       status: input.status,
       serviceType: normalizeOptionalString(input.serviceType),
+      servicePrice: input.servicePrice ?? null,
       assignedTechnicianId: normalizeOptionalString(input.assignedTechnicianId),
       scheduledStartAt: toOptionalDate(input.scheduledStartAt),
       startedAt: toOptionalDate(input.startedAt),
