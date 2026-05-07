@@ -17,7 +17,7 @@ export const billingSummarySchema = z.object({
 });
 
 export const billingEntrySchema = z.object({
-  entryType: z.enum(["LABOR", "PART", "TRAVEL", "EXTRA"]),
+  entryType: z.enum(["LABOR", "PART", "TRAVEL", "EXTRA", "CONSULTING", "REMOTE_SUPPORT"]),
   description: z.string().trim().min(3, "Descrição obrigatória"),
   quantity: z.coerce.number().positive("Quantidade deve ser maior que zero"),
   unitPrice: z.coerce.number().min(0, "Valor unitário não pode ser negativo"),

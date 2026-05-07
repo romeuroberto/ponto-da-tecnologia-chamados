@@ -1,4 +1,4 @@
-import type { FinancialStatus } from "@/types";
+import type { BillingEntryType, FinancialStatus } from "@/types";
 import { isDatabaseConfigured } from "@/server/db-support";
 import { billingRepository } from "@/server/repositories/billing-repository";
 import { ticketRepository } from "@/server/repositories/ticket-repository";
@@ -59,7 +59,7 @@ export const billingService = {
   async addBillingEntry(
     ticketId: string,
     input: {
-      entryType: "LABOR" | "PART" | "TRAVEL" | "EXTRA";
+      entryType: BillingEntryType;
       description: string;
       quantity: number;
       unitPrice: number;
@@ -91,7 +91,7 @@ export const billingService = {
     ticketId: string,
     entryId: string,
     input: {
-      entryType: "LABOR" | "PART" | "TRAVEL" | "EXTRA";
+      entryType: BillingEntryType;
       description: string;
       quantity: number;
       unitPrice: number;

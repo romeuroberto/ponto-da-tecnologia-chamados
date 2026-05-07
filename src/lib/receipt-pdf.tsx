@@ -2,143 +2,141 @@ import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/render
 
 import type { CompanyProfile, FiscalDocumentType } from "@/types";
 
-const BRAND = "#1a3558";
+// Paleta monocromática para impressão laser
+const C = {
+  black: "#000000",
+  dark: "#1a1a1a",
+  mid: "#555555",
+  light: "#888888",
+  rule: "#bbbbbb",
+  ruleLight: "#dddddd",
+  bg: "#f4f4f4"
+};
 
 const s = StyleSheet.create({
-  page: { fontFamily: "Helvetica", fontSize: 9, color: "#0f172a", backgroundColor: "#ffffff" },
+  page: {
+    fontFamily: "Helvetica",
+    fontSize: 8.5,
+    color: C.dark,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 30,
+    paddingTop: 24,
+    paddingBottom: 18
+  },
 
-  // ── Header band ──────────────────────────────────────────────────
-  band: {
-    backgroundColor: BRAND,
-    paddingHorizontal: 40,
-    paddingVertical: 18,
+  // ── Cabeçalho ────────────────────────────────────────────────────
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "flex-start",
+    marginBottom: 10
   },
-  bandLeft: { flexDirection: "row", alignItems: "center", flex: 1 },
-  logo: { width: 88, height: 44, objectFit: "contain", marginRight: 14 },
-  companyName: { fontSize: 13, fontFamily: "Helvetica-Bold", color: "#ffffff", marginBottom: 3 },
-  companyMeta: { fontSize: 7.5, color: "#93c5fd", lineHeight: 1.55 },
-  bandRight: { alignItems: "flex-end" },
-  docTitle: { fontSize: 24, fontFamily: "Helvetica-Bold", color: "#ffffff", letterSpacing: 3 },
-  docNumber: { fontSize: 8, color: "#93c5fd", marginTop: 4 },
-  docDate: { fontSize: 8, color: "#93c5fd", marginTop: 2 },
+  headerLeft: { flexDirection: "row", alignItems: "flex-start", flex: 1 },
+  logo: { width: 52, height: 34, objectFit: "contain", marginRight: 10, marginTop: 1 },
+  companyName: { fontSize: 11, fontFamily: "Helvetica-Bold", color: C.black, marginBottom: 2 },
+  companyMeta: { fontSize: 7, color: C.light, lineHeight: 1.5 },
+  headerRight: { alignItems: "flex-end" },
+  docTitle: { fontSize: 20, fontFamily: "Helvetica-Bold", color: C.black, letterSpacing: 2 },
+  docNumber: { fontSize: 7.5, color: C.mid, marginTop: 3, textAlign: "right" },
+  docDate: { fontSize: 7.5, color: C.mid, marginTop: 1, textAlign: "right" },
 
-  // ── Body ─────────────────────────────────────────────────────────
-  body: { paddingHorizontal: 40, paddingTop: 22, flex: 1 },
+  // ── Régua ────────────────────────────────────────────────────────
+  rule: { borderTopWidth: 1, borderTopColor: C.black, marginBottom: 10 },
+  ruleThin: { borderTopWidth: 0.5, borderTopColor: C.rule, marginBottom: 8 },
 
-  // ── Info cards row ───────────────────────────────────────────────
-  cardRow: { flexDirection: "row", gap: 10, marginBottom: 20 },
-  card: { flex: 1, borderWidth: 0.75, borderColor: "#e2e8f0", borderRadius: 6, padding: 11 },
-  cardTitle: {
+  // ── Seção genérica ───────────────────────────────────────────────
+  sectionLabel: {
     fontSize: 6.5,
     fontFamily: "Helvetica-Bold",
-    color: "#94a3b8",
+    color: C.light,
     textTransform: "uppercase",
     letterSpacing: 0.8,
-    marginBottom: 8
+    marginBottom: 4
   },
-  cardField: { marginBottom: 6 },
-  cardLabel: { fontSize: 6.5, color: "#94a3b8", marginBottom: 1 },
-  cardValue: { fontSize: 9.5, color: "#0f172a", fontFamily: "Helvetica-Bold" },
-  cardValueNormal: { fontSize: 9, color: "#334155" },
+  sectionRow: { flexDirection: "row", gap: 12, marginBottom: 10 },
+  sectionBlock: { flex: 1 },
 
-  // ── Table ────────────────────────────────────────────────────────
-  tableTitle: {
-    fontSize: 7,
+  // ── Recebemos de ─────────────────────────────────────────────────
+  clientName: { fontSize: 10, fontFamily: "Helvetica-Bold", color: C.black, marginBottom: 2 },
+  clientMeta: { fontSize: 7.5, color: C.mid, lineHeight: 1.55 },
+
+  // ── Referente a ──────────────────────────────────────────────────
+  refLabel: { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.dark, marginBottom: 1 },
+  refDesc: { fontSize: 7.5, color: C.mid, lineHeight: 1.5 },
+
+  // ── Tabela de itens ──────────────────────────────────────────────
+  tableLabel: {
+    fontSize: 6.5,
     fontFamily: "Helvetica-Bold",
-    color: "#64748b",
+    color: C.light,
     textTransform: "uppercase",
-    letterSpacing: 0.7,
-    marginBottom: 6
+    letterSpacing: 0.8,
+    marginBottom: 4
   },
-  table: { borderWidth: 0.75, borderColor: "#e2e8f0", borderRadius: 6, marginBottom: 4, overflow: "hidden" },
-  thead: { flexDirection: "row", backgroundColor: BRAND, paddingVertical: 8, paddingHorizontal: 12 },
-  th: { fontSize: 7, fontFamily: "Helvetica-Bold", color: "#ffffff", textTransform: "uppercase", letterSpacing: 0.4 },
-  tr: { flexDirection: "row", paddingVertical: 7, paddingHorizontal: 12, borderTopWidth: 0.5, borderTopColor: "#f1f5f9" },
-  trAlt: { backgroundColor: "#f8fafc" },
-  td: { fontSize: 8.5, color: "#0f172a" },
-  tdSub: { fontSize: 7, color: "#94a3b8", marginTop: 1 },
-  colItem: { flex: 3.5 },
-  colType: { flex: 1.4 },
-  colQty: { flex: 0.7, textAlign: "right" },
-  colUnit: { flex: 1.3, textAlign: "right" },
-  colTotal: { flex: 1.3, textAlign: "right" },
-
-  // ── Subtotals ────────────────────────────────────────────────────
-  subRow: { flexDirection: "row", justifyContent: "flex-end", marginBottom: 3 },
-  subLabel: { fontSize: 8, color: "#64748b", width: 100, textAlign: "right", paddingRight: 12 },
-  subValue: { fontSize: 8, color: "#334155", width: 90, textAlign: "right" },
-  discountValue: { fontSize: 8, color: "#dc2626", width: 90, textAlign: "right" },
-
-  // ── Total bar ────────────────────────────────────────────────────
-  totalBar: {
+  thead: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: BRAND,
-    borderRadius: 6,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 18
+    borderBottomWidth: 0.75,
+    borderBottomColor: C.black,
+    paddingBottom: 4,
+    marginBottom: 2
   },
-  totalBarLabel: { fontSize: 8.5, fontFamily: "Helvetica-Bold", color: "#93c5fd", textTransform: "uppercase", letterSpacing: 1.5 },
-  totalBarValue: { fontSize: 20, fontFamily: "Helvetica-Bold", color: "#ffffff" },
+  th: { fontSize: 7, fontFamily: "Helvetica-Bold", color: C.mid, textTransform: "uppercase" },
+  tr: {
+    flexDirection: "row",
+    paddingVertical: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: C.ruleLight
+  },
+  td: { fontSize: 8, color: C.dark },
+  colItem: { flex: 3.5 },
+  colType: { flex: 1.5 },
+  colQty: { flex: 0.7, textAlign: "right" },
+  colUnit: { flex: 1.4, textAlign: "right" },
+  colTotal: { flex: 1.4, textAlign: "right" },
 
-  // ── Payment box ──────────────────────────────────────────────────
-  payBox: {
-    borderWidth: 1,
-    borderColor: "#86efac",
-    borderRadius: 6,
-    backgroundColor: "#f0fdf4",
-    padding: 12,
-    marginBottom: 18
-  },
-  payHeader: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  payCheck: { fontSize: 11, color: "#16a34a", marginRight: 6 },
-  payTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", color: "#15803d" },
-  payRow: { flexDirection: "row", gap: 20 },
+  // ── Totais ───────────────────────────────────────────────────────
+  totalsBlock: { alignItems: "flex-end", marginTop: 8, marginBottom: 10 },
+  subRow: { flexDirection: "row", marginBottom: 3 },
+  subLabel: { fontSize: 7.5, color: C.mid, width: 90, textAlign: "right", paddingRight: 10 },
+  subValue: { fontSize: 7.5, color: C.dark, width: 75, textAlign: "right" },
+  discountValue: { fontSize: 7.5, color: C.dark, width: 75, textAlign: "right" },
+  totalRule: { borderTopWidth: 0.75, borderTopColor: C.black, width: 165, marginBottom: 4 },
+  totalRow: { flexDirection: "row" },
+  totalLabel: { fontSize: 9, fontFamily: "Helvetica-Bold", color: C.black, width: 90, textAlign: "right", paddingRight: 10 },
+  totalValue: { fontSize: 11, fontFamily: "Helvetica-Bold", color: C.black, width: 75, textAlign: "right" },
+
+  // ── Pagamento ────────────────────────────────────────────────────
+  paySection: { marginBottom: 10 },
+  payTitle: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: C.dark, marginBottom: 4 },
+  payRow: { flexDirection: "row", gap: 16 },
   payField: { flex: 1 },
-  payLabel: { fontSize: 6.5, color: "#16a34a", marginBottom: 1 },
-  payValue: { fontSize: 9, color: "#14532d", fontFamily: "Helvetica-Bold" },
+  payFieldWide: { flex: 2 },
+  payFieldLabel: { fontSize: 6.5, color: C.light, marginBottom: 1 },
+  payFieldValue: { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.dark },
 
-  // ── Courtesy box ─────────────────────────────────────────────────
-  courtBox: {
-    borderWidth: 1,
-    borderColor: "#bfdbfe",
-    borderRadius: 6,
-    backgroundColor: "#eff6ff",
-    padding: 12,
-    marginBottom: 18
-  },
-  courtTitle: { fontSize: 9, fontFamily: "Helvetica-Bold", color: "#1d4ed8", marginBottom: 4 },
-  courtText: { fontSize: 8.5, color: "#1e40af" },
+  // ── Cortesia ─────────────────────────────────────────────────────
+  courtSection: { marginBottom: 10 },
+  courtText: { fontSize: 8, color: C.mid, fontFamily: "Helvetica-Oblique" },
 
-  // ── Notes ────────────────────────────────────────────────────────
-  notesBox: { marginBottom: 18 },
-  notesTitle: { fontSize: 6.5, fontFamily: "Helvetica-Bold", color: "#94a3b8", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 5 },
-  notesText: { fontSize: 8.5, color: "#334155", lineHeight: 1.5 },
+  // ── Observações ──────────────────────────────────────────────────
+  notesSection: { marginBottom: 10 },
+  notesText: { fontSize: 7.5, color: C.mid, lineHeight: 1.5 },
 
-  // ── Signature ────────────────────────────────────────────────────
-  sigBlock: { alignItems: "flex-end", marginBottom: 22 },
-  sigImage: { width: 180, height: 68, objectFit: "contain", marginBottom: 8 },
-  sigLine: { width: 210, borderTopWidth: 0.75, borderTopColor: "#94a3b8", paddingTop: 5 },
-  sigLabel: { fontSize: 7.5, color: "#64748b", textAlign: "center" },
+  // ── Assinatura ───────────────────────────────────────────────────
+  sigBlock: { alignItems: "flex-end", marginTop: 6, marginBottom: 10 },
+  sigImage: { width: 140, height: 52, objectFit: "contain", marginBottom: 4 },
+  sigLine: { width: 170, borderTopWidth: 0.75, borderTopColor: C.dark, paddingTop: 4 },
+  sigLabel: { fontSize: 7, color: C.mid, textAlign: "center" },
 
-  // ── Footer ───────────────────────────────────────────────────────
+  // ── Rodapé ───────────────────────────────────────────────────────
   footer: {
     borderTopWidth: 0.5,
-    borderTopColor: "#e2e8f0",
-    paddingVertical: 10,
-    paddingHorizontal: 40,
+    borderTopColor: C.rule,
+    paddingTop: 6,
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center"
+    justifyContent: "space-between"
   },
-  footL: { fontSize: 7, color: "#94a3b8", flex: 1 },
-  footR: { fontSize: 7, color: "#94a3b8" }
+  footText: { fontSize: 6.5, color: C.light }
 });
 
 const documentTypeLabel: Record<FiscalDocumentType, string> = {
@@ -194,112 +192,90 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
   const hasTypes = data.items.some((i) => i.typeLabel);
   const addressParts = [
     data.company.addressLine1,
-    data.company.addressLine2,
     data.company.city && data.company.state
-      ? `${data.company.city} — ${data.company.state}`
+      ? `${data.company.city} / ${data.company.state}`
       : (data.company.city ?? data.company.state),
     data.company.postalCode ? `CEP ${data.company.postalCode}` : undefined
   ].filter(Boolean);
 
+  const clientMeta = [
+    data.client.document ? `CPF/CNPJ: ${data.client.document}` : null,
+    data.client.phone ? `Tel: ${data.client.phone}` : null,
+    data.client.email ? data.client.email : null
+  ].filter(Boolean).join("   ·   ");
+
   return (
     <Document>
-      <Page size="A4" style={s.page}>
+      <Page size="A5" style={s.page}>
 
-        {/* ── Header band ─────────────────────────────── */}
-        <View style={s.band}>
-          <View style={s.bandLeft}>
+        {/* ── Cabeçalho ───────────────────────────────── */}
+        <View style={s.header}>
+          <View style={s.headerLeft}>
             {data.logoDataUri ? <Image src={data.logoDataUri} style={s.logo} /> : null}
             <View>
               <Text style={s.companyName}>{data.company.tradeName ?? data.company.legalName}</Text>
               <Text style={s.companyMeta}>CNPJ {data.company.document}</Text>
-              {addressParts.length > 0 ? <Text style={s.companyMeta}>{addressParts.join(" · ")}</Text> : null}
-              {data.company.phone ? <Text style={s.companyMeta}>{data.company.phone}</Text> : null}
-              {data.company.financialEmail ? <Text style={s.companyMeta}>{data.company.financialEmail}</Text> : null}
+              {addressParts.length > 0 ? <Text style={s.companyMeta}>{addressParts.join("  ·  ")}</Text> : null}
+              {data.company.phone || data.company.financialEmail ? (
+                <Text style={s.companyMeta}>
+                  {[data.company.phone, data.company.financialEmail].filter(Boolean).join("   ·   ")}
+                </Text>
+              ) : null}
             </View>
           </View>
-          <View style={s.bandRight}>
+          <View style={s.headerRight}>
             <Text style={s.docTitle}>{documentTypeLabel[data.documentType]}</Text>
             <Text style={s.docNumber}>Nº {data.receiptNumber}</Text>
             <Text style={s.docDate}>Emissão: {fmtDate(data.issueDate)}</Text>
           </View>
         </View>
 
-        {/* ── Body ────────────────────────────────────── */}
-        <View style={s.body}>
+        <View style={s.rule} />
 
-          {/* Info cards */}
-          <View style={s.cardRow}>
-            <View style={s.card}>
-              <Text style={s.cardTitle}>Cliente</Text>
-              <View style={s.cardField}>
-                <Text style={s.cardLabel}>Nome / Razão social</Text>
-                <Text style={s.cardValue}>{data.client.name}</Text>
-              </View>
-              {data.client.document ? (
-                <View style={s.cardField}>
-                  <Text style={s.cardLabel}>CPF / CNPJ</Text>
-                  <Text style={s.cardValueNormal}>{data.client.document}</Text>
-                </View>
-              ) : null}
-              {data.client.email ? (
-                <View style={s.cardField}>
-                  <Text style={s.cardLabel}>E-mail</Text>
-                  <Text style={s.cardValueNormal}>{data.client.email}</Text>
-                </View>
-              ) : null}
-              {data.client.phone ? (
-                <View style={s.cardField}>
-                  <Text style={s.cardLabel}>Telefone</Text>
-                  <Text style={s.cardValueNormal}>{data.client.phone}</Text>
-                </View>
-              ) : null}
-            </View>
-
-            {(data.referenceLabel || data.referenceDescription) ? (
-              <View style={[s.card, { flex: 0.9 }]}>
-                <Text style={s.cardTitle}>Referência</Text>
-                {data.referenceLabel ? (
-                  <View style={s.cardField}>
-                    <Text style={s.cardLabel}>Identificação</Text>
-                    <Text style={s.cardValue}>{data.referenceLabel}</Text>
-                  </View>
-                ) : null}
-                {data.referenceDescription ? (
-                  <View style={s.cardField}>
-                    <Text style={s.cardLabel}>Descrição</Text>
-                    <Text style={s.cardValueNormal}>{data.referenceDescription}</Text>
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
+        {/* ── Recebemos de / Referência ────────────────── */}
+        <View style={s.sectionRow}>
+          <View style={[s.sectionBlock, { flex: 1.6 }]}>
+            <Text style={s.sectionLabel}>Recebemos de</Text>
+            <Text style={s.clientName}>{data.client.name}</Text>
+            {clientMeta ? <Text style={s.clientMeta}>{clientMeta}</Text> : null}
           </View>
 
-          {/* Items table */}
-          {data.items.length > 0 ? (
-            <>
-              <Text style={s.tableTitle}>Itens</Text>
-              <View style={s.table}>
-                <View style={s.thead}>
-                  <Text style={[s.th, s.colItem]}>Descrição</Text>
-                  {hasTypes ? <Text style={[s.th, s.colType]}>Tipo</Text> : null}
-                  <Text style={[s.th, s.colQty]}>Qtd.</Text>
-                  <Text style={[s.th, s.colUnit]}>Unit.</Text>
-                  <Text style={[s.th, s.colTotal]}>Total</Text>
-                </View>
-                {data.items.map((item, i) => (
-                  <View key={i} style={[s.tr, i % 2 === 1 ? s.trAlt : {}]}>
-                    <Text style={[s.td, s.colItem]}>{item.description}</Text>
-                    {hasTypes ? <Text style={[s.td, s.colType, { color: "#64748b" }]}>{item.typeLabel ?? "—"}</Text> : null}
-                    <Text style={[s.td, s.colQty]}>{item.quantity}</Text>
-                    <Text style={[s.td, s.colUnit]}>{fmt(item.unitPrice)}</Text>
-                    <Text style={[s.td, s.colTotal, { fontFamily: "Helvetica-Bold" }]}>{fmt(item.totalPrice)}</Text>
-                  </View>
-                ))}
-              </View>
-            </>
+          {(data.referenceLabel || data.referenceDescription) ? (
+            <View style={s.sectionBlock}>
+              <Text style={s.sectionLabel}>Referente a</Text>
+              {data.referenceLabel ? <Text style={s.refLabel}>{data.referenceLabel}</Text> : null}
+              {data.referenceDescription ? <Text style={s.refDesc}>{data.referenceDescription}</Text> : null}
+            </View>
           ) : null}
+        </View>
 
-          {/* Subtotals */}
+        <View style={s.ruleThin} />
+
+        {/* ── Itens ────────────────────────────────────── */}
+        {data.items.length > 0 ? (
+          <>
+            <Text style={s.tableLabel}>Discriminação dos serviços</Text>
+            <View style={s.thead}>
+              <Text style={[s.th, s.colItem]}>Descrição</Text>
+              {hasTypes ? <Text style={[s.th, s.colType]}>Tipo</Text> : null}
+              <Text style={[s.th, s.colQty]}>Qtd.</Text>
+              <Text style={[s.th, s.colUnit]}>Unit.</Text>
+              <Text style={[s.th, s.colTotal]}>Total</Text>
+            </View>
+            {data.items.map((item, i) => (
+              <View key={i} style={s.tr}>
+                <Text style={[s.td, s.colItem]}>{item.description}</Text>
+                {hasTypes ? <Text style={[s.td, s.colType, { color: C.mid }]}>{item.typeLabel ?? "—"}</Text> : null}
+                <Text style={[s.td, s.colQty]}>{item.quantity}</Text>
+                <Text style={[s.td, s.colUnit]}>{fmt(item.unitPrice)}</Text>
+                <Text style={[s.td, s.colTotal, { fontFamily: "Helvetica-Bold" }]}>{fmt(item.totalPrice)}</Text>
+              </View>
+            ))}
+          </>
+        ) : null}
+
+        {/* ── Totais ───────────────────────────────────── */}
+        <View style={s.totalsBlock}>
           {data.discountAmount > 0 ? (
             <>
               <View style={s.subRow}>
@@ -312,73 +288,69 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
               </View>
             </>
           ) : null}
-
-          {/* Total bar */}
-          <View style={s.totalBar}>
-            <Text style={s.totalBarLabel}>{data.isCortesia ? "Valor cobrado" : "Total"}</Text>
-            <Text style={s.totalBarValue}>{data.isCortesia ? "R$ 0,00" : fmt(data.totalAmount)}</Text>
+          <View style={s.totalRule} />
+          <View style={s.totalRow}>
+            <Text style={s.totalLabel}>{data.isCortesia ? "Valor cobrado" : "Total"}</Text>
+            <Text style={s.totalValue}>{data.isCortesia ? "R$ 0,00" : fmt(data.totalAmount)}</Text>
           </View>
-
-          {/* Payment / Courtesy */}
-          {data.isCortesia ? (
-            <View style={s.courtBox}>
-              <Text style={s.courtTitle}>Serviço prestado em regime de cortesia</Text>
-              <Text style={s.courtText}>Nenhum valor foi cobrado do cliente nesta operação.</Text>
-            </View>
-          ) : data.paymentMethod ? (
-            <View style={s.payBox}>
-              <View style={s.payHeader}>
-                <Text style={s.payCheck}>✓</Text>
-                <Text style={s.payTitle}>Pagamento confirmado</Text>
-              </View>
-              <View style={s.payRow}>
-                <View style={s.payField}>
-                  <Text style={s.payLabel}>Forma de pagamento</Text>
-                  <Text style={s.payValue}>{data.paymentMethod}</Text>
-                </View>
-                {data.paymentDate ? (
-                  <View style={s.payField}>
-                    <Text style={s.payLabel}>Data do pagamento</Text>
-                    <Text style={s.payValue}>{fmtDate(data.paymentDate)}</Text>
-                  </View>
-                ) : null}
-                {data.paymentReference ? (
-                  <View style={[s.payField, { flex: 2 }]}>
-                    <Text style={s.payLabel}>Referência / comprovante</Text>
-                    <Text style={s.payValue}>{data.paymentReference}</Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          ) : null}
-
-          {/* Notes */}
-          {data.notes ? (
-            <View style={s.notesBox}>
-              <Text style={s.notesTitle}>Observações</Text>
-              <Text style={s.notesText}>{data.notes}</Text>
-            </View>
-          ) : null}
-
-          {/* Signature */}
-          {data.signatureDataUri ? (
-            <View style={s.sigBlock}>
-              <Image src={data.signatureDataUri} style={s.sigImage} />
-              <View style={s.sigLine}>
-                <Text style={s.sigLabel}>{data.company.tradeName ?? data.company.legalName}</Text>
-              </View>
-            </View>
-          ) : null}
-
         </View>
 
-        {/* ── Footer ──────────────────────────────────── */}
+        <View style={s.ruleThin} />
+
+        {/* ── Pagamento / Cortesia ─────────────────────── */}
+        {data.isCortesia ? (
+          <View style={s.courtSection}>
+            <Text style={s.courtText}>Serviço prestado em regime de cortesia — nenhum valor foi cobrado.</Text>
+          </View>
+        ) : data.paymentMethod ? (
+          <View style={s.paySection}>
+            <Text style={s.payTitle}>Pagamento confirmado</Text>
+            <View style={s.payRow}>
+              <View style={s.payField}>
+                <Text style={s.payFieldLabel}>Forma de pagamento</Text>
+                <Text style={s.payFieldValue}>{data.paymentMethod}</Text>
+              </View>
+              {data.paymentDate ? (
+                <View style={s.payField}>
+                  <Text style={s.payFieldLabel}>Data</Text>
+                  <Text style={s.payFieldValue}>{fmtDate(data.paymentDate)}</Text>
+                </View>
+              ) : null}
+              {data.paymentReference ? (
+                <View style={s.payFieldWide}>
+                  <Text style={s.payFieldLabel}>Referência / comprovante</Text>
+                  <Text style={s.payFieldValue}>{data.paymentReference}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
+        {/* ── Observações ──────────────────────────────── */}
+        {data.notes ? (
+          <View style={s.notesSection}>
+            <Text style={[s.sectionLabel, { marginBottom: 3 }]}>Observações</Text>
+            <Text style={s.notesText}>{data.notes}</Text>
+          </View>
+        ) : null}
+
+        {/* ── Assinatura ───────────────────────────────── */}
+        {data.signatureDataUri ? (
+          <View style={s.sigBlock}>
+            <Image src={data.signatureDataUri} style={s.sigImage} />
+            <View style={s.sigLine}>
+              <Text style={s.sigLabel}>{data.company.tradeName ?? data.company.legalName}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* ── Rodapé ───────────────────────────────────── */}
         <View style={s.footer}>
-          <Text style={s.footL}>
-            Documento gerado eletronicamente · {data.company.tradeName ?? data.company.legalName}
-            {data.company.website ? ` · ${data.company.website}` : ""}
+          <Text style={s.footText}>
+            Documento gerado eletronicamente
+            {data.company.website ? `  ·  ${data.company.website}` : ""}
           </Text>
-          <Text style={s.footR}>Gerado em {new Date().toLocaleDateString("pt-BR")}</Text>
+          <Text style={s.footText}>Gerado em {new Date().toLocaleDateString("pt-BR")}</Text>
         </View>
 
       </Page>

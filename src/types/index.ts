@@ -18,7 +18,15 @@ export type BillingType = "AVULSO" | "CONTRATO" | "GARANTIA" | "CORTESIA";
 
 export type FinancialStatus = "PENDENTE" | "EM_ANALISE" | "APROVADO" | "FATURADO" | "PAGO" | "CANCELADO";
 
-export type BillingEntryType = "LABOR" | "PART" | "TRAVEL" | "EXTRA";
+export type BillingEntryType = "LABOR" | "PART" | "TRAVEL" | "EXTRA" | "CONSULTING" | "REMOTE_SUPPORT";
+
+export interface OsContribution {
+  osId: string;
+  osNumber: string;
+  laborAmount: number;
+  partsAmount: number;
+  totalAmount: number;
+}
 export type FiscalDocumentType = "NFSE" | "NFE" | "RECIBO" | "OUTRO";
 
 export type BillingHistoryEventType =
@@ -312,6 +320,9 @@ export interface TicketBilling {
   updatedAt: string;
   entries: BillingEntry[];
   history: BillingHistoryItem[];
+  // Contribuições automáticas das OSs concluídas (camada 1 — somente leitura)
+  osContributions: OsContribution[];
+  osContributionsTotal: number;
 }
 
 export interface ClientBillingProfile {

@@ -59,7 +59,9 @@ const entryTypeLabel: Record<BillingEntryType, string> = {
   LABOR: "Mão de obra",
   PART: "Material / Peça",
   TRAVEL: "Deslocamento",
-  EXTRA: "Cobrança avulsa"
+  EXTRA: "Cobrança avulsa",
+  CONSULTING: "Consultoria / Análise",
+  REMOTE_SUPPORT: "Suporte Remoto"
 };
 
 function getFlowActions(status: FinancialStatus, billingType: BillingType): FlowAction[] {
@@ -397,15 +399,135 @@ export function TicketBillingPanel({
 
       <Card>
         <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Lançamentos</CardTitle>
+            {billing ? (
+              <span className="text-sm text-slate-500">
+                {billing.osContributions.length > 0 ? `${billing.osContributions.length} OS + ` : ""}
+                {billing.entries.length} avulso{billing.entries.length !== 1 ? "s" : ""}
+              </span>
+            ) : null}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {billing && billing.osContributions.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ordens de Serviço concluídas</p>
+              <div className="divide-y divide-emerald-100 overflow-hidden rounded-xl border border-emerald-200">
+                {billing.osContributions.map((c) => (
+                  <div key={c.osId} className="flex items-center gap-3 bg-emerald-50/40 px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-900">OS {c.osNumber}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        Mão de obra: {formatCurrency(c.laborAmount)} · Materiais: {formatCurrency(c.partsAmount)}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold text-emerald-700">{formatCurrency(c.totalAmount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {billing && billing.osContributions.length > 0 ? (
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Lançamentos avulsos</p>
+          ) : null}
+
+          {billing?.entries.length ? (
+            <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
+              {billing.entries.map((entry) => (
+                <div key={entry.id} className="flex items-center gap-3 bg-white px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-slate-950">{entry.description}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {entryTypeLabel[entry.entryType]} · {entry.quantity} x {formatCurrency(entry.unitPrice)} · {entry.billable ? "Faturável" : "Não faturável"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-slate-950">{formatCurrency(entry.totalPrice)}</span>
+                  {canManage && !entriesLocked ? (
+                    <div className="flex shrink-0 gap-1">
+                      <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => startEditEntry(entry)}>Editar</Button>
+                      <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => deleteEntry(entry.id)}>Remover</Button>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">
+              Nenhum lançamento avulso adicionado.
+            </div>
+          )}
+
+          {canManage && !entriesLocked ? (
+            <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-700">{editingEntry ? "Editando lançamento" : "Novo lançamento"}</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="entryType">Tipo</Label>
+                  <Select id="entryType" value={entryFields.entryType} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, entryType: e.target.value as BillingEntryType }))}>
+                    <option value="LABOR">Mão de obra</option>
+                    <option value="TRAVEL">Deslocamento</option>
+                    <option value="EXTRA">Cobrança avulsa</option>
+                    <option value="CONSULTING">Consultoria / Análise</option>
+                    <option value="REMOTE_SUPPORT">Suporte Remoto</option>
+                    {editingEntry?.entryType === "PART" ? <option value="PART">Material / Peça</option> : null}
+                  </Select>
+                  {entryFields.entryType === "LABOR" ? (
+                    <p className="text-xs text-amber-600">Prefira registrar mão de obra via Ordem de Serviço para vinculação automática ao financeiro.</p>
+                  ) : null}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="entryDescription">Descrição</Label>
+                  <Input id="entryDescription" value={entryFields.description} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, description: e.target.value }))} />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="quantity">Quantidade</Label>
+                  <Input id="quantity" type="number" min="0.01" step="0.01" value={entryFields.quantity} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, quantity: e.target.value }))} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="unitPrice">Valor unitário</Label>
+                  <Input id="unitPrice" value={entryFields.unitPrice} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, unitPrice: e.target.value }))} onBlur={() => setEntryFields((current) => ({ ...current, unitPrice: formatCurrencyInput(parseCurrencyInput(current.unitPrice)) }))} />
+                </div>
+                <div className="flex items-end">
+                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" checked={entryFields.billable} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, billable: e.target.checked }))} />
+                    Faturável
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" className="flex-1" disabled={isPending} onClick={submitEntry}>
+                  {isPending ? "Salvando..." : editingEntry ? "Atualizar" : "Adicionar"}
+                </Button>
+                {editingEntry ? (
+                  <Button type="button" variant="outline" disabled={isPending} onClick={cancelEditEntry}>Cancelar</Button>
+                ) : null}
+              </div>
+            </div>
+          ) : entriesLocked ? (
+            <p className="text-xs text-slate-500">Lançamentos bloqueados - status <strong>{badge.label}</strong>.</p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between gap-3">
             <CardTitle>Situação financeira</CardTitle>
             <span className={`rounded-full px-3 py-0.5 text-xs font-semibold ${badge.className}`}>{badge.label}</span>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
+              <p className="text-xs text-emerald-600">OSs concluídas</p>
+              <p className="mt-1 font-semibold text-emerald-900">{formatCurrency(billing?.osContributionsTotal ?? 0)}</p>
+            </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
-              <p className="text-xs text-slate-500">Subtotal</p>
+              <p className="text-xs text-slate-500">Lançamentos avulsos</p>
               <p className="mt-1 font-semibold text-slate-950">{formatCurrency(billing?.subtotalAmount ?? 0)}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
@@ -415,7 +537,16 @@ export function TicketBillingPanel({
             <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-center">
               <p className="text-xs text-sky-600">Total</p>
               <p className="mt-1 font-semibold text-sky-950">
-                {formatCurrency(billing ? Math.max(0, billing.subtotalAmount - parseCurrencyInput(summaryFields.discountAmount)) : 0)}
+                {formatCurrency(
+                  billing
+                    ? Math.max(
+                        0,
+                        (billing.osContributionsTotal ?? 0) +
+                          billing.subtotalAmount -
+                          parseCurrencyInput(summaryFields.discountAmount)
+                      )
+                    : 0
+                )}
               </p>
             </div>
           </div>
@@ -584,104 +715,25 @@ export function TicketBillingPanel({
             </div>
           ) : null}
 
-          {canManage && ["PAGO", "FATURADO"].includes(currentStatus) ? (
+          {canManage && billing && currentStatus !== "CANCELADO" ? (
             <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
               <p className="text-xs font-semibold text-slate-700">Recibo</p>
-              <p className="text-xs text-slate-500">Gera um PDF com os dados do serviço e disponibiliza automaticamente no portal do cliente.</p>
+              <p className="text-xs text-slate-500">
+                {["PAGO", "FATURADO"].includes(currentStatus)
+                  ? "Gera um PDF com os dados do serviço e disponibiliza no portal do cliente."
+                  : "Gera um recibo de cobrança para envio ao cliente antes do pagamento."}
+              </p>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" size="sm" disabled={isGeneratingReceipt} onClick={generateReceipt}>
-                  {isGeneratingReceipt ? "Gerando..." : "Gerar recibo"}
+                  {isGeneratingReceipt ? "Gerando..." : ["PAGO", "FATURADO"].includes(currentStatus) ? "Gerar recibo" : "Gerar recibo de cobrança"}
                 </Button>
                 {receiptUrl ? (
                   <a href={receiptUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50">
-                    Baixar PDF
+                    Abrir PDF
                   </a>
                 ) : null}
               </div>
             </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Lançamentos</CardTitle>
-            {billing ? <span className="text-sm text-slate-500">{billing.entries.length} item{billing.entries.length !== 1 ? "s" : ""}</span> : null}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {billing?.entries.length ? (
-            <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
-              {billing.entries.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-3 bg-white px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-slate-950">{entry.description}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {entryTypeLabel[entry.entryType]} · {entry.quantity} x {formatCurrency(entry.unitPrice)} · {entry.billable ? "Faturável" : "Não faturável"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-sm font-semibold text-slate-950">{formatCurrency(entry.totalPrice)}</span>
-                  {canManage && !entriesLocked ? (
-                    <div className="flex shrink-0 gap-1">
-                      <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => startEditEntry(entry)}>Editar</Button>
-                      <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => deleteEntry(entry.id)}>Remover</Button>
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500">
-              Nenhum lançamento adicionado ainda.
-            </div>
-          )}
-
-          {canManage && !entriesLocked ? (
-            <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-700">{editingEntry ? "Editando lançamento" : "Novo lançamento"}</p>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="entryType">Tipo</Label>
-                  <Select id="entryType" value={entryFields.entryType} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, entryType: e.target.value as BillingEntryType }))}>
-                    <option value="LABOR">Mão de obra</option>
-                    <option value="PART">Material / Peça</option>
-                    <option value="TRAVEL">Deslocamento</option>
-                    <option value="EXTRA">Cobrança avulsa</option>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="entryDescription">Descrição</Label>
-                  <Input id="entryDescription" value={entryFields.description} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, description: e.target.value }))} />
-                </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity">Quantidade</Label>
-                  <Input id="quantity" type="number" min="0.01" step="0.01" value={entryFields.quantity} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, quantity: e.target.value }))} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="unitPrice">Valor unitário</Label>
-                  <Input id="unitPrice" value={entryFields.unitPrice} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, unitPrice: e.target.value }))} onBlur={() => setEntryFields((current) => ({ ...current, unitPrice: formatCurrencyInput(parseCurrencyInput(current.unitPrice)) }))} />
-                </div>
-                <div className="flex items-end">
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
-                    <input type="checkbox" checked={entryFields.billable} disabled={isPending} onChange={(e) => setEntryFields((current) => ({ ...current, billable: e.target.checked }))} />
-                    Faturável
-                  </label>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" className="flex-1" disabled={isPending} onClick={submitEntry}>
-                  {isPending ? "Salvando..." : editingEntry ? "Atualizar" : "Adicionar"}
-                </Button>
-                {editingEntry ? (
-                  <Button type="button" variant="outline" disabled={isPending} onClick={cancelEditEntry}>Cancelar</Button>
-                ) : null}
-              </div>
-            </div>
-          ) : entriesLocked ? (
-            <p className="text-xs text-slate-500">Lançamentos bloqueados - status <strong>{badge.label}</strong>.</p>
           ) : null}
         </CardContent>
       </Card>

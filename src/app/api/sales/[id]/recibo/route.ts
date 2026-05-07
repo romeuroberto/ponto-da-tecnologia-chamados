@@ -37,9 +37,9 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
       return NextResponse.json({ success: false, message: "Venda não encontrada." }, { status: 404 });
     }
 
-    if (sale.financialStatus !== "PAGO") {
+    if (sale.financialStatus === "CANCELADO") {
       return NextResponse.json(
-        { success: false, message: "O recibo só pode ser gerado para vendas com status Pago." },
+        { success: false, message: "Não é possível gerar recibo para uma venda cancelada." },
         { status: 422 }
       );
     }

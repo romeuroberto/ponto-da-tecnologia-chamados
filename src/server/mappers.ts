@@ -7,6 +7,7 @@ import type {
   CompanyProfile,
   FiscalDocument,
   FiscalDocumentLink,
+  OsContribution,
   PaymentInstruction,
   Sale,
   SaleItem,
@@ -443,7 +444,7 @@ export function mapBillingHistory(record: BillingHistoryRecord): BillingHistoryI
   };
 }
 
-export function mapTicketBilling(record: TicketBillingRecord): TicketBilling {
+export function mapTicketBilling(record: TicketBillingRecord, osContributions: OsContribution[] = []): TicketBilling {
   return {
     id: record.id,
     ticketId: record.ticketId,
@@ -465,7 +466,9 @@ export function mapTicketBilling(record: TicketBillingRecord): TicketBilling {
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
     entries: record.entries.map(mapBillingEntry),
-    history: record.history.map(mapBillingHistory)
+    history: record.history.map(mapBillingHistory),
+    osContributions,
+    osContributionsTotal: osContributions.reduce((s, c) => s + c.totalAmount, 0)
   };
 }
 
@@ -511,7 +514,27 @@ export function mapTicket(record: TicketRecord): Ticket {
     checkedOutAt: record.checkedOutAt?.toISOString() ?? undefined,
     history: record.history.map(mapTicketHistory),
     attachments: (record.attachments ?? []).map(mapTicketAttachment),
-    billing: record.billing ? mapTicketBilling(record.billing) : undefined,
+    billing: record.billing
+      ? mapTicketBilling(
+          record.billing,
+          (record.serviceOrders ?? [])
+            .filter((os) => os.status === "COMPLETED")
+            .map((os) => {
+              const laborAmount = os.servicePrice ? Number(os.servicePrice.toNumber()) : 0;
+              const partsAmount = (os.parts ?? []).reduce(
+                (s, p) => s + p.unitPrice.toNumber() * p.quantity.toNumber(),
+                0
+              );
+              return {
+                osId: os.id,
+                osNumber: os.number,
+                laborAmount: Number(laborAmount.toFixed(2)),
+                partsAmount: Number(partsAmount.toFixed(2)),
+                totalAmount: Number((laborAmount + partsAmount).toFixed(2))
+              };
+            })
+        )
+      : undefined,
     serviceOrders: (record.serviceOrders ?? []).map(mapServiceOrder)
   };
 }

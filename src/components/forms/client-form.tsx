@@ -34,6 +34,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<ClientFormState>({
     name: client?.name ?? "",
     document: client?.document ?? "",
@@ -57,6 +58,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
+    setFieldErrors({});
 
     startTransition(async () => {
       const payload = {
@@ -88,6 +90,14 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
       const result = await response.json();
 
       if (!response.ok) {
+        const flat = result.errors?.fieldErrors as Record<string, string[]> | undefined;
+        if (flat) {
+          const mapped: Record<string, string> = {};
+          for (const [key, msgs] of Object.entries(flat)) {
+            if (Array.isArray(msgs) && msgs.length > 0) mapped[key] = msgs[0];
+          }
+          setFieldErrors(mapped);
+        }
         setMessage({
           type: "error",
           text: result.message ?? "Não foi possível salvar o cliente."
@@ -135,8 +145,9 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="name">Nome</Label>
-              <Input id="name" value={formData.name} onChange={(event) => handleChange("name", event.target.value)} placeholder="Nome da empresa ou cliente" />
+              <Label htmlFor="name">Nome <span className="text-rose-500">*</span></Label>
+              <Input id="name" value={formData.name} onChange={(event) => handleChange("name", event.target.value)} placeholder="Nome da empresa ou cliente" aria-invalid={!!fieldErrors.name} />
+              {fieldErrors.name ? <p className="text-xs text-rose-600">{fieldErrors.name}</p> : null}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -145,8 +156,9 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
                 <Input id="document" value={formData.document} onChange={(event) => handleChange("document", event.target.value)} placeholder="CNPJ ou identificação" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="contactName">Contato principal</Label>
-                <Input id="contactName" value={formData.contactName} onChange={(event) => handleChange("contactName", event.target.value)} placeholder="Nome do contato" />
+                <Label htmlFor="contactName">Contato principal <span className="text-rose-500">*</span></Label>
+                <Input id="contactName" value={formData.contactName} onChange={(event) => handleChange("contactName", event.target.value)} placeholder="Nome do contato" aria-invalid={!!fieldErrors.contactName} />
+                {fieldErrors.contactName ? <p className="text-xs text-rose-600">{fieldErrors.contactName}</p> : null}
               </div>
             </div>
 

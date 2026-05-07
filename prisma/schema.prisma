@@ -68,6 +68,8 @@ enum BillingEntryType {
   PART
   TRAVEL
   EXTRA
+  CONSULTING
+  REMOTE_SUPPORT
 }
 
 enum FiscalDocumentType {

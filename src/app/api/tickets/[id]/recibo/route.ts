@@ -42,9 +42,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       );
     }
 
-    if (!["PAGO", "FATURADO"].includes(billing.financialStatus)) {
+    if (billing.financialStatus === "CANCELADO") {
       return NextResponse.json(
-        { success: false, message: "O recibo só pode ser gerado para chamados com status Faturado ou Pago." },
+        { success: false, message: "Não é possível gerar recibo para um financeiro cancelado." },
         { status: 422 }
       );
     }
@@ -82,7 +82,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       LABOR: "Mão de obra",
       PART: "Material",
       TRAVEL: "Deslocamento",
-      EXTRA: "Avulso"
+      EXTRA: "Avulso",
+      CONSULTING: "Consultoria",
+      REMOTE_SUPPORT: "Suporte Remoto"
     };
 
     const receiptData = {

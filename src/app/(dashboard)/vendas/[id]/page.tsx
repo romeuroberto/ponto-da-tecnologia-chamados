@@ -137,12 +137,15 @@ export default async function VendaDetailPage({ params }: { params: Promise<{ id
           {isPending ? <SaleActions saleId={sale.id} /> : null}
 
           {/* Receipt */}
-          {isPaid ? (
+          {(isPending || isPaid) ? (
             <Card>
-              <CardHeader>
-                <CardTitle>Recibo</CardTitle>
-              </CardHeader>
-              <CardContent className="p-5">
+              <CardContent className="p-5 space-y-2">
+                <p className="text-xs font-semibold text-slate-700">Recibo</p>
+                <p className="text-xs text-slate-500">
+                  {isPaid
+                    ? "Gera o recibo de pagamento em PDF."
+                    : "Gera um recibo de cobrança para envio ao cliente antes do pagamento."}
+                </p>
                 <SaleReceiptButton saleId={sale.id} />
               </CardContent>
             </Card>

@@ -1,9 +1,32 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
-import type { BillingEntryType, BillingType, FinancialStatus, TicketBilling } from "@/types";
+import type { BillingEntryType, BillingType, FinancialStatus, OsContribution, TicketBilling } from "@/types";
 import { isDatabaseConfigured, normalizeOptionalString } from "@/server/db-support";
 import { mapTicketBilling, ticketBillingInclude } from "@/server/mappers";
+
+interface RawOsRecord {
+  id: string;
+  number: string;
+  servicePrice: { toNumber(): number } | null;
+  parts: Array<{ unitPrice: { toNumber(): number }; quantity: { toNumber(): number } }>;
+}
+
+function buildOsContributions(orders: RawOsRecord[]): OsContribution[] {
+  return orders.map((os) => {
+    const laborAmount = toMoney(os.servicePrice ? os.servicePrice.toNumber() : 0);
+    const partsAmount = toMoney(
+      (os.parts ?? []).reduce((s, p) => s + p.unitPrice.toNumber() * p.quantity.toNumber(), 0)
+    );
+    return {
+      osId: os.id,
+      osNumber: os.number,
+      laborAmount,
+      partsAmount,
+      totalAmount: toMoney(laborAmount + partsAmount)
+    };
+  });
+}
 
 export interface UpsertTicketBillingInput {
   billingType: BillingType;
@@ -60,10 +83,12 @@ function buildFinancialTimestamps(
 
 function getEntryTypeLabel(type: BillingEntryType) {
   const labels: Record<BillingEntryType, string> = {
-    LABOR: "Horas",
-    PART: "Material",
+    LABOR: "Mão de obra",
+    PART: "Material / Peça",
     TRAVEL: "Deslocamento",
-    EXTRA: "Extra"
+    EXTRA: "Cobrança avulsa",
+    CONSULTING: "Consultoria / Análise",
+    REMOTE_SUPPORT: "Suporte Remoto"
   };
   return labels[type];
 }
@@ -123,11 +148,21 @@ async function recalculateTotals(tx: Prisma.TransactionClient, billingId: string
 
   if (!billing) return null;
 
+  // Camada 1: contribuições das OSs concluídas
+  const completedOrders = await tx.serviceOrder.findMany({
+    where: { ticketId: billing.ticketId, status: "COMPLETED" },
+    include: { parts: true }
+  });
+  const osContributions = buildOsContributions(completedOrders);
+  const osTotal = toMoney(osContributions.reduce((s, c) => s + c.totalAmount, 0));
+
+  // Camada 2: lançamentos avulsos billable
   const subtotalAmount = toMoney(
     billing.entries.filter((e) => e.billable).reduce((sum, e) => sum + Number(e.totalPrice), 0)
   );
+
   const discountAmount = toMoney(Number(billing.discountAmount));
-  const totalAmount = Math.max(0, toMoney(subtotalAmount - discountAmount));
+  const totalAmount = Math.max(0, toMoney(osTotal + subtotalAmount - discountAmount));
 
   const updated = await tx.ticketBilling.update({
     where: { id: billingId },
@@ -135,7 +170,7 @@ async function recalculateTotals(tx: Prisma.TransactionClient, billingId: string
     include: ticketBillingInclude
   });
 
-  return mapTicketBilling(updated);
+  return mapTicketBilling(updated, osContributions);
 }
 
 export interface BillingListItem {
@@ -215,11 +250,11 @@ export const billingRepository = {
   },
 
   async findByTicketId(ticketId: string): Promise<TicketBilling | null> {
-    const record = await prisma.ticketBilling.findUnique({
-      where: { ticketId },
-      include: ticketBillingInclude
-    });
-    return record ? mapTicketBilling(record) : null;
+    const [record, completedOrders] = await Promise.all([
+      prisma.ticketBilling.findUnique({ where: { ticketId }, include: ticketBillingInclude }),
+      prisma.serviceOrder.findMany({ where: { ticketId, status: "COMPLETED" }, include: { parts: true } })
+    ]);
+    return record ? mapTicketBilling(record, buildOsContributions(completedOrders)) : null;
   },
 
   async upsertByTicketId(ticketId: string, input: UpsertTicketBillingInput) {
