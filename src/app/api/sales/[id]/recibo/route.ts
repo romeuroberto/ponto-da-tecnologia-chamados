@@ -114,7 +114,7 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
       // Don't block PDF delivery if DB record fails
     }
 
-    return new Response(pdfBuffer, {
+    return new Response(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
