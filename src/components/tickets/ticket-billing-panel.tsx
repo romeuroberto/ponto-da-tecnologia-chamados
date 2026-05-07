@@ -359,14 +359,15 @@ export function TicketBillingPanel({
     setIsGeneratingReceipt(true);
     setMessage(null);
     fetch(`/api/tickets/${ticketId}/recibo`, { method: "POST" })
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success) {
-          setReceiptUrl(json.data.filePath);
-          setMessage({ type: "success", text: "Recibo gerado e disponível no portal do cliente." });
-        } else {
-          setMessage({ type: "error", text: json.message ?? "Não foi possível gerar o recibo." });
+      .then(async (res) => {
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          setMessage({ type: "error", text: (json as { message?: string }).message ?? "Não foi possível gerar o recibo." });
+          return;
         }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        setReceiptUrl(url);
       })
       .catch(() => setMessage({ type: "error", text: "Falha na conexão. Tente novamente." }))
       .finally(() => setIsGeneratingReceipt(false));

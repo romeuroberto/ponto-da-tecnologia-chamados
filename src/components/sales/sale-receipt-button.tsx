@@ -14,16 +14,14 @@ export function SaleReceiptButton({ saleId }: { saleId: string }) {
     setIsGenerating(true);
     try {
       const res = await fetch(`/api/sales/${saleId}/recibo`, { method: "POST" });
-      const json = await res.json();
       if (!res.ok) {
-        setError(json.message ?? "Erro ao gerar o recibo.");
+        const json = await res.json().catch(() => ({}));
+        setError((json as { message?: string }).message ?? "Erro ao gerar o recibo.");
         return;
       }
-      if (json.data?.filePath) {
-        setReceiptUrl(json.data.filePath);
-      } else {
-        setError("Recibo gerado mas caminho não retornado.");
-      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setReceiptUrl(url);
     } catch {
       setError("Falha na conexão. Tente novamente.");
     } finally {

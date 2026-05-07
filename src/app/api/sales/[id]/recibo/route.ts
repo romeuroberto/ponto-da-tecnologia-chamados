@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -97,33 +97,31 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
       React.createElement(ReceiptDocument, { data: receiptData }) as ReactElement<DocumentProps>
     );
 
-    const relativeDir = path.join("uploads", "recibos", "vendas", id);
-    const absoluteDir = path.join(process.cwd(), "public", relativeDir);
-    const absoluteFilePath = path.join(absoluteDir, fileName);
-    const publicFilePath = `/${relativeDir.replaceAll("\\", "/")}/${fileName}`;
-
-    await mkdir(absoluteDir, { recursive: true });
-    await writeFile(absoluteFilePath, pdfBuffer);
-
-    let fiscalDocumentId: string | undefined;
+    // Best-effort: register fiscal document record
     try {
-      const fiscalDoc = await fiscalDocumentService.create({
+      await fiscalDocumentService.create({
         clientId: sale.clientId,
         type: "RECIBO",
         number: receiptNumber,
         issueDate,
         totalAmount: sale.totalAmount,
         fileName,
-        filePath: publicFilePath,
+        filePath: `/recibos/vendas/${id}/${fileName}`,
         ticketIds: [],
         saleIds: [id]
       });
-      fiscalDocumentId = fiscalDoc.id;
     } catch {
-      // Log fiscal document failure but don't block PDF delivery
+      // Don't block PDF delivery if DB record fails
     }
 
-    return NextResponse.json({ success: true, data: { filePath: publicFilePath, fiscalDocumentId } }, { status: 201 });
+    return new Response(pdfBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${fileName}"`,
+        "Cache-Control": "no-store"
+      }
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : "Falha ao gerar o recibo." },

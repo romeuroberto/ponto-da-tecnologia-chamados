@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
@@ -15,7 +15,17 @@ import { companyProfileService } from "@/server/services/company-profile-service
 import { fiscalDocumentService } from "@/server/services/fiscal-document-service";
 import { ticketService } from "@/server/services/ticket-service";
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+async function toDataUri(relativePath?: string): Promise<string | undefined> {
+  if (!relativePath) return undefined;
+  const abs = path.join(process.cwd(), "public", relativePath.replace(/^\//, ""));
+  if (!existsSync(abs)) return undefined;
+  const buf = await readFile(abs);
+  const ext = path.extname(abs).toLowerCase().replace(".", "");
+  const mime = ext === "svg" ? "image/svg+xml" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : `image/${ext}`;
+  return `data:${mime};base64,${buf.toString("base64")}`;
+}
+
+export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const guard = await requireApiUser(["ADMIN", "ATTENDANT"]);
 
@@ -58,16 +68,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     const clients = await clientService.listClients();
     const client = clients.find((c) => c.id === ticket.clientId);
-
-    async function toDataUri(relativePath?: string): Promise<string | undefined> {
-      if (!relativePath) return undefined;
-      const abs = path.join(process.cwd(), "public", relativePath.replace(/^\//, ""));
-      if (!existsSync(abs)) return undefined;
-      const buf = await readFile(abs);
-      const ext = path.extname(abs).toLowerCase().replace(".", "");
-      const mime = ext === "svg" ? "image/svg+xml" : ext === "jpg" || ext === "jpeg" ? "image/jpeg" : `image/${ext}`;
-      return `data:${mime};base64,${buf.toString("base64")}`;
-    }
 
     const [logoDataUri, signatureDataUri] = await Promise.all([
       toDataUri(company.logoPath),
@@ -125,33 +125,31 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       React.createElement(ReceiptDocument, { data: receiptData }) as ReactElement<DocumentProps>
     );
 
-    const relativeDir = path.join("uploads", "recibos", id);
-    const absoluteDir = path.join(process.cwd(), "public", relativeDir);
-    const absoluteFilePath = path.join(absoluteDir, fileName);
-    const publicFilePath = `/${relativeDir.replaceAll("\\", "/")}/${fileName}`;
-
-    await mkdir(absoluteDir, { recursive: true });
-    await writeFile(absoluteFilePath, pdfBuffer);
-
-    let fiscalDocumentId: string | undefined;
+    // Best-effort: register fiscal document record
     try {
-      const fiscalDoc = await fiscalDocumentService.create({
+      await fiscalDocumentService.create({
         clientId: ticket.clientId,
         type: "RECIBO",
         number: receiptNumber,
         issueDate,
         totalAmount: billing.billingType === "CORTESIA" ? 0 : billing.totalAmount,
         fileName,
-        filePath: publicFilePath,
+        filePath: `/recibos/chamados/${id}/${fileName}`,
         ticketIds: [id],
         saleIds: []
       });
-      fiscalDocumentId = fiscalDoc.id;
     } catch {
-      // Log fiscal document failure but don't block PDF delivery
+      // Don't block PDF delivery if DB record fails
     }
 
-    return NextResponse.json({ success: true, data: { filePath: publicFilePath, fiscalDocumentId } }, { status: 201 });
+    return new Response(pdfBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `inline; filename="${fileName}"`,
+        "Cache-Control": "no-store"
+      }
+    });
   } catch (error) {
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : "Falha ao gerar o recibo." },
