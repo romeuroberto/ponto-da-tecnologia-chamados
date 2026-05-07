@@ -159,6 +159,7 @@ Prioridades:
 
 - codigo em ingles
 - interface em portugues
+- na interface e na documentacao em portugues, usar acentuacao correta
 - regras de negocio em `services`
 - acesso ao banco em `repositories`
 - validar dados antes de gravar
@@ -171,3 +172,4 @@ Prioridades:
 - preferir alteracoes pequenas e incrementais
 - respeitar a matriz de permissoes existente
 - ao mexer em auth, validar paginas e APIs protegidas
+- nao remover acentos de textos em portugues

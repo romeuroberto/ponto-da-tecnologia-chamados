@@ -133,19 +133,25 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     await mkdir(absoluteDir, { recursive: true });
     await writeFile(absoluteFilePath, pdfBuffer);
 
-    const fiscalDoc = await fiscalDocumentService.create({
-      clientId: ticket.clientId,
-      type: "RECIBO",
-      number: receiptNumber,
-      issueDate,
-      totalAmount: billing.billingType === "CORTESIA" ? 0 : billing.totalAmount,
-      fileName,
-      filePath: publicFilePath,
-      ticketIds: [id],
-      saleIds: []
-    });
+    let fiscalDocumentId: string | undefined;
+    try {
+      const fiscalDoc = await fiscalDocumentService.create({
+        clientId: ticket.clientId,
+        type: "RECIBO",
+        number: receiptNumber,
+        issueDate,
+        totalAmount: billing.billingType === "CORTESIA" ? 0 : billing.totalAmount,
+        fileName,
+        filePath: publicFilePath,
+        ticketIds: [id],
+        saleIds: []
+      });
+      fiscalDocumentId = fiscalDoc.id;
+    } catch {
+      // Log fiscal document failure but don't block PDF delivery
+    }
 
-    return NextResponse.json({ success: true, data: { filePath: publicFilePath, fiscalDocumentId: fiscalDoc.id } }, { status: 201 });
+    return NextResponse.json({ success: true, data: { filePath: publicFilePath, fiscalDocumentId } }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : "Falha ao gerar o recibo." },

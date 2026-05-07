@@ -64,6 +64,10 @@ export function canManageTicketBilling(role: UserRole) {
   return role === "ADMIN" || role === "ATTENDANT";
 }
 
+export function canManageExpenses(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
 export function canManageCompanyProfile(role: UserRole) {
   return role === "ADMIN";
 }

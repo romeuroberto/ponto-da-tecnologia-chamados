@@ -39,6 +39,7 @@ export const appNavigation: NavigationItem[] = [
     label: "Financeiro",
     children: [
       { href: "/financeiro", label: "Visão geral" },
+      { href: "/financeiro/despesas", label: "Despesas" },
       { href: "/financeiro/cobrancas", label: "Cobranças" },
       { href: "/financeiro/pagamentos", label: "Pagamentos" },
       { href: "/financeiro/documentos", label: "Documentos fiscais" }

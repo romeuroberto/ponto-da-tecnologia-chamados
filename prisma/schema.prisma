@@ -63,6 +63,26 @@ enum FinancialStatus {
   CANCELADO
 }
 
+enum ExpenseStatus {
+  PENDENTE
+  PAGA
+  CANCELADA
+}
+
+enum ExpenseCategory {
+  ALUGUEL
+  ENERGIA
+  INTERNET
+  TRANSPORTE
+  COMBUSTIVEL
+  ALIMENTACAO
+  PECAS_INSUMOS
+  FERRAMENTAS_EQUIPAMENTOS
+  IMPOSTOS_TAXAS
+  SERVICOS_TERCEIROS
+  OUTROS
+}
+
 enum BillingEntryType {
   LABOR
   PART
@@ -122,6 +142,7 @@ model User {
   createdServiceOrders  ServiceOrder[]  @relation("ServiceOrderCreator")
   createdSales          Sale[]          @relation("SaleCreator")
   stockMovements        StockMovement[] @relation("StockMovementCreator")
+  expensesCreated       Expense[]       @relation("ExpenseCreator")
 }
 
 model Client {
@@ -235,6 +256,7 @@ model Ticket {
   billing         TicketBilling?
   serviceOrders   ServiceOrder[]
   fiscalDocumentLinks FiscalDocumentLink[]
+  expenses        Expense[]
 }
 
 model TicketHistory {
@@ -370,6 +392,30 @@ model BillingHistory {
   createdAt        DateTime                @default(now())
   ticketBilling    TicketBilling           @relation(fields: [ticketBillingId], references: [id])
   author           User                    @relation(fields: [authorId], references: [id])
+}
+
+model Expense {
+  id                 String          @id @default(cuid())
+  description        String
+  category           ExpenseCategory
+  amount             Decimal         @db.Decimal(12, 2)
+  status             ExpenseStatus   @default(PENDENTE)
+  expenseDate        DateTime
+  paidAt             DateTime?
+  paymentMethod      String?
+  notes              String?
+  ticketId           String?
+  createdById        String
+  cancellationReason String?
+  canceledAt         DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  ticket             Ticket?         @relation(fields: [ticketId], references: [id])
+  createdBy          User            @relation("ExpenseCreator", fields: [createdById], references: [id])
+
+  @@index([expenseDate, status])
+  @@index([category])
+  @@index([ticketId])
 }
 
 model Sale {

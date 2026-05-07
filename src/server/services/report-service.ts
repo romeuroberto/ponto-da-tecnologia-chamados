@@ -1,6 +1,8 @@
 import { getSlaInfo } from "@/lib/sla";
+import { expenseService } from "@/server/services/expense-service";
+import { saleService } from "@/server/services/sale-service";
 import { ticketService } from "@/server/services/ticket-service";
-import type { BillingType, FinancialStatus, Ticket, TicketPriority, TicketStatus } from "@/types";
+import type { BillingType, ExpenseCategory, FinancialStatus, Ticket, TicketPriority, TicketStatus } from "@/types";
 
 const statusLabels: Record<TicketStatus, string> = {
   OPEN: "Aberto",
@@ -32,6 +34,20 @@ const financialStatusLabels: Record<FinancialStatus, string> = {
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
+};
+
+const expenseCategoryLabels: Record<ExpenseCategory, string> = {
+  ALUGUEL: "Aluguel",
+  ENERGIA: "Energia",
+  INTERNET: "Internet",
+  TRANSPORTE: "Transporte",
+  COMBUSTIVEL: "Combustivel",
+  ALIMENTACAO: "Alimentacao",
+  PECAS_INSUMOS: "Pecas e insumos",
+  FERRAMENTAS_EQUIPAMENTOS: "Ferramentas e equipamentos",
+  IMPOSTOS_TAXAS: "Impostos e taxas",
+  SERVICOS_TERCEIROS: "Servicos de terceiros",
+  OUTROS: "Outros"
 };
 
 function formatDateTime(value?: string) {
@@ -348,8 +364,13 @@ export const reportService = {
     };
   },
   async getFinancialDashboard(filters: { from?: string; to?: string }) {
-    const report = await reportService.getOperationalReport(filters);
-    const allTickets = await ticketService.listTickets();
+    const [report, allTickets, filteredExpenses, allSales, allExpenses] = await Promise.all([
+      reportService.getOperationalReport(filters),
+      ticketService.listTickets(),
+      expenseService.listExpenses({ from: filters.from, to: filters.to }),
+      saleService.listSales(),
+      expenseService.listExpenses()
+    ]);
     const tickets = filterTicketsByRange(allTickets, filters.from, filters.to);
     const billedTickets = tickets.filter((ticket) => ticket.billing);
     const recentActivity = billedTickets
@@ -391,6 +412,79 @@ export const reportService = {
       report.financial.totalTicketsWithBilling > 0
         ? Number((report.financial.total / report.financial.totalTicketsWithBilling).toFixed(2))
         : 0;
+    const ticketPaidAmount = Number(
+      allTickets
+        .filter((ticket) => ticket.billing?.paidAt)
+        .filter((ticket) => {
+          const paidAt = ticket.billing?.paidAt ? new Date(ticket.billing.paidAt) : null;
+          if (!paidAt) return false;
+          const { fromDate, toDate } = buildRange(filters.from, filters.to);
+          if (fromDate && paidAt < fromDate) return false;
+          if (toDate && paidAt > toDate) return false;
+          return true;
+        })
+        .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0)
+        .toFixed(2)
+    );
+    const { fromDate, toDate } = buildRange(filters.from, filters.to);
+    const salesPaidAmount = Number(
+      allSales
+        .filter((sale) => sale.financialStatus === "PAGO" && sale.paidAt)
+        .filter((sale) => {
+          const paidAt = sale.paidAt ? new Date(sale.paidAt) : null;
+          if (!paidAt) return false;
+          if (fromDate && paidAt < fromDate) return false;
+          if (toDate && paidAt > toDate) return false;
+          return true;
+        })
+        .reduce((sum, sale) => sum + sale.totalAmount, 0)
+        .toFixed(2)
+    );
+    const expensesPaidAmount = Number(
+      allExpenses
+        .filter((expense) => expense.status === "PAGA" && expense.paidAt)
+        .filter((expense) => {
+          const paidAt = expense.paidAt ? new Date(expense.paidAt) : null;
+          if (!paidAt) return false;
+          if (fromDate && paidAt < fromDate) return false;
+          if (toDate && paidAt > toDate) return false;
+          return true;
+        })
+        .reduce((sum, expense) => sum + expense.amount, 0)
+        .toFixed(2)
+    );
+    const expensesPendingAmount = Number(
+      filteredExpenses
+        .filter((expense) => expense.status === "PENDENTE")
+        .reduce((sum, expense) => sum + expense.amount, 0)
+        .toFixed(2)
+    );
+    const byExpenseCategory = Array.from(
+      filteredExpenses.reduce((map, expense) => {
+        if (expense.status === "CANCELADA") {
+          return map;
+        }
+
+        const current = map.get(expense.category) ?? {
+          category: expense.category,
+          label: expenseCategoryLabels[expense.category],
+          total: 0,
+          amount: 0
+        };
+
+        current.total += 1;
+        current.amount += expense.amount;
+        map.set(expense.category, current);
+        return map;
+      }, new Map<ExpenseCategory, { category: ExpenseCategory; label: string; total: number; amount: number }>()),
+      ([, value]) => ({
+        ...value,
+        amount: Number(value.amount.toFixed(2))
+      })
+    ).sort((left, right) => right.amount - left.amount);
+    const cashInflow = Number((ticketPaidAmount + salesPaidAmount).toFixed(2));
+    const cashOutflow = expensesPaidAmount;
+    const cashBalance = Number((cashInflow - cashOutflow).toFixed(2));
 
     return {
       filters,
@@ -412,7 +506,18 @@ export const reportService = {
       byFinancialStatus: report.financial.byFinancialStatus,
       pendingByClient: report.financial.pendingByClient,
       trend: buildFinancialTrend(billedTickets),
-      recentActivity
+      recentActivity,
+      expenses: {
+        totalCount: filteredExpenses.length,
+        pendingAmount: expensesPendingAmount,
+        paidAmount: expensesPaidAmount,
+        byCategory: byExpenseCategory
+      },
+      cash: {
+        inflowAmount: cashInflow,
+        outflowAmount: cashOutflow,
+        balanceAmount: cashBalance
+      }
     };
   },
   async getOperationalExport(filters: { from?: string; to?: string }) {
@@ -420,6 +525,11 @@ export const reportService = {
     const tickets = filterTicketsByRange(allTickets, filters.from, filters.to);
 
     return tickets.map((ticket) => ({
+      totalDespesasVinculadas: String((ticket.expenses ?? []).length),
+      custoInternoVinculado: (ticket.expenses ?? [])
+        .filter((expense) => expense.status !== "CANCELADA")
+        .reduce((sum, expense) => sum + expense.amount, 0)
+        .toFixed(2),
       numero: ticket.number,
       titulo: ticket.title,
       cliente: ticket.clientName,
@@ -463,5 +573,56 @@ export const reportService = {
       criadoEm: formatDateTime(ticket.createdAt),
       atualizadoEm: formatDateTime(ticket.updatedAt)
     }));
+  },
+  async getCashExpensesExport(filters: { from?: string; to?: string }) {
+    const dashboard = await reportService.getFinancialDashboard(filters);
+    const expenses = await expenseService.listExpenses({
+      from: filters.from,
+      to: filters.to,
+      sort: "expense_desc"
+    });
+
+    const summaryRows = [
+      {
+        tipoLinha: "RESUMO_CAIXA",
+        periodoDe: filters.from ?? "",
+        periodoAte: filters.to ?? "",
+        entradasRealizadas: dashboard.cash.inflowAmount.toFixed(2),
+        saidasRealizadas: dashboard.cash.outflowAmount.toFixed(2),
+        saldoPeriodo: dashboard.cash.balanceAmount.toFixed(2),
+        despesasPendentes: dashboard.expenses.pendingAmount.toFixed(2),
+        descricao: "",
+        categoria: "",
+        statusDespesa: "",
+        valorDespesa: "",
+        dataDespesa: "",
+        dataPagamento: "",
+        chamado: "",
+        lancadoPor: "",
+        observacoes: ""
+      }
+    ];
+
+    const expenseRows = expenses.map((expense) => ({
+      tipoLinha: "DESPESA",
+      periodoDe: filters.from ?? "",
+      periodoAte: filters.to ?? "",
+      entradasRealizadas: "",
+      saidasRealizadas: "",
+      saldoPeriodo: "",
+      despesasPendentes: "",
+      descricao: expense.description,
+      categoria: expenseCategoryLabels[expense.category],
+      statusDespesa:
+        expense.status === "PENDENTE" ? "Pendente" : expense.status === "PAGA" ? "Paga" : "Cancelada",
+      valorDespesa: expense.amount.toFixed(2),
+      dataDespesa: formatDateTime(expense.expenseDate),
+      dataPagamento: formatDateTime(expense.paidAt),
+      chamado: expense.ticketNumber ? `${expense.ticketNumber} - ${expense.ticketTitle ?? ""}` : "",
+      lancadoPor: expense.createdByName,
+      observacoes: expense.notes ?? ""
+    }));
+
+    return [...summaryRows, ...expenseRows];
   }
 };

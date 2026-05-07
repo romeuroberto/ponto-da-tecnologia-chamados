@@ -58,9 +58,9 @@ export default async function VendaDetailPage({ params }: { params: Promise<{ id
                     <span className="text-right font-semibold tabular-nums text-slate-950">{formatCurrency(item.totalPrice)}</span>
                   </div>
                 ))}
-                <div className="flex items-center justify-between bg-slate-950 px-6 py-4">
-                  <span className="text-sm font-semibold text-slate-300 uppercase tracking-wide">Total</span>
-                  <span className="text-xl font-bold text-white tabular-nums">{formatCurrency(sale.totalAmount)}</span>
+                <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
+                  <span className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Total</span>
+                  <span className="text-xl font-bold text-slate-900 tabular-nums">{formatCurrency(sale.totalAmount)}</span>
                 </div>
               </div>
             </CardContent>

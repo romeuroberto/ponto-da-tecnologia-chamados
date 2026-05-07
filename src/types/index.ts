@@ -18,6 +18,21 @@ export type BillingType = "AVULSO" | "CONTRATO" | "GARANTIA" | "CORTESIA";
 
 export type FinancialStatus = "PENDENTE" | "EM_ANALISE" | "APROVADO" | "FATURADO" | "PAGO" | "CANCELADO";
 
+export type ExpenseStatus = "PENDENTE" | "PAGA" | "CANCELADA";
+
+export type ExpenseCategory =
+  | "ALUGUEL"
+  | "ENERGIA"
+  | "INTERNET"
+  | "TRANSPORTE"
+  | "COMBUSTIVEL"
+  | "ALIMENTACAO"
+  | "PECAS_INSUMOS"
+  | "FERRAMENTAS_EQUIPAMENTOS"
+  | "IMPOSTOS_TAXAS"
+  | "SERVICOS_TERCEIROS"
+  | "OUTROS";
+
 export type BillingEntryType = "LABOR" | "PART" | "TRAVEL" | "EXTRA" | "CONSULTING" | "REMOTE_SUPPORT";
 
 export interface OsContribution {
@@ -215,6 +230,27 @@ export interface Sale {
   items: SaleItem[];
 }
 
+export interface Expense {
+  id: string;
+  description: string;
+  category: ExpenseCategory;
+  amount: number;
+  status: ExpenseStatus;
+  expenseDate: string;
+  paidAt?: string;
+  paymentMethod?: string;
+  notes?: string;
+  ticketId?: string;
+  ticketNumber?: string;
+  ticketTitle?: string;
+  createdById: string;
+  createdByName: string;
+  cancellationReason?: string;
+  canceledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PaymentInstruction {
   id: string;
   clientId?: string;
@@ -365,6 +401,7 @@ export interface Ticket {
   history: TicketHistoryItem[];
   attachments: TicketAttachment[];
   billing?: TicketBilling;
+  expenses?: Expense[];
   serviceOrders: ServiceOrder[];
 }
 

@@ -38,6 +38,7 @@ export default async function FinancialDashboardPage({
   });
 
   const quickFilters: Array<{ href: Route; label: string }> = [
+    { href: "/financeiro/despesas", label: "Despesas" },
     { href: "/relatorios", label: "Relatórios completos" },
     { href: "/chamados?status=RESOLVED", label: "Chamados resolvidos" },
     { href: "/clientes", label: "Clientes" }
@@ -47,7 +48,7 @@ export default async function FinancialDashboardPage({
     <div className="space-y-6">
       <PageHeader
         title="Dashboard Financeiro"
-        description="Visão dedicada de faturamento, pendências, recebimentos e atividade financeira dos chamados."
+        description="Visão dedicada de faturamento, cobrança, despesas e caixa do período."
         action={
           <div className="flex flex-wrap gap-2">
             {quickFilters.map((item) => (
@@ -73,7 +74,10 @@ export default async function FinancialDashboardPage({
             <Button type="submit" variant="secondary">
               Atualizar dashboard
             </Button>
-            <a href="/financeiro" className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
+            <a
+              href="/financeiro"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
+            >
               Limpar período
             </a>
           </CardContent>
@@ -109,6 +113,27 @@ export default async function FinancialDashboardPage({
           <CardContent className="p-5">
             <p className="text-sm text-slate-600">Pagos</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.paidCount}</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <Card className="border-emerald-200 bg-emerald-50/60">
+          <CardContent className="p-5">
+            <p className="text-sm text-emerald-700">Entradas de caixa</p>
+            <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(dashboard.cash.inflowAmount)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-rose-200 bg-rose-50/60">
+          <CardContent className="p-5">
+            <p className="text-sm text-rose-700">Saídas de caixa</p>
+            <p className="mt-2 text-2xl font-semibold text-rose-950">{formatCurrency(dashboard.cash.outflowAmount)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 bg-slate-50/70">
+          <CardContent className="p-5">
+            <p className="text-sm text-slate-700">Saldo do período</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.cash.balanceAmount)}</p>
           </CardContent>
         </Card>
       </section>
@@ -162,6 +187,49 @@ export default async function FinancialDashboardPage({
                 <p className="mt-1 text-sm text-slate-600">{formatCurrency(item.amount)}</p>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Despesas do período</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-slate-200 px-4 py-3">
+              <p className="text-sm text-slate-600">Total de despesas</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-950">{dashboard.expenses.totalCount}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 px-4 py-3">
+              <p className="text-sm text-slate-600">Pendentes</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.expenses.pendingAmount)}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 px-4 py-3 sm:col-span-2">
+              <p className="text-sm text-slate-600">Pagas</p>
+              <p className="mt-1 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.expenses.paidAmount)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Despesas por categoria</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {dashboard.expenses.byCategory.length > 0 ? (
+              dashboard.expenses.byCategory.slice(0, 6).map((item) => (
+                <div key={item.category} className="rounded-xl border border-slate-200 px-4 py-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="font-medium text-slate-900">{item.label}</span>
+                    <span className="text-sm font-semibold text-slate-950">{item.total}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-slate-600">{formatCurrency(item.amount)}</p>
+                </div>
+              ))
+            ) : (
+              <EmptyState title="Sem despesas registradas" description="Quando houver saídas no período, elas aparecerão aqui." />
+            )}
           </CardContent>
         </Card>
       </section>

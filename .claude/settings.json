@@ -10,7 +10,10 @@
       "Bash(Sort-Object LastWriteTime -Descending)",
       "Bash(Select-Object -First 3 Name)",
       "Bash(find \"c:\\\\\\\\Users\\\\\\\\User\\\\\\\\Desktop\\\\\\\\Projetos VS\\\\\\\\ponto-da-tecnologia-chamados\\\\\\\\src\\\\\\\\lib\" -name \"*portal*\")",
-      "Bash(mkdir \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\\\\[id]\\\\recibo\" 2>/dev/null; echo \"ok\")"
+      "Bash(mkdir \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\\\\[id]\\\\recibo\" 2>/dev/null; echo \"ok\")",
+      "Bash(dir \"src\\\\app\\\\api\\\\sales\" /s /b)",
+      "Bash(Get-ChildItem -Recurse \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\sales\")",
+      "Bash(Select-Object FullName)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

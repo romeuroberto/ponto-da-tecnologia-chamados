@@ -31,6 +31,12 @@ const financialStatusLabels: Record<string, { label: string; className: string }
   CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
 };
 
+const expenseStatusLabels: Record<string, string> = {
+  PENDENTE: "Pendente",
+  PAGA: "Paga",
+  CANCELADA: "Cancelada"
+};
+
 export default async function TicketDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const currentUser = await requireUser();
   const { id } = await params;
@@ -52,6 +58,10 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
     !!(client?.billingProfile?.hasActiveContract &&
       ticket.category &&
       client.billingProfile.contractCoveredCategories.includes(ticket.category));
+  const relatedExpenses = ticket.expenses ?? [];
+  const activeExpenseAmount = relatedExpenses
+    .filter((expense) => expense.status !== "CANCELADA")
+    .reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
     <div className="space-y-6">
@@ -218,6 +228,39 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 ) : (
                   <p className="text-sm text-slate-500">Nenhum financeiro iniciado para este chamado.</p>
                 )}
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Despesas vinculadas</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-950">
+                        {relatedExpenses.length} registro(s) · {formatCurrency(activeExpenseAmount)}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/financeiro/despesas?ticketId=${ticket.id}` as Route}
+                      className={cn(buttonVariants({ variant: "outline" }), "h-9")}
+                    >
+                      Ver despesas
+                    </Link>
+                  </div>
+                  {relatedExpenses.length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {relatedExpenses.slice(0, 3).map((expense) => (
+                        <div key={expense.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-medium text-slate-900">{expense.description}</span>
+                            <span className="font-semibold text-slate-950">{formatCurrency(expense.amount)}</span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {expenseStatusLabels[expense.status]} · {new Date(expense.expenseDate).toLocaleDateString("pt-BR")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-500">Nenhuma despesa operacional vinculada a este chamado.</p>
+                  )}
+                </div>
                 <Link href={`/chamados/${id}/financeiro` as Route} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
                   {ticket.billing ? "Gerenciar financeiro" : "Iniciar financeiro"}
                 </Link>

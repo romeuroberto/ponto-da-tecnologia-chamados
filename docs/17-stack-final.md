@@ -49,6 +49,13 @@ Objetivo: usar uma stack simples, moderna e economica em complexidade para imple
 - usar Prisma para toda persistencia
 - usar upload local no desenvolvimento e abstrair para nuvem depois
 
+## Ambiente de banco
+
+- o PostgreSQL do projeto nao roda como instancia local nativa
+- o banco roda em container no Docker Desktop
+- comandos de migration, seed e validacao de banco devem assumir esse ambiente containerizado
+- nao presumir que o banco esteja disponivel fora do Docker apenas por existir `DATABASE_URL`
+
 ## Bibliotecas recomendadas
 
 - `next`

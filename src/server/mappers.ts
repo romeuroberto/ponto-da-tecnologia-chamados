@@ -5,6 +5,7 @@ import type {
   Client,
   ClientBillingProfile,
   CompanyProfile,
+  Expense,
   FiscalDocument,
   FiscalDocumentLink,
   OsContribution,
@@ -159,6 +160,7 @@ interface TicketRecord {
   openedBy: UserRecord;
   history: TicketHistoryRecord[];
   attachments?: TicketAttachmentRecord[];
+  expenses?: ExpenseRecord[];
   serviceOrders?: ServiceOrderRecord[];
   billing?: TicketBillingRecord | null;
 }
@@ -246,6 +248,26 @@ interface SaleRecord {
   client: { name: string };
   createdBy: UserRecord;
   items: SaleItemRecord[];
+}
+
+interface ExpenseRecord {
+  id: string;
+  description: string;
+  category: Expense["category"];
+  amount: PrismaDecimalLike;
+  status: Expense["status"];
+  expenseDate: Date;
+  paidAt: Date | null;
+  paymentMethod: string | null;
+  notes: string | null;
+  ticketId: string | null;
+  createdById: string;
+  cancellationReason: string | null;
+  canceledAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  ticket?: { number: string; title: string } | null;
+  createdBy: UserRecord;
 }
 
 interface StockMovementRecord {
@@ -514,6 +536,7 @@ export function mapTicket(record: TicketRecord): Ticket {
     checkedOutAt: record.checkedOutAt?.toISOString() ?? undefined,
     history: record.history.map(mapTicketHistory),
     attachments: (record.attachments ?? []).map(mapTicketAttachment),
+    expenses: (record.expenses ?? []).map(mapExpense),
     billing: record.billing
       ? mapTicketBilling(
           record.billing,
@@ -572,6 +595,29 @@ export function mapSale(record: SaleRecord): Sale {
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
     items: record.items.map(mapSaleItem)
+  };
+}
+
+export function mapExpense(record: ExpenseRecord): Expense {
+  return {
+    id: record.id,
+    description: record.description,
+    category: record.category,
+    amount: record.amount.toNumber(),
+    status: record.status,
+    expenseDate: record.expenseDate.toISOString(),
+    paidAt: record.paidAt?.toISOString() ?? undefined,
+    paymentMethod: record.paymentMethod ?? undefined,
+    notes: record.notes ?? undefined,
+    ticketId: record.ticketId ?? undefined,
+    ticketNumber: record.ticket?.number ?? undefined,
+    ticketTitle: record.ticket?.title ?? undefined,
+    createdById: record.createdById,
+    createdByName: record.createdBy.name,
+    cancellationReason: record.cancellationReason ?? undefined,
+    canceledAt: record.canceledAt?.toISOString() ?? undefined,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString()
   };
 }
 
@@ -644,6 +690,17 @@ export const saleInclude = {
   client: true,
   createdBy: true,
   items: { orderBy: { createdAt: "asc" as const } }
+} as const;
+
+export const expenseInclude = {
+  createdBy: true,
+  ticket: {
+    select: {
+      id: true,
+      number: true,
+      title: true
+    }
+  }
 } as const;
 
 interface TicketCategoryRecord {
@@ -721,6 +778,12 @@ export const ticketIncludeWithoutServiceOrders = {
       createdAt: "desc"
     }
   },
+  expenses: {
+    include: expenseInclude,
+    orderBy: {
+      expenseDate: "desc"
+    }
+  },
   billing: {
     include: {
       entries: {
@@ -758,6 +821,12 @@ export const ticketInclude = {
   attachments: {
     orderBy: {
       createdAt: "desc"
+    }
+  },
+  expenses: {
+    include: expenseInclude,
+    orderBy: {
+      expenseDate: "desc"
     }
   },
   serviceOrders: {
@@ -803,6 +872,12 @@ export const ticketIncludeWithoutServiceOrderParts = {
   attachments: {
     orderBy: {
       createdAt: "desc"
+    }
+  },
+  expenses: {
+    include: expenseInclude,
+    orderBy: {
+      expenseDate: "desc"
     }
   },
   serviceOrders: {
