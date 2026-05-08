@@ -74,7 +74,8 @@ export async function POST(request: Request) {
       state: profile?.state,
       postalCode: profile?.postalCode,
       notes: profile?.notes,
-      logoPath: publicFilePath
+      logoPath: publicFilePath,
+      signaturePath: profile?.signaturePath
     });
 
     return NextResponse.json({ success: true, logoPath: publicFilePath }, { status: 200 });
@@ -118,7 +119,8 @@ export async function DELETE() {
         state: profile.state,
         postalCode: profile.postalCode,
         notes: profile.notes,
-        logoPath: undefined
+        logoPath: undefined,
+        signaturePath: profile.signaturePath
       });
     }
 

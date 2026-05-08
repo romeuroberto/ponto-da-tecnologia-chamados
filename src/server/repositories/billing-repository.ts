@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { BillingEntryType, BillingType, FinancialStatus, OsContribution, TicketBilling } from "@/types";
 import { isDatabaseConfigured, normalizeOptionalString } from "@/server/db-support";
 import { mapTicketBilling, ticketBillingInclude } from "@/server/mappers";
+import { contractRepository } from "@/server/repositories/contract-repository";
 
 interface RawOsRecord {
   id: string;
@@ -262,11 +263,15 @@ export const billingRepository = {
   },
 
   async findByTicketId(ticketId: string): Promise<TicketBilling | null> {
-    const [record, completedOrders] = await Promise.all([
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { clientId: true } });
+    const [record, completedOrders, activeContract] = await Promise.all([
       prisma.ticketBilling.findUnique({ where: { ticketId }, include: ticketBillingInclude }),
-      prisma.serviceOrder.findMany({ where: { ticketId, status: "COMPLETED" }, include: { parts: true } })
+      prisma.serviceOrder.findMany({ where: { ticketId, status: "COMPLETED" }, include: { parts: true } }),
+      ticket ? contractRepository.findActiveByClientId(ticket.clientId) : Promise.resolve(null)
     ]);
-    return record ? mapTicketBilling(record, buildOsContributions(completedOrders)) : null;
+    return record
+      ? mapTicketBilling(record, buildOsContributions(completedOrders), activeContract ?? undefined)
+      : null;
   },
 
   async upsertByTicketId(ticketId: string, input: UpsertTicketBillingInput) {

@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation";
 import type { Client, PartCatalogItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ClientCombobox } from "@/components/ui/client-combobox";
+import { PartCombobox } from "@/components/ui/part-combobox";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { formatCurrency } from "@/lib/utils";
 
 interface SaleLineItem {
@@ -99,12 +100,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
         <CardContent className="grid gap-4 p-6 md:grid-cols-2">
           <div className="grid gap-2">
             <Label>Cliente</Label>
-            <Select value={clientId} onChange={(e) => handleClientChange(e.target.value)}>
-              <option value="" disabled>Selecione um cliente</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
+            <ClientCombobox clients={clients} value={clientId} onChange={handleClientChange} disabled={isPending} />
           </div>
           <div className="grid gap-2">
             <Label>Observações internas</Label>
@@ -126,14 +122,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
           <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 md:grid-cols-[2fr_1fr_1fr_auto]">
             <div className="grid gap-1">
               <Label className="text-xs">Material</Label>
-              <Select value={selectedPartId} onChange={(e) => handlePartChange(e.target.value)}>
-                <option value="">Selecione um material</option>
-                {parts.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}{p.code ? ` (${p.code})` : ""} — estoque: {p.stockQuantity} {p.unit}
-                  </option>
-                ))}
-              </Select>
+              <PartCombobox parts={parts} value={selectedPartId} onChange={handlePartChange} disabled={isPending} />
             </div>
             <div className="grid gap-1">
               <Label className="text-xs">Quantidade ({parts.find((p) => p.id === selectedPartId)?.unit ?? "un"})</Label>

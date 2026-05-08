@@ -160,9 +160,9 @@ function needsCancellationReason(status: FinancialStatus) {
   return status === "CANCELADO";
 }
 
-function getDefaultBilling(profile?: ClientBillingProfile): SummaryFormState {
+function getDefaultBilling(profile?: ClientBillingProfile, hasActiveContract?: boolean): SummaryFormState {
   return {
-    billingType: profile?.defaultBillingType ?? "AVULSO",
+    billingType: hasActiveContract ? "CONTRATO" : (profile?.defaultBillingType ?? "AVULSO"),
     discountAmount: formatCurrencyInput(profile?.defaultDiscountPercent ?? 0),
     internalNotes: profile?.contractNotes ?? ""
   };
@@ -223,7 +223,7 @@ export function TicketBillingPanel({
           discountAmount: formatCurrencyInput(initialBilling.discountAmount),
           internalNotes: initialBilling.internalNotes ?? ""
         }
-      : getDefaultBilling(clientBillingProfile)
+      : getDefaultBilling(clientBillingProfile, !!initialBilling?.activeContract)
   );
   const [entryFields, setEntryFields] = useState(getDefaultEntry(clientBillingProfile));
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -389,6 +389,29 @@ export function TicketBillingPanel({
     });
   }
 
+  function applyContractCoverage() {
+    const contract = billing?.activeContract;
+    if (!contract) return;
+    const totalToDiscount = Math.max(0, (billing?.osContributionsTotal ?? 0) + (billing?.subtotalAmount ?? 0));
+    const today = new Date().toISOString().slice(0, 10);
+    setMessage(null);
+    startTransition(async () => {
+      const data = await callBillingApi({
+        billingType: "CONTRATO",
+        financialStatus: "PAGO",
+        discountAmount: totalToDiscount,
+        internalNotes: summaryFields.internalNotes || `Coberto pelo contrato ${contract.contractNumber}`,
+        paymentMethod: `Contrato ${contract.contractNumber}`,
+        paymentDate: new Date(today).toISOString()
+      });
+      if (data) {
+        syncBilling(data);
+        setMessage({ type: "success", text: `Cobertura do contrato ${contract.contractNumber} aplicada.` });
+        router.refresh();
+      }
+    });
+  }
+
   const badge = statusBadge[currentStatus];
   const primaryActions = flowActions.filter((action) => action.tone === "primary");
   const secondaryActions = flowActions.filter((action) => action.tone === "secondary");
@@ -551,6 +574,36 @@ export function TicketBillingPanel({
               </p>
             </div>
           </div>
+
+          {billing?.activeContract ? (
+            billing.activeContract.coverageType === "TOTAL" && currentStatus !== "PAGO" && currentStatus !== "CANCELADO" ? (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-blue-900">
+                    Contrato ativo — Cobertura Total
+                  </p>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    {billing.activeContract.contractNumber} · Este chamado está coberto pelo contrato do cliente.
+                  </p>
+                </div>
+                {canManage ? (
+                  <Button
+                    type="button"
+                    className="w-full bg-blue-700 hover:bg-blue-800 text-white"
+                    disabled={isPending}
+                    onClick={applyContractCoverage}
+                  >
+                    {isPending ? "Aplicando..." : "Aplicar cobertura do contrato"}
+                  </Button>
+                ) : null}
+              </div>
+            ) : billing.activeContract.coverageType === "PARCIAL" ? (
+              <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                <span className="font-semibold">Contrato ativo — Cobertura Parcial</span>
+                <span className="ml-2 text-blue-600 text-xs">{billing.activeContract.contractNumber}</span>
+              </div>
+            ) : null
+          ) : null}
 
           {!summaryLocked && canManage ? (
             <div className="grid gap-4 md:grid-cols-2">

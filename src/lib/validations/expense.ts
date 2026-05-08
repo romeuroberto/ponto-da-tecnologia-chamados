@@ -36,3 +36,17 @@ export const expenseCancelSchema = z.object({
 });
 
 export type ExpenseInput = z.infer<typeof expenseSchema>;
+
+export const recurringExpenseSchema = z.object({
+  description: z.string().trim().min(3, "Descrição obrigatória").max(160),
+  category: expenseCategorySchema,
+  baseAmount: z.coerce.number().positive("Valor deve ser maior que zero"),
+  paymentMethod: z.string().trim().max(100).optional().or(z.literal("")),
+  frequency: z.enum(["MENSAL", "BIMESTRAL", "TRIMESTRAL", "SEMESTRAL", "ANUAL"]),
+  dayOfMonth: z.coerce.number().int().min(1).max(28).default(1),
+  startDate: z.string().min(1, "Data de início obrigatória"),
+  endDate: z.string().optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).optional().or(z.literal(""))
+});
+
+export type RecurringExpenseInput = z.infer<typeof recurringExpenseSchema>;

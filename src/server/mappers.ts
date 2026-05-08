@@ -4,12 +4,14 @@ import type {
   BillingHistoryItem,
   Client,
   ClientBillingProfile,
+  ClientContract,
   CompanyProfile,
   Expense,
   FiscalDocument,
   FiscalDocumentLink,
   OsContribution,
   PaymentInstruction,
+  RecurringExpense,
   Sale,
   SaleItem,
   ServiceOrderPart,
@@ -251,6 +253,44 @@ interface SaleRecord {
   items: SaleItemRecord[];
 }
 
+interface RecurringExpenseRecord {
+  id: string;
+  description: string;
+  category: Expense["category"];
+  baseAmount: PrismaDecimalLike;
+  paymentMethod: string | null;
+  frequency: RecurringExpense["frequency"];
+  dayOfMonth: number;
+  startDate: Date;
+  endDate: Date | null;
+  active: boolean;
+  notes: string | null;
+  createdById: string;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: UserRecord;
+}
+
+export function mapRecurringExpense(record: RecurringExpenseRecord): RecurringExpense {
+  return {
+    id: record.id,
+    description: record.description,
+    category: record.category,
+    baseAmount: record.baseAmount.toNumber(),
+    paymentMethod: record.paymentMethod ?? undefined,
+    frequency: record.frequency,
+    dayOfMonth: record.dayOfMonth,
+    startDate: record.startDate.toISOString(),
+    endDate: record.endDate?.toISOString() ?? undefined,
+    active: record.active,
+    notes: record.notes ?? undefined,
+    createdById: record.createdById,
+    createdByName: record.createdBy.name,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString()
+  };
+}
+
 interface ExpenseRecord {
   id: string;
   description: string;
@@ -262,6 +302,9 @@ interface ExpenseRecord {
   paymentMethod: string | null;
   notes: string | null;
   ticketId: string | null;
+  recurringExpenseId: string | null;
+  referenceMonth: number | null;
+  referenceYear: number | null;
   createdById: string;
   cancellationReason: string | null;
   canceledAt: Date | null;
@@ -468,7 +511,11 @@ export function mapBillingHistory(record: BillingHistoryRecord): BillingHistoryI
   };
 }
 
-export function mapTicketBilling(record: TicketBillingRecord, osContributions: OsContribution[] = []): TicketBilling {
+export function mapTicketBilling(
+  record: TicketBillingRecord,
+  osContributions: OsContribution[] = [],
+  activeContract?: ClientContract
+): TicketBilling {
   return {
     id: record.id,
     ticketId: record.ticketId,
@@ -492,7 +539,8 @@ export function mapTicketBilling(record: TicketBillingRecord, osContributions: O
     entries: record.entries.map(mapBillingEntry),
     history: record.history.map(mapBillingHistory),
     osContributions,
-    osContributionsTotal: osContributions.reduce((s, c) => s + c.totalAmount, 0)
+    osContributionsTotal: osContributions.reduce((s, c) => s + c.totalAmount, 0),
+    activeContract
   };
 }
 
@@ -614,6 +662,9 @@ export function mapExpense(record: ExpenseRecord): Expense {
     ticketId: record.ticketId ?? undefined,
     ticketNumber: record.ticket?.number ?? undefined,
     ticketTitle: record.ticket?.title ?? undefined,
+    recurringExpenseId: record.recurringExpenseId ?? undefined,
+    referenceMonth: record.referenceMonth ?? undefined,
+    referenceYear: record.referenceYear ?? undefined,
     createdById: record.createdById,
     createdByName: record.createdBy.name,
     cancellationReason: record.cancellationReason ?? undefined,
@@ -670,6 +721,38 @@ export function mapFiscalDocument(record: FiscalDocumentRecord): FiscalDocument 
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString(),
     links: record.links.map(mapFiscalDocumentLink)
+  };
+}
+
+interface ClientContractRecord {
+  id: string;
+  clientId: string;
+  contractNumber: string;
+  startDate: Date;
+  endDate: Date | null;
+  status: ClientContract["status"];
+  coverageType: ClientContract["coverageType"];
+  monthlyValue: PrismaDecimalLike | null;
+  coveredCategories: string[];
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export function mapClientContract(record: ClientContractRecord): ClientContract {
+  return {
+    id: record.id,
+    clientId: record.clientId,
+    contractNumber: record.contractNumber,
+    startDate: record.startDate.toISOString(),
+    endDate: record.endDate?.toISOString() ?? undefined,
+    status: record.status,
+    coverageType: record.coverageType,
+    monthlyValue: record.monthlyValue?.toNumber() ?? undefined,
+    coveredCategories: record.coveredCategories,
+    notes: record.notes ?? undefined,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString()
   };
 }
 

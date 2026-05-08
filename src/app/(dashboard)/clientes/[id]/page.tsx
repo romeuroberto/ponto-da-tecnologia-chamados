@@ -8,10 +8,12 @@ import { PageHeader } from "@/components/layout/page-header";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { ClientPortalAccessSection } from "@/components/clients/client-portal-access-section";
+import { ContractList } from "@/components/contracts/contract-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { canEditClient } from "@/server/auth/permissions";
 import { clientService } from "@/server/services/client-service";
+import { contractRepository } from "@/server/repositories/contract-repository";
 import { ticketCategoryService } from "@/server/services/ticket-category-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
@@ -25,10 +27,11 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const [tickets, portalUser, categories] = await Promise.all([
+  const [tickets, portalUser, categories, contracts] = await Promise.all([
     ticketService.listTickets(),
     userService.getPortalUserByClientId(id),
-    ticketCategoryService.listCategories(true)
+    ticketCategoryService.listCategories(true),
+    contractRepository.findByClientId(id)
   ]);
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
   const canEdit = session?.user ? canEditClient(session.user.role) : false;
@@ -93,6 +96,8 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
           </Card>
 
           <ClientPortalAccessSection clientId={client.id} portalUser={portalUser} canEdit={canEdit} />
+
+          <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} />
         </div>
       </div>
     </div>

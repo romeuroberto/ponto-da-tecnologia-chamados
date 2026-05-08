@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import type { AppUser, Client, TicketAttendanceType, TicketCategory } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ClientCombobox } from "@/components/ui/client-combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -97,16 +98,7 @@ export function TicketForm({ clients, users, categories }: { clients: Client[]; 
           {message ? <FormMessage type={message.type} message={message.text} /> : null}
           <div className="grid gap-2">
             <Label htmlFor="client">Cliente</Label>
-            <Select id="client" value={formData.clientId} onChange={(event) => updateField("clientId", event.target.value)}>
-              <option value="" disabled>
-                Selecione um cliente
-              </option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </Select>
+            <ClientCombobox clients={clients} value={formData.clientId} onChange={(id) => updateField("clientId", id)} disabled={isPending} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="title">Título</Label>

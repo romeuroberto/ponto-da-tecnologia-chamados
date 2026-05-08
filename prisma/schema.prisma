@@ -69,6 +69,14 @@ enum ExpenseStatus {
   CANCELADA
 }
 
+enum RecurringFrequency {
+  MENSAL
+  BIMESTRAL
+  TRIMESTRAL
+  SEMESTRAL
+  ANUAL
+}
+
 enum ExpenseCategory {
   ALUGUEL
   ENERGIA
@@ -107,6 +115,18 @@ enum BillingHistoryEventType {
   STATUS_UPDATED
 }
 
+enum ContractStatus {
+  RASCUNHO
+  ATIVO
+  ENCERRADO
+  EXPIRADO
+}
+
+enum ContractCoverageType {
+  TOTAL
+  PARCIAL
+}
+
 enum ServiceOrderStatus {
   PLANNED
   IN_EXECUTION
@@ -142,7 +162,8 @@ model User {
   createdServiceOrders  ServiceOrder[]  @relation("ServiceOrderCreator")
   createdSales          Sale[]          @relation("SaleCreator")
   stockMovements        StockMovement[] @relation("StockMovementCreator")
-  expensesCreated       Expense[]       @relation("ExpenseCreator")
+  expensesCreated       Expense[]         @relation("ExpenseCreator")
+  recurringExpenses     RecurringExpense[] @relation("RecurringExpenseCreator")
 }
 
 model Client {
@@ -163,6 +184,7 @@ model Client {
   sales          Sale[]
   paymentInstructions PaymentInstruction[]
   fiscalDocuments FiscalDocument[]
+  contracts      ClientContract[]
 }
 
 model CompanyProfile {
@@ -384,6 +406,23 @@ model ClientBillingProfile {
   client                     Client       @relation(fields: [clientId], references: [id])
 }
 
+model ClientContract {
+  id                String               @id @default(cuid())
+  clientId          String
+  contractNumber    String               @unique
+  startDate         DateTime
+  endDate           DateTime?
+  status            ContractStatus       @default(ATIVO)
+  coverageType      ContractCoverageType @default(PARCIAL)
+  monthlyValue      Decimal?             @db.Decimal(12, 2)
+  coveredCategories String[]
+  notes             String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id])
+}
+
 model BillingHistory {
   id              String                  @id @default(cuid())
   ticketBillingId  String
@@ -395,28 +434,53 @@ model BillingHistory {
   author           User                    @relation(fields: [authorId], references: [id])
 }
 
-model Expense {
-  id                 String          @id @default(cuid())
+model RecurringExpense {
+  id                 String             @id @default(cuid())
   description        String
   category           ExpenseCategory
-  amount             Decimal         @db.Decimal(12, 2)
-  status             ExpenseStatus   @default(PENDENTE)
-  expenseDate        DateTime
-  paidAt             DateTime?
+  baseAmount         Decimal            @db.Decimal(12, 2)
   paymentMethod      String?
+  frequency          RecurringFrequency @default(MENSAL)
+  dayOfMonth         Int                @default(1)
+  startDate          DateTime
+  endDate            DateTime?
+  active             Boolean            @default(true)
   notes              String?
-  ticketId           String?
   createdById        String
-  cancellationReason String?
-  canceledAt         DateTime?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  ticket             Ticket?         @relation(fields: [ticketId], references: [id])
-  createdBy          User            @relation("ExpenseCreator", fields: [createdById], references: [id])
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  createdBy          User               @relation("RecurringExpenseCreator", fields: [createdById], references: [id])
+  occurrences        Expense[]
+}
+
+model Expense {
+  id                   String             @id @default(cuid())
+  description          String
+  category             ExpenseCategory
+  amount               Decimal            @db.Decimal(12, 2)
+  status               ExpenseStatus      @default(PENDENTE)
+  expenseDate          DateTime
+  paidAt               DateTime?
+  paymentMethod        String?
+  notes                String?
+  ticketId             String?
+  recurringExpenseId   String?
+  referenceMonth       Int?
+  referenceYear        Int?
+  createdById          String
+  cancellationReason   String?
+  canceledAt           DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  ticket               Ticket?            @relation(fields: [ticketId], references: [id])
+  recurringExpense     RecurringExpense?  @relation(fields: [recurringExpenseId], references: [id])
+  createdBy            User               @relation("ExpenseCreator", fields: [createdById], references: [id])
 
   @@index([expenseDate, status])
   @@index([category])
   @@index([ticketId])
+  @@index([recurringExpenseId, referenceYear, referenceMonth])
 }
 
 model Sale {

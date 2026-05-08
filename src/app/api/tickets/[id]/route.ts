@@ -104,6 +104,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       id,
       {
         ...result.data,
+        status: result.data.status ?? current.status,
+        priority: result.data.priority ?? current.priority,
         assigneeId: result.data.assigneeId || undefined,
         closingReason: result.data.closingReason || undefined
       },

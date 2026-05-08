@@ -16,9 +16,14 @@ export type ServiceOrderStatus = "PLANNED" | "IN_EXECUTION" | "PAUSED" | "COMPLE
 
 export type BillingType = "AVULSO" | "CONTRATO" | "GARANTIA" | "CORTESIA";
 
+export type ContractStatus = "RASCUNHO" | "ATIVO" | "ENCERRADO" | "EXPIRADO";
+export type ContractCoverageType = "TOTAL" | "PARCIAL";
+
 export type FinancialStatus = "PENDENTE" | "EM_ANALISE" | "APROVADO" | "FATURADO" | "PAGO" | "CANCELADO";
 
 export type ExpenseStatus = "PENDENTE" | "PAGA" | "CANCELADA";
+
+export type RecurringFrequency = "MENSAL" | "BIMESTRAL" | "TRIMESTRAL" | "SEMESTRAL" | "ANUAL";
 
 export type ExpenseCategory =
   | "ALUGUEL"
@@ -231,6 +236,24 @@ export interface Sale {
   items: SaleItem[];
 }
 
+export interface RecurringExpense {
+  id: string;
+  description: string;
+  category: ExpenseCategory;
+  baseAmount: number;
+  paymentMethod?: string;
+  frequency: RecurringFrequency;
+  dayOfMonth: number;
+  startDate: string;
+  endDate?: string;
+  active: boolean;
+  notes?: string;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Expense {
   id: string;
   description: string;
@@ -244,6 +267,9 @@ export interface Expense {
   ticketId?: string;
   ticketNumber?: string;
   ticketTitle?: string;
+  recurringExpenseId?: string;
+  referenceMonth?: number;
+  referenceYear?: number;
   createdById: string;
   createdByName: string;
   cancellationReason?: string;
@@ -360,6 +386,23 @@ export interface TicketBilling {
   // Contribuições automáticas das OSs concluídas (camada 1 — somente leitura)
   osContributions: OsContribution[];
   osContributionsTotal: number;
+  // Contrato ativo do cliente (somente leitura)
+  activeContract?: ClientContract;
+}
+
+export interface ClientContract {
+  id: string;
+  clientId: string;
+  contractNumber: string;
+  startDate: string;
+  endDate?: string;
+  status: ContractStatus;
+  coverageType: ContractCoverageType;
+  monthlyValue?: number;
+  coveredCategories: string[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ClientBillingProfile {
