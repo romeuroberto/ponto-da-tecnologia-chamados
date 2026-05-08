@@ -223,7 +223,7 @@ export function TicketBillingPanel({
           discountAmount: formatCurrencyInput(initialBilling.discountAmount),
           internalNotes: initialBilling.internalNotes ?? ""
         }
-      : getDefaultBilling(clientBillingProfile, !!initialBilling?.activeContract)
+      : getDefaultBilling(clientBillingProfile, false)
   );
   const [entryFields, setEntryFields] = useState(getDefaultEntry(clientBillingProfile));
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
