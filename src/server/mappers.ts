@@ -347,6 +347,7 @@ export function mapClient(record: ClientRecord): Client {
     email: record.email ?? undefined,
     phone: normalizeBrazilianPhone(record.phone),
     notes: record.notes ?? undefined,
+    isReseller: record.isReseller,
     active: record.active,
     ticketCount: record._count?.tickets ?? 0,
     billingProfile: record.billingProfile ? mapClientBillingProfile(record.billingProfile) : undefined

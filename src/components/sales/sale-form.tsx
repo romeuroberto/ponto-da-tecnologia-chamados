@@ -24,6 +24,16 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [clientId, setClientId] = useState("");
+
+  function handleClientChange(newClientId: string) {
+    setClientId(newClientId);
+    if (!selectedPartId) return;
+    const part = parts.find((p) => p.id === selectedPartId);
+    if (!part) return;
+    const client = clients.find((c) => c.id === newClientId);
+    const autoPrice = client?.isReseller && part.resalePrice != null ? part.resalePrice : part.unitPrice;
+    setUnitPrice(String(autoPrice));
+  }
   const [internalNotes, setInternalNotes] = useState("");
   const [items, setItems] = useState<SaleLineItem[]>([]);
   const [selectedPartId, setSelectedPartId] = useState("");
@@ -53,7 +63,10 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
   function handlePartChange(partId: string) {
     setSelectedPartId(partId);
     const part = parts.find((p) => p.id === partId);
-    if (part) setUnitPrice(String(part.unitPrice));
+    if (!part) return;
+    const client = clients.find((c) => c.id === clientId);
+    const autoPrice = client?.isReseller && part.resalePrice != null ? part.resalePrice : part.unitPrice;
+    setUnitPrice(String(autoPrice));
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -86,7 +99,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
         <CardContent className="grid gap-4 p-6 md:grid-cols-2">
           <div className="grid gap-2">
             <Label>Cliente</Label>
-            <Select value={clientId} onChange={(e) => setClientId(e.target.value)}>
+            <Select value={clientId} onChange={(e) => handleClientChange(e.target.value)}>
               <option value="" disabled>Selecione um cliente</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -134,21 +147,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
               />
             </div>
             <div className="grid gap-1">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Preço unit. (R$)</Label>
-                {(() => {
-                  const selected = parts.find((p) => p.id === selectedPartId);
-                  return selected?.resalePrice != null ? (
-                    <button
-                      type="button"
-                      className="text-xs text-sky-600 hover:underline"
-                      onClick={() => setUnitPrice(String(selected.resalePrice))}
-                    >
-                      Revenda
-                    </button>
-                  ) : null;
-                })()}
-              </div>
+              <Label className="text-xs">Preço unit. (R$)</Label>
               <input
                 type="number"
                 min="0"
@@ -158,6 +157,22 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
                 placeholder="0,00"
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
               />
+              {(() => {
+                const selected = parts.find((p) => p.id === selectedPartId);
+                if (!selected) return null;
+                return (
+                  <div className="flex gap-3 text-xs text-slate-500">
+                    <button type="button" className="hover:text-slate-800 hover:underline" onClick={() => setUnitPrice(String(selected.unitPrice))}>
+                      Normal: {formatCurrency(selected.unitPrice)}
+                    </button>
+                    {selected.resalePrice != null ? (
+                      <button type="button" className="text-sky-600 hover:text-sky-800 hover:underline" onClick={() => setUnitPrice(String(selected.resalePrice))}>
+                        Revenda: {formatCurrency(selected.resalePrice)}
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex items-end">
               <Button type="button" variant="secondary" onClick={handleAddItem} disabled={!selectedPartId}>

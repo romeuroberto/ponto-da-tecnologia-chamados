@@ -188,6 +188,18 @@ export interface BillingListItem {
 }
 
 export const billingRepository = {
+  async recalculateForTicket(ticketId: string) {
+    return prisma.$transaction(async (tx) => {
+      const billing = await tx.ticketBilling.upsert({
+        where: { ticketId },
+        create: { ticketId },
+        update: {},
+        select: { id: true }
+      });
+      return recalculateTotals(tx, billing.id);
+    });
+  },
+
   async listAll(input: { financialStatus?: FinancialStatus }): Promise<BillingListItem[]> {
     const records = await prisma.ticketBilling.findMany({
       where: {

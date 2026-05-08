@@ -13,7 +13,13 @@
       "Bash(mkdir \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\\\\[id]\\\\recibo\" 2>/dev/null; echo \"ok\")",
       "Bash(dir \"src\\\\app\\\\api\\\\sales\" /s /b)",
       "Bash(Get-ChildItem -Recurse \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\sales\")",
-      "Bash(Select-Object FullName)"
+      "Bash(Select-Object FullName)",
+      "WebFetch(domain:github.com)",
+      "PowerShell(Get-ChildItem \"$env:TEMP\\\\rtk-install\" -Recurse | Select-Object FullName)",
+      "PowerShell(ls \"$env:TEMP\\\\rtk-install\")",
+      "PowerShell(ls \"$env:TEMP\\\\rtk-install\\\\extracted\")",
+      "PowerShell($dest = \"C:\\\\Users\\\\User\\\\bin\"; New-Item -ItemType Directory -Force -Path $dest | Out-Null; Copy-Item \"$env:TEMP\\\\rtk-install\\\\extracted\\\\rtk.exe\" \"$dest\\\\rtk.exe\" -Force; Write-Output \"Copiado para $dest\\\\rtk.exe\")",
+      "PowerShell(& \"C:\\\\Users\\\\User\\\\bin\\\\rtk.exe\" --version)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

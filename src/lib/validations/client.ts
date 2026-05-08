@@ -7,6 +7,7 @@ export const clientSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional(),
   notes: z.string().optional(),
+  isReseller: z.boolean().default(false),
   billingProfile: z.object({
     defaultBillingType: z.enum(["AVULSO", "CONTRATO", "GARANTIA", "CORTESIA"]),
     hourlyRate: z.coerce.number().min(0, "Valor/hora não pode ser negativo").optional(),

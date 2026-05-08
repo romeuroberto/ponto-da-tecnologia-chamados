@@ -1,5 +1,6 @@
 import { isDatabaseConfigured } from "@/server/db-support";
 import { requireActivePartCatalogItems } from "@/server/services/service-order-support";
+import { billingRepository } from "@/server/repositories/billing-repository";
 import { serviceOrderRepository } from "@/server/repositories/service-order-repository";
 import { ticketRepository } from "@/server/repositories/ticket-repository";
 import { userRepository } from "@/server/repositories/user-repository";
@@ -140,6 +141,10 @@ export const serviceOrderService = {
 
     if (!serviceOrder) {
       throw new Error("Ordem de serviço não encontrada.");
+    }
+
+    if (input.status === "COMPLETED") {
+      await billingRepository.recalculateForTicket(ticketId);
     }
 
     return serviceOrder;

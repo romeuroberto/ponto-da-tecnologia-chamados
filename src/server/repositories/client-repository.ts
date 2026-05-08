@@ -12,6 +12,7 @@ export interface CreateClientInput {
   email?: string;
   phone?: string;
   notes?: string;
+  isReseller?: boolean;
   billingProfile?: {
     defaultBillingType: Client["billingProfile"] extends infer T ? T extends { defaultBillingType: infer U } ? U : never : never;
     hourlyRate?: number;
@@ -156,6 +157,7 @@ export const clientRepository = {
         email: normalizeOptionalString(input.email),
         phone: normalizeOptionalString(input.phone),
         notes: normalizeOptionalString(input.notes),
+        isReseller: input.isReseller ?? false,
         billingProfile: input.billingProfile
           ? {
               create: {
@@ -193,6 +195,7 @@ export const clientRepository = {
         email: normalizeOptionalString(input.email),
         phone: normalizeOptionalString(input.phone),
         notes: normalizeOptionalString(input.notes),
+        isReseller: input.isReseller ?? false,
         active: input.active,
         billingProfile: input.billingProfile
           ? {

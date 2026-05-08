@@ -21,6 +21,7 @@ type ClientFormState = {
   email: string;
   phone: string;
   notes: string;
+  isReseller: boolean;
   defaultBillingType: "AVULSO" | "CONTRATO" | "GARANTIA" | "CORTESIA";
   hourlyRate: string;
   travelRate: string;
@@ -42,6 +43,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
     email: client?.email ?? "",
     phone: client?.phone ?? "",
     notes: client?.notes ?? "",
+    isReseller: client?.isReseller ?? false,
     defaultBillingType: client?.billingProfile?.defaultBillingType ?? "AVULSO",
     hourlyRate: formatCurrencyInput(client?.billingProfile?.hourlyRate ?? 0),
     travelRate: formatCurrencyInput(client?.billingProfile?.travelRate ?? 0),
@@ -68,6 +70,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
         email: formData.email,
         phone: formData.phone,
         notes: formData.notes,
+        isReseller: formData.isReseller,
         billingProfile: {
           defaultBillingType: formData.defaultBillingType,
           hourlyRate: parseCurrencyInput(formData.hourlyRate),
@@ -118,6 +121,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
           email: "",
           phone: "",
           notes: "",
+          isReseller: false,
           defaultBillingType: "AVULSO",
           hourlyRate: formatCurrencyInput(0),
           travelRate: formatCurrencyInput(0),
@@ -177,6 +181,19 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
               <Label htmlFor="notes">Observações</Label>
               <Textarea id="notes" value={formData.notes} onChange={(event) => handleChange("notes", event.target.value)} placeholder="Informações relevantes do atendimento" />
             </div>
+
+            <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 cursor-pointer hover:border-sky-200 hover:bg-sky-50/50 transition-colors">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                checked={formData.isReseller}
+                onChange={(event) => setFormData((current) => ({ ...current, isReseller: event.target.checked }))}
+              />
+              <div>
+                <span className="font-medium">Cliente revendedor</span>
+                <p className="text-xs text-slate-500 mt-0.5">Preço de revenda será aplicado automaticamente nas vendas</p>
+              </div>
+            </label>
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">

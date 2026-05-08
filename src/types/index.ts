@@ -89,6 +89,7 @@ export interface Client {
   email?: string;
   phone?: string;
   notes?: string;
+  isReseller: boolean;
   active: boolean;
   ticketCount: number;
   billingProfile?: ClientBillingProfile;
