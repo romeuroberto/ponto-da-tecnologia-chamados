@@ -23,17 +23,8 @@ export interface NavigationItem {
 
 export const appNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard" },
-  {
-    href: "/chamados",
-    label: "Chamados",
-    children: [
-      { href: "/chamados", label: "Todos" },
-      { href: "/chamados?status=OPEN" as Route, label: "Em Aberto" },
-      { href: "/chamados?status=WAITING_CUSTOMER" as Route, label: "Aguardando Cliente" },
-      { href: "/chamados/novo", label: "Novo Chamado" },
-      { href: "/relatorios", label: "Relatórios" }
-    ]
-  },
+  { href: "/chamados", label: "Chamados" },
+  { href: "/clientes", label: "Clientes" },
   {
     href: "/financeiro",
     label: "Financeiro",
@@ -45,8 +36,6 @@ export const appNavigation: NavigationItem[] = [
       { href: "/financeiro/documentos", label: "Documentos fiscais" }
     ]
   },
-  { href: "/empresa", label: "Empresa" },
-  { href: "/clientes", label: "Clientes" },
   {
     href: "/vendas",
     label: "Vendas",
@@ -55,7 +44,7 @@ export const appNavigation: NavigationItem[] = [
       { href: "/estoque", label: "Estoque" }
     ]
   },
-  { href: "/usuarios", label: "Usuários" },
+  { href: "/relatorios", label: "Relatórios" },
   {
     href: "/catalogos",
     label: "Catálogos",
@@ -64,7 +53,9 @@ export const appNavigation: NavigationItem[] = [
       { href: "/catalogos/pecas", label: "Materiais" },
       { href: "/catalogos/categorias" as Route, label: "Categorias" }
     ]
-  }
+  },
+  { href: "/usuarios", label: "Usuários" },
+  { href: "/empresa", label: "Empresa" }
 ];
 
 export function filterNavigationByRole(items: NavigationItem[], role?: AppUser["role"]) {

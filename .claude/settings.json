@@ -19,7 +19,19 @@
       "PowerShell(ls \"$env:TEMP\\\\rtk-install\")",
       "PowerShell(ls \"$env:TEMP\\\\rtk-install\\\\extracted\")",
       "PowerShell($dest = \"C:\\\\Users\\\\User\\\\bin\"; New-Item -ItemType Directory -Force -Path $dest | Out-Null; Copy-Item \"$env:TEMP\\\\rtk-install\\\\extracted\\\\rtk.exe\" \"$dest\\\\rtk.exe\" -Force; Write-Output \"Copiado para $dest\\\\rtk.exe\")",
-      "PowerShell(& \"C:\\\\Users\\\\User\\\\bin\\\\rtk.exe\" --version)"
+      "PowerShell(& \"C:\\\\Users\\\\User\\\\bin\\\\rtk.exe\" --version)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\server\\\\routers\" -Name)",
+      "Read(//c/Users/User/Desktop/Projetos VS/**)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\" -Recurse -Filter \"*route.ts\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(rtk prisma *)",
+      "Bash(docker compose *)",
+      "Bash(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\")",
+      "PowerShell(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\" -ErrorAction SilentlyContinue)",
+      "PowerShell(docker info 2>&1)",
+      "Bash(rtk ls *)",
+      "Bash(rtk grep *)",
+      "Bash(rtk git *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

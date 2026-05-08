@@ -129,9 +129,10 @@ export function ContractList({
                   </Button>
                   <Button
                     size="sm"
-                    variant="destructive"
+                    variant="outline"
                     onClick={() => handleDelete(contract.id)}
                     disabled={isPending || deletingId === contract.id}
+                    className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                   >
                     {deletingId === contract.id ? "Excluindo..." : "Excluir"}
                   </Button>
