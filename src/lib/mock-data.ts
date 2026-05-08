@@ -35,6 +35,7 @@ export const clients: Client[] = [
     phone: "(11) 98888-1111",
     notes: "Cliente com alta recorrência de suporte remoto.",
     active: true,
+    isReseller: false,
     ticketCount: 12
   },
   {
@@ -45,6 +46,7 @@ export const clients: Client[] = [
     phone: "(11) 97777-2222",
     notes: "Priorizar falhas relacionadas ao caixa.",
     active: true,
+    isReseller: false,
     ticketCount: 5
   },
   {
@@ -54,6 +56,7 @@ export const clients: Client[] = [
     email: "luciana@clinicavida.com.br",
     phone: "(11) 96666-3333",
     active: true,
+    isReseller: false,
     ticketCount: 8
   }
 ];

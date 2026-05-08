@@ -39,6 +39,7 @@ interface ClientRecord {
   email: string | null;
   phone: string | null;
   notes: string | null;
+  isReseller: boolean;
   active: boolean;
   billingProfile?: ClientBillingProfileRecord | null;
   _count?: {
