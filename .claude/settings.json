@@ -31,7 +31,10 @@
       "PowerShell(docker info 2>&1)",
       "Bash(rtk ls *)",
       "Bash(rtk grep *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(rtk find *)",
+      "Bash(dir /s /b \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\")",
+      "Bash(rtk tsc *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

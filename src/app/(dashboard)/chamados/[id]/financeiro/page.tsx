@@ -47,6 +47,7 @@ export default async function TicketFinancialPage({ params }: { params: Promise<
       />
       <TicketBillingPanel
         ticketId={ticket.id}
+        ticketStatus={ticket.status}
         initialBilling={ticket.billing}
         clientBillingProfile={client?.billingProfile}
         role={currentUser.role}

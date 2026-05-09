@@ -50,6 +50,18 @@ export const billingService = {
       throw new Error("Sua sessão não corresponde mais a um usuário ativo. Entre novamente.");
     }
 
+    const TERMINAL_TECHNICAL_STATUSES = ["RESOLVED", "CLOSED", "CANCELED"];
+    const REQUIRES_TERMINAL_TECHNICAL = ["FATURADO", "PAGO"];
+
+    if (
+      REQUIRES_TERMINAL_TECHNICAL.includes(input.financialStatus) &&
+      !TERMINAL_TECHNICAL_STATUSES.includes(ticket.status)
+    ) {
+      throw new Error(
+        "O chamado precisa estar tecnicamente concluído (Resolvido ou Encerrado) antes de registrar cobrança ou pagamento."
+      );
+    }
+
     return billingRepository.upsertByTicketId(ticketId, {
       ...input,
       authorId

@@ -199,14 +199,18 @@ const statusBadge: Record<FinancialStatus, { label: string; className: string }>
   CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
 };
 
+const TERMINAL_TECHNICAL_STATUSES = ["RESOLVED", "CLOSED", "CANCELED"] as const;
+
 export function TicketBillingPanel({
   ticketId,
+  ticketStatus,
   initialBilling,
   clientBillingProfile,
   role,
   partCatalogItems: _partCatalogItems
 }: {
   ticketId: string;
+  ticketStatus: string;
   initialBilling?: TicketBilling;
   clientBillingProfile?: ClientBillingProfile;
   role: AppUser["role"];
@@ -233,6 +237,7 @@ export function TicketBillingPanel({
 
   const canView = canViewFinancialModule(role);
   const canManage = canManageTicketBilling(role);
+  const isTechnicallyComplete = TERMINAL_TECHNICAL_STATUSES.includes(ticketStatus as typeof TERMINAL_TECHNICAL_STATUSES[number]);
   const currentStatus = billing?.financialStatus ?? "PENDENTE";
   const activeBillingType: BillingType = billing?.billingType ?? summaryFields.billingType;
   const summaryLocked = billing ? isBillingSummaryLocked(billing.financialStatus) : false;
@@ -419,6 +424,12 @@ export function TicketBillingPanel({
 
   return (
     <div className="space-y-6">
+      {!isTechnicallyComplete ? (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="font-semibold">Chamado ainda não concluído tecnicamente.</span>{" "}
+          Lançamentos podem ser registrados, mas não é possível faturar ou registrar pagamento enquanto o chamado não estiver Resolvido ou Encerrado.
+        </div>
+      ) : null}
       {message ? <FormMessage type={message.type} message={message.text} /> : null}
 
       <Card>

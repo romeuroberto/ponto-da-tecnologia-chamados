@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import type { Route } from "next";
+import { useRouter } from "next/navigation";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import type { Ticket } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
+import type { Ticket, UserRole } from "@/types";
 import { PriorityBadge } from "./priority-badge";
 import { StatusBadge } from "./status-badge";
 import { TicketSlaBadge } from "./ticket-sla-badge";
@@ -20,15 +23,46 @@ function buildSortHref(sort: string, params: Record<string, string | undefined>)
   return (`/chamados?${searchParams.toString()}`) as Route;
 }
 
+const FINANCIAL_PENDING_STATUSES = ["RESOLVED", "CLOSED"] as const;
+
+function FinancialBadge({ ticket, userRole }: { ticket: Ticket; userRole: UserRole }) {
+  if (userRole !== "ADMIN" && userRole !== "ATTENDANT") return null;
+  if (!ticket.billing) return null;
+
+  const { financialStatus } = ticket.billing;
+
+  if (financialStatus === "PENDENTE" && FINANCIAL_PENDING_STATUSES.includes(ticket.status as typeof FINANCIAL_PENDING_STATUSES[number])) {
+    return (
+      <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+        $ Fin. pendente
+      </span>
+    );
+  }
+
+  if (financialStatus === "FATURADO") {
+    return (
+      <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800">
+        $ Aguard. pagto
+      </span>
+    );
+  }
+
+  return null;
+}
+
 export function TicketTable({
   tickets,
   currentSort,
-  params
+  params,
+  userRole
 }: {
   tickets: Ticket[];
   currentSort: string;
   params: Record<string, string | undefined>;
+  userRole: UserRole;
 }) {
+  const router = useRouter();
+
   return (
     <Card className="hidden lg:block">
       <CardContent className="overflow-x-auto p-0">
@@ -51,12 +85,15 @@ export function TicketTable({
                   Atualizado {currentSort.startsWith("updated_") ? "•" : ""}
                 </Link>
               </th>
-              <th className="px-6 py-4 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
             {tickets.map((ticket) => (
-              <tr key={ticket.id} className="border-b border-slate-100 last:border-b-0">
+              <tr
+                key={ticket.id}
+                className="cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 last:border-b-0"
+                onClick={() => router.push(`/chamados/${ticket.id}` as Route)}
+              >
                 <td className="px-6 py-4 font-semibold text-slate-950">{ticket.number}</td>
                 <td className="px-6 py-4">{ticket.clientName}</td>
                 <td className="px-6 py-4">{ticket.title}</td>
@@ -64,18 +101,16 @@ export function TicketTable({
                   <PriorityBadge priority={ticket.priority} />
                 </td>
                 <td className="px-6 py-4">
-                  <StatusBadge status={ticket.status} />
+                  <div className="flex flex-col items-start">
+                    <StatusBadge status={ticket.status} />
+                    <FinancialBadge ticket={ticket} userRole={userRole} />
+                  </div>
                 </td>
                 <td className="px-6 py-4">
                   <TicketSlaBadge ticket={ticket} />
                 </td>
                 <td className="px-6 py-4">{ticket.assigneeName ?? "Não atribuído"}</td>
                 <td className="px-6 py-4 text-slate-500">{formatDate(ticket.updatedAt)}</td>
-                <td className="px-6 py-4">
-                  <Link href={`/chamados/${ticket.id}`} className="font-semibold text-sky-700">
-                    Abrir
-                  </Link>
-                </td>
               </tr>
             ))}
           </tbody>

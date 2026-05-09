@@ -104,7 +104,7 @@ export default async function TicketsPage({
       </div>
 
       {result.items.length > 0 ? (
-        <TicketTable tickets={result.items} currentSort={sort} params={{ q, status, priority, client, from, to }} />
+        <TicketTable tickets={result.items} currentSort={sort} params={{ q, status, priority, client, from, to }} userRole={session?.user?.role ?? "TECHNICIAN"} />
       ) : null}
 
       <PaginationControls pathname="/chamados" page={result.page} totalPages={result.totalPages} params={{ q, status, priority, client, from, to, sort }} />

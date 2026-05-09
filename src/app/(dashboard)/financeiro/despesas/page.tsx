@@ -19,6 +19,7 @@ import { expenseCancelSchema, expensePaySchema, expenseSchema, recurringExpenseS
 import { requireRole } from "@/server/auth/session";
 import { expenseService } from "@/server/services/expense-service";
 import { recurringExpenseRepository } from "@/server/repositories/recurring-expense-repository";
+import { ticketService } from "@/server/services/ticket-service";
 import type { ExpenseCategory, ExpenseStatus, RecurringFrequency } from "@/types";
 
 type ExpenseSort = "expense_desc" | "expense_asc" | "amount_desc" | "amount_asc" | "created_desc" | "created_asc";
@@ -81,6 +82,7 @@ export default async function ExpensesPage({
   const expenseStatus = typeof params.expenseStatus === "string" ? (params.expenseStatus as ExpenseStatus) : undefined;
   const sort: ExpenseSort = typeof params.sort === "string" ? (params.sort as ExpenseSort) : "expense_desc";
   const page = typeof params.page === "string" ? params.page : "1";
+  const ticketId = typeof params.ticketId === "string" ? params.ticketId : undefined;
   const exportParams = new URLSearchParams();
 
   if (from) exportParams.set("from", from);
@@ -88,7 +90,7 @@ export default async function ExpensesPage({
 
   await recurringExpenseRepository.generateOccurrences();
 
-  const [result, summary, recurringExpenses] = await Promise.all([
+  const [result, summary, recurringExpenses, preSelectedTicket, recentTickets] = await Promise.all([
     expenseService.searchExpenses({
       from,
       to,
@@ -105,7 +107,9 @@ export default async function ExpensesPage({
       category,
       status: expenseStatus
     }),
-    recurringExpenseRepository.listAll()
+    recurringExpenseRepository.listAll(),
+    ticketId ? ticketService.getTicket(ticketId) : Promise.resolve(null),
+    ticketService.searchTickets({ sort: "updated_desc", pageSize: 80 })
   ]);
 
   const cashExpensesExportHref = `/api/reports/cash-expenses${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
@@ -127,24 +131,28 @@ export default async function ExpensesPage({
       amount: formData.get("amount")?.toString() ?? "",
       expenseDate: formData.get("expenseDate")?.toString() ?? "",
       paymentMethod: formData.get("paymentMethod")?.toString() ?? "",
-      notes: formData.get("notes")?.toString() ?? ""
+      notes: formData.get("notes")?.toString() ?? "",
+      ticketId: formData.get("ticketId")?.toString() ?? ""
     });
 
     if (!parsed.success) {
       redirect(toRedirectMessage("/financeiro/despesas", "error", "Confira os dados da nova despesa."));
     }
 
+    let destination: Route;
     try {
       await expenseService.createExpense({
         ...parsed.data,
+        ticketId: parsed.data.ticketId || undefined,
         createdById: user.id
       });
       revalidatePath("/financeiro");
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", "Despesa criada com sucesso."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", "Despesa criada com sucesso.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao criar despesa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao criar despesa.");
     }
+    redirect(destination);
   }
 
   async function updateExpense(formData: FormData) {
@@ -158,21 +166,24 @@ export default async function ExpensesPage({
       amount: formData.get("amount")?.toString() ?? "",
       expenseDate: formData.get("expenseDate")?.toString() ?? "",
       paymentMethod: formData.get("paymentMethod")?.toString() ?? "",
-      notes: formData.get("notes")?.toString() ?? ""
+      notes: formData.get("notes")?.toString() ?? "",
+      ticketId: formData.get("ticketId")?.toString() ?? ""
     });
 
     if (!id || !parsed.success) {
       redirect(toRedirectMessage("/financeiro/despesas", "error", "Confira os dados da despesa."));
     }
 
+    let destination: Route;
     try {
-      await expenseService.updateExpense(id, parsed.data, user.id);
+      await expenseService.updateExpense(id, { ...parsed.data, ticketId: parsed.data.ticketId || undefined }, user.id);
       revalidatePath("/financeiro");
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", "Despesa atualizada."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", "Despesa atualizada.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao atualizar despesa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao atualizar despesa.");
     }
+    redirect(destination);
   }
 
   async function payExpense(formData: FormData) {
@@ -188,14 +199,16 @@ export default async function ExpensesPage({
       redirect(toRedirectMessage("/financeiro/despesas", "error", "Informe a data de pagamento da despesa."));
     }
 
+    let destination: Route;
     try {
       await expenseService.payExpense(id, parsed.data, user.id);
       revalidatePath("/financeiro");
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", "Despesa marcada como paga."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", "Despesa marcada como paga.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao pagar despesa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao pagar despesa.");
     }
+    redirect(destination);
   }
 
   async function cancelExpense(formData: FormData) {
@@ -210,14 +223,16 @@ export default async function ExpensesPage({
       redirect(toRedirectMessage("/financeiro/despesas", "error", "Informe o motivo do cancelamento."));
     }
 
+    let destination: Route;
     try {
       await expenseService.cancelExpense(id, parsed.data, user.id);
       revalidatePath("/financeiro");
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", "Despesa cancelada."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", "Despesa cancelada.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao cancelar despesa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao cancelar despesa.");
     }
+    redirect(destination);
   }
 
   async function createRecurringExpense(formData: FormData) {
@@ -240,13 +255,15 @@ export default async function ExpensesPage({
       redirect(toRedirectMessage("/financeiro/despesas", "error", "Confira os dados da despesa fixa."));
     }
 
+    let destination: Route;
     try {
       await recurringExpenseRepository.create(parsed.data, user.id);
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", "Despesa fixa criada com sucesso."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", "Despesa fixa criada com sucesso.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao criar despesa fixa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao criar despesa fixa.");
     }
+    redirect(destination);
   }
 
   async function updateRecurringExpense(formData: FormData) {
@@ -270,13 +287,15 @@ export default async function ExpensesPage({
       redirect(toRedirectMessage("/financeiro/despesas", "error", "Confira os dados da despesa fixa."));
     }
 
+    let destination: Route;
     try {
       await recurringExpenseRepository.update(id, parsed.data);
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", "Despesa fixa atualizada."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", "Despesa fixa atualizada.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao atualizar despesa fixa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao atualizar despesa fixa.");
     }
+    redirect(destination);
   }
 
   async function toggleRecurringExpense(formData: FormData) {
@@ -289,13 +308,15 @@ export default async function ExpensesPage({
       redirect(toRedirectMessage("/financeiro/despesas", "error", "ID inválido."));
     }
 
+    let destination: Route;
     try {
       await recurringExpenseRepository.setActive(id, active);
       revalidatePath("/financeiro/despesas");
-      redirect(toRedirectMessage("/financeiro/despesas", "success", active ? "Despesa fixa reativada." : "Despesa fixa pausada."));
+      destination = toRedirectMessage("/financeiro/despesas", "success", active ? "Despesa fixa reativada." : "Despesa fixa pausada.");
     } catch (error) {
-      redirect(toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao atualizar despesa fixa."));
+      destination = toRedirectMessage("/financeiro/despesas", "error", error instanceof Error ? error.message : "Falha ao atualizar despesa fixa.");
     }
+    redirect(destination);
   }
 
   return (
@@ -563,6 +584,26 @@ export default async function ExpensesPage({
                 ))}
               </Select>
             </div>
+            {preSelectedTicket ? (
+              <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">Chamado vinculado</p>
+                  <p className="mt-0.5 truncate text-sm font-medium text-sky-950">
+                    {preSelectedTicket.number} — {preSelectedTicket.title}
+                  </p>
+                </div>
+                <input type="hidden" name="ticketId" value={preSelectedTicket.id} />
+              </div>
+            ) : (
+              <Select name="ticketId" defaultValue="">
+                <option value="">Sem vínculo com chamado (opcional)</option>
+                {recentTickets.items.map((ticket) => (
+                  <option key={ticket.id} value={ticket.id}>
+                    {ticket.number} — {ticket.clientName} — {ticket.title}
+                  </option>
+                ))}
+              </Select>
+            )}
             <Textarea name="notes" placeholder="Observações" />
             <div className="flex justify-end">
               <Button type="submit">Criar despesa</Button>
@@ -595,6 +636,14 @@ export default async function ExpensesPage({
                     <p><span className="font-semibold text-slate-900">Lançado por:</span> {expense.createdByName}</p>
                     {expense.referenceMonth && expense.referenceYear ? (
                       <p><span className="font-semibold text-slate-900">Referência:</span> {String(expense.referenceMonth).padStart(2, "0")}/{expense.referenceYear}</p>
+                    ) : null}
+                    {expense.ticketId ? (
+                      <p className="md:col-span-2">
+                        <span className="font-semibold text-slate-900">Chamado: </span>
+                        <a href={`/chamados/${expense.ticketId}`} className="font-medium text-sky-700 hover:underline">
+                          {expense.ticketNumber} — {expense.ticketTitle}
+                        </a>
+                      </p>
                     ) : null}
                     {expense.cancellationReason ? (
                       <p className="md:col-span-2">
@@ -632,6 +681,15 @@ export default async function ExpensesPage({
                         ))}
                       </Select>
                     </div>
+
+                    <Select name="ticketId" defaultValue={expense.ticketId ?? ""} disabled={expense.status === "CANCELADA"}>
+                      <option value="">Sem vínculo com chamado</option>
+                      {recentTickets.items.map((ticket) => (
+                        <option key={ticket.id} value={ticket.id}>
+                          {ticket.number} — {ticket.clientName} — {ticket.title}
+                        </option>
+                      ))}
+                    </Select>
 
                     <Textarea name="notes" defaultValue={expense.notes ?? ""} disabled={expense.status === "CANCELADA"} />
 
