@@ -14,7 +14,6 @@ import { formatCurrency } from "@/lib/utils";
 import { canEditClient } from "@/server/auth/permissions";
 import { clientService } from "@/server/services/client-service";
 import { contractRepository } from "@/server/repositories/contract-repository";
-import { ticketCategoryService } from "@/server/services/ticket-category-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
 
@@ -27,10 +26,9 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const [tickets, portalUser, categories, contracts] = await Promise.all([
+  const [tickets, portalUser, contracts] = await Promise.all([
     ticketService.listTickets(),
     userService.getPortalUserByClientId(id),
-    ticketCategoryService.listCategories(true),
     contractRepository.findByClientId(id)
   ]);
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
@@ -41,7 +39,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
       <PageHeader title={client.name} description={`Contato principal: ${client.contactName}`} />
       <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
         {canEdit ? (
-          <ClientForm client={client} categories={categories} />
+          <ClientForm client={client} />
         ) : (
           <Card>
             <CardHeader>
@@ -55,7 +53,6 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
               <p><span className="font-semibold text-slate-950">Observações:</span> {client.notes ?? "Sem observações"}</p>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p><span className="font-semibold text-slate-950">Tipo padrão:</span> {client.billingProfile?.defaultBillingType ?? "Não definido"}</p>
-                <p><span className="font-semibold text-slate-950">Contrato ativo:</span> {client.billingProfile?.hasActiveContract ? "Sim" : "Não"}</p>
                 <p><span className="font-semibold text-slate-950">Valor/hora:</span> {client.billingProfile?.hourlyRate !== undefined ? formatCurrency(client.billingProfile.hourlyRate) : "Não definido"}</p>
                 <p><span className="font-semibold text-slate-950">Deslocamento:</span> {client.billingProfile?.travelRate !== undefined ? formatCurrency(client.billingProfile.travelRate) : "Não definido"}</p>
                 <p><span className="font-semibold text-slate-950">Desconto padrão:</span> {client.billingProfile?.defaultDiscountPercent !== undefined ? `${client.billingProfile.defaultDiscountPercent}%` : "Não definido"}</p>

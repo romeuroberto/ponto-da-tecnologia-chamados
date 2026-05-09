@@ -216,7 +216,7 @@ export const expenseRepository = {
       }
     );
 
-    if (!current || current.status === "CANCELADA") {
+    if (!current || current.status === "CANCELADA" || current.status === "PAGA") {
       return null;
     }
 

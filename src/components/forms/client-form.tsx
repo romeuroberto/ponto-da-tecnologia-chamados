@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import type { Client, TicketCategory } from "@/types";
+import type { Client } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,12 +26,10 @@ type ClientFormState = {
   hourlyRate: string;
   travelRate: string;
   defaultDiscountPercent: string;
-  hasActiveContract: boolean;
   contractNotes: string;
-  contractCoveredCategories: string[];
 };
 
-export function ClientForm({ client, categories = [] }: { client?: Client; categories?: TicketCategory[] }) {
+export function ClientForm({ client }: { client?: Client }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -48,9 +46,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
     hourlyRate: formatCurrencyInput(client?.billingProfile?.hourlyRate ?? 0),
     travelRate: formatCurrencyInput(client?.billingProfile?.travelRate ?? 0),
     defaultDiscountPercent: client?.billingProfile?.defaultDiscountPercent !== undefined ? String(client.billingProfile.defaultDiscountPercent) : "",
-    hasActiveContract: client?.billingProfile?.hasActiveContract ?? false,
-    contractNotes: client?.billingProfile?.contractNotes ?? "",
-    contractCoveredCategories: client?.billingProfile?.contractCoveredCategories ?? []
+    contractNotes: client?.billingProfile?.contractNotes ?? ""
   });
 
   function handleChange(field: keyof ClientFormState, value: string) {
@@ -76,9 +72,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
           hourlyRate: parseCurrencyInput(formData.hourlyRate),
           travelRate: parseCurrencyInput(formData.travelRate),
           defaultDiscountPercent: formData.defaultDiscountPercent ? Number(formData.defaultDiscountPercent) : undefined,
-          hasActiveContract: formData.hasActiveContract,
-          contractNotes: formData.contractNotes,
-          contractCoveredCategories: formData.contractCoveredCategories
+          contractNotes: formData.contractNotes
         }
       };
 
@@ -126,9 +120,7 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
           hourlyRate: formatCurrencyInput(0),
           travelRate: formatCurrencyInput(0),
           defaultDiscountPercent: "",
-          hasActiveContract: false,
-          contractNotes: "",
-          contractCoveredCategories: []
+          contractNotes: ""
         });
       }
 
@@ -202,28 +194,14 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
               <p className="mt-1 text-sm text-slate-600">Defina regras padrão para cobrança, deslocamento e contrato.</p>
             </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="defaultBillingType">Tipo de cobrança padrão</Label>
-                <Select id="defaultBillingType" value={formData.defaultBillingType} onChange={(event) => handleChange("defaultBillingType", event.target.value)}>
-                  <option value="AVULSO">Avulso</option>
-                  <option value="CONTRATO">Contrato</option>
-                  <option value="GARANTIA">Garantia</option>
-                  <option value="CORTESIA">Cortesia</option>
-                </Select>
-              </div>
-
-              <div className="flex items-end">
-                <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                    checked={formData.hasActiveContract}
-                    onChange={(event) => setFormData((current) => ({ ...current, hasActiveContract: event.target.checked }))}
-                  />
-                  Cliente com contrato ativo
-                </label>
-              </div>
+            <div className="mt-4 grid gap-2">
+              <Label htmlFor="defaultBillingType">Tipo de cobrança padrão</Label>
+              <Select id="defaultBillingType" value={formData.defaultBillingType} onChange={(event) => handleChange("defaultBillingType", event.target.value)}>
+                <option value="AVULSO">Avulso</option>
+                <option value="CONTRATO">Contrato</option>
+                <option value="GARANTIA">Garantia</option>
+                <option value="CORTESIA">Cortesia</option>
+              </Select>
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -272,30 +250,6 @@ export function ClientForm({ client, categories = [] }: { client?: Client; categ
               />
             </div>
 
-            {formData.hasActiveContract ? (
-              <div className="mt-4 grid gap-2">
-                <Label>Categorias cobertas pelo contrato</Label>
-                <p className="text-xs text-slate-500">Chamados dessas categorias serão sinalizados como inclusos no contrato.</p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {categories.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 cursor-pointer hover:border-sky-200 hover:bg-sky-50/50 transition-colors">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                        checked={formData.contractCoveredCategories.includes(cat.name)}
-                        onChange={(event) => {
-                          const updated = event.target.checked
-                            ? [...formData.contractCoveredCategories, cat.name]
-                            : formData.contractCoveredCategories.filter((c) => c !== cat.name);
-                          setFormData((current) => ({ ...current, contractCoveredCategories: updated }));
-                        }}
-                      />
-                      {cat.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </section>
 
           <div className="flex justify-end">

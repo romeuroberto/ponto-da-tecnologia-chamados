@@ -372,10 +372,11 @@ export default async function ExpensesPage({
         </CardHeader>
         <CardContent className="space-y-4">
           {recurringExpenses.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recurringExpenses.map((re) => (
-                <div key={re.id} className={`rounded-xl border px-4 py-3 ${re.active ? "border-slate-200 bg-slate-50" : "border-slate-100 bg-slate-50/40 opacity-60"}`}>
-                  <div className="flex flex-wrap items-center gap-2 pb-3">
+                <div key={re.id} className={`rounded-xl border ${re.active ? "border-slate-200 bg-white" : "border-slate-100 bg-slate-50/40 opacity-60"}`}>
+                  {/* Linha de resumo — sempre visível */}
+                  <div className="flex flex-wrap items-center gap-3 px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${re.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
                       {re.active ? "Ativa" : "Pausada"}
                     </span>
@@ -383,68 +384,78 @@ export default async function ExpensesPage({
                       {frequencyLabels[re.frequency]}
                     </span>
                     <span className="text-sm font-medium text-slate-900">{re.description}</span>
-                    <span className="ml-auto text-sm font-semibold text-slate-900">{formatCurrency(re.baseAmount)}</span>
+                    <span className="ml-auto text-sm font-semibold text-slate-950">{formatCurrency(re.baseAmount)}</span>
+                    <form action={toggleRecurringExpense}>
+                      <input type="hidden" name="re_id" value={re.id} />
+                      <input type="hidden" name="re_active" value={re.active ? "false" : "true"} />
+                      <Button type="submit" variant="outline" size="sm">
+                        {re.active ? "Pausar" : "Reativar"}
+                      </Button>
+                    </form>
                   </div>
-                  <form id={`re-update-${re.id}`} action={updateRecurringExpense} className="space-y-3">
-                    <input type="hidden" name="re_id" value={re.id} />
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Descrição</label>
-                        <Input name="re_description" defaultValue={re.description} placeholder="Descrição" required />
+
+                  {/* Edição protegida — colapsada por padrão */}
+                  <details className="group border-t border-slate-100">
+                    <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-800">
+                      <span className="group-open:hidden">▸ Editar dados</span>
+                      <span className="hidden group-open:inline">▾ Fechar edição</span>
+                    </summary>
+                    <form id={`re-update-${re.id}`} action={updateRecurringExpense} className="space-y-3 px-4 pb-4 pt-2">
+                      <input type="hidden" name="re_id" value={re.id} />
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Descrição</label>
+                          <Input name="re_description" defaultValue={re.description} placeholder="Descrição" required />
+                        </div>
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Categoria</label>
+                          <Select name="re_category" defaultValue={re.category}>
+                            {Object.entries(categoryLabels).map(([value, label]) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </Select>
+                        </div>
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Valor base (R$)</label>
+                          <Input name="re_baseAmount" type="number" step="0.01" min="0.01" defaultValue={re.baseAmount} placeholder="0,00" required />
+                        </div>
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Forma de pagamento</label>
+                          <Select name="re_paymentMethod" defaultValue={re.paymentMethod ?? ""}>
+                            <option value="">Sem preferência</option>
+                            {PAYMENT_METHODS.map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </Select>
+                        </div>
                       </div>
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Categoria</label>
-                        <Select name="re_category" defaultValue={re.category}>
-                          {Object.entries(categoryLabels).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </Select>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Frequência</label>
+                          <Select name="re_frequency" defaultValue={re.frequency}>
+                            {Object.entries(frequencyLabels).map(([value, label]) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </Select>
+                        </div>
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Dia do vencimento</label>
+                          <Input name="re_dayOfMonth" type="number" min="1" max="28" defaultValue={re.dayOfMonth} placeholder="1–28" required />
+                        </div>
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Início da vigência</label>
+                          <Input name="re_startDate" type="date" defaultValue={toDateInput(re.startDate)} required />
+                        </div>
+                        <div className="grid gap-1">
+                          <label className="text-xs font-medium text-slate-500">Fim da vigência (opcional)</label>
+                          <Input name="re_endDate" type="date" defaultValue={toDateInput(re.endDate ?? "")} />
+                        </div>
                       </div>
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Valor base (R$)</label>
-                        <Input name="re_baseAmount" type="number" step="0.01" min="0.01" defaultValue={re.baseAmount} placeholder="0,00" required />
+                      <div className="flex justify-end">
+                        <Button type="submit" size="sm">Salvar alterações</Button>
                       </div>
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Forma de pagamento</label>
-                        <Select name="re_paymentMethod" defaultValue={re.paymentMethod ?? ""}>
-                          <option value="">Sem preferência</option>
-                          {PAYMENT_METHODS.map((m) => (
-                            <option key={m} value={m}>{m}</option>
-                          ))}
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Frequência</label>
-                        <Select name="re_frequency" defaultValue={re.frequency}>
-                          {Object.entries(frequencyLabels).map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
-                          ))}
-                        </Select>
-                      </div>
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Dia do vencimento</label>
-                        <Input name="re_dayOfMonth" type="number" min="1" max="28" defaultValue={re.dayOfMonth} placeholder="1–28" required />
-                      </div>
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Início da vigência</label>
-                        <Input name="re_startDate" type="date" defaultValue={toDateInput(re.startDate)} required />
-                      </div>
-                      <div className="grid gap-1">
-                        <label className="text-xs font-medium text-slate-500">Fim da vigência (opcional)</label>
-                        <Input name="re_endDate" type="date" defaultValue={toDateInput(re.endDate ?? "")} />
-                      </div>
-                    </div>
-                  </form>
-                  <form action={toggleRecurringExpense} className="mt-3 flex flex-wrap gap-2">
-                    <input type="hidden" name="re_id" value={re.id} />
-                    <input type="hidden" name="re_active" value={re.active ? "false" : "true"} />
-                    <Button type="submit" form={`re-update-${re.id}`} variant="secondary" size="sm">Salvar</Button>
-                    <Button type="submit" variant="outline" size="sm">
-                      {re.active ? "Pausar" : "Reativar"}
-                    </Button>
-                  </form>
+                    </form>
+                  </details>
                 </div>
               ))}
             </div>
@@ -655,8 +666,8 @@ export default async function ExpensesPage({
                   <form action={updateExpense} className="grid gap-4">
                     <input type="hidden" name="id" value={expense.id} />
                     <div className="grid gap-4 lg:grid-cols-3">
-                      <Input name="description" defaultValue={expense.description} disabled={expense.status === "CANCELADA"} required />
-                      <Select name="category" defaultValue={expense.category} disabled={expense.status === "CANCELADA"}>
+                      <Input name="description" defaultValue={expense.description} disabled={expense.status === "CANCELADA" || expense.status === "PAGA"} required />
+                      <Select name="category" defaultValue={expense.category} disabled={expense.status === "CANCELADA" || expense.status === "PAGA"}>
                         {Object.entries(categoryLabels).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
                         ))}
@@ -667,14 +678,14 @@ export default async function ExpensesPage({
                         step="0.01"
                         min="0.01"
                         defaultValue={expense.amount}
-                        disabled={expense.status === "CANCELADA"}
+                        disabled={expense.status === "CANCELADA" || expense.status === "PAGA"}
                         required
                       />
                     </div>
 
                     <div className="grid gap-4 lg:grid-cols-2">
-                      <Input name="expenseDate" type="date" defaultValue={toDateInput(expense.expenseDate)} disabled={expense.status === "CANCELADA"} required />
-                      <Select name="paymentMethod" defaultValue={expense.paymentMethod ?? ""} disabled={expense.status === "CANCELADA"}>
+                      <Input name="expenseDate" type="date" defaultValue={toDateInput(expense.expenseDate)} disabled={expense.status === "CANCELADA" || expense.status === "PAGA"} required />
+                      <Select name="paymentMethod" defaultValue={expense.paymentMethod ?? ""} disabled={expense.status === "CANCELADA" || expense.status === "PAGA"}>
                         <option value="">Forma de pagamento</option>
                         {PAYMENT_METHODS.map((m) => (
                           <option key={m} value={m}>{m}</option>
@@ -682,7 +693,7 @@ export default async function ExpensesPage({
                       </Select>
                     </div>
 
-                    <Select name="ticketId" defaultValue={expense.ticketId ?? ""} disabled={expense.status === "CANCELADA"}>
+                    <Select name="ticketId" defaultValue={expense.ticketId ?? ""} disabled={expense.status === "CANCELADA" || expense.status === "PAGA"}>
                       <option value="">Sem vínculo com chamado</option>
                       {recentTickets.items.map((ticket) => (
                         <option key={ticket.id} value={ticket.id}>
@@ -694,7 +705,7 @@ export default async function ExpensesPage({
                     <Textarea name="notes" defaultValue={expense.notes ?? ""} disabled={expense.status === "CANCELADA"} />
 
                     <div className="flex flex-wrap gap-2">
-                      <Button type="submit" variant="secondary" disabled={expense.status === "CANCELADA"}>
+                      <Button type="submit" variant="secondary" disabled={expense.status === "CANCELADA" || expense.status === "PAGA"}>
                         Salvar alterações
                       </Button>
                       {expense.status === "PENDENTE" ? (

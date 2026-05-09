@@ -412,9 +412,7 @@ export interface ClientBillingProfile {
   hourlyRate?: number;
   travelRate?: number;
   defaultDiscountPercent?: number;
-  hasActiveContract: boolean;
   contractNotes?: string;
-  contractCoveredCategories: string[];
   createdAt: string;
   updatedAt: string;
 }

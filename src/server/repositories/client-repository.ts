@@ -18,9 +18,7 @@ export interface CreateClientInput {
     hourlyRate?: number;
     travelRate?: number;
     defaultDiscountPercent?: number;
-    hasActiveContract: boolean;
     contractNotes?: string;
-    contractCoveredCategories?: string[];
   };
 }
 
@@ -165,9 +163,7 @@ export const clientRepository = {
                 hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
                 travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                 defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
-                hasActiveContract: input.billingProfile.hasActiveContract,
-                contractNotes: normalizeOptionalString(input.billingProfile.contractNotes),
-                contractCoveredCategories: input.billingProfile.contractCoveredCategories ?? []
+                contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
               }
             }
           : undefined
@@ -205,18 +201,14 @@ export const clientRepository = {
                   hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
                   travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                   defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
-                  hasActiveContract: input.billingProfile.hasActiveContract,
-                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes),
-                  contractCoveredCategories: input.billingProfile.contractCoveredCategories ?? []
+                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
                 },
                 update: {
                   defaultBillingType: input.billingProfile.defaultBillingType,
                   hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
                   travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                   defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
-                  hasActiveContract: input.billingProfile.hasActiveContract,
-                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes),
-                  contractCoveredCategories: input.billingProfile.contractCoveredCategories ?? []
+                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
                 }
               }
             }

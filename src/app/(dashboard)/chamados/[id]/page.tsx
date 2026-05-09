@@ -19,6 +19,7 @@ import { canViewFinancialModule } from "@/server/auth/permissions";
 import { requireUser } from "@/server/auth/session";
 import { catalogService } from "@/server/services/catalog-service";
 import { clientService } from "@/server/services/client-service";
+import { contractRepository } from "@/server/repositories/contract-repository";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
 
@@ -53,11 +54,13 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
+  const activeContract = await contractRepository.findActiveByClientId(ticket.clientId);
   const canViewFinancial = canViewFinancialModule(currentUser.role);
-  const contractCoversCategory =
-    !!(client?.billingProfile?.hasActiveContract &&
-      ticket.category &&
-      client.billingProfile.contractCoveredCategories.includes(ticket.category));
+  const contractCoversCategory = !!(
+    activeContract &&
+    ticket.category &&
+    (activeContract.coverageType === "TOTAL" || activeContract.coveredCategories.includes(ticket.category))
+  );
   const relatedExpenses = ticket.expenses ?? [];
   const activeExpenseAmount = relatedExpenses
     .filter((expense) => expense.status !== "CANCELADA")
@@ -120,10 +123,10 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de atendimento</p>
                 <p className="mt-1 text-sm text-slate-900">{getAttendanceTypeLabel(ticket.attendanceType)}</p>
               </div>
-              {client?.billingProfile?.hasActiveContract && ticket.category ? (
+              {activeContract && ticket.category ? (
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Cobertura contratual</p>
-                  {client.billingProfile.contractCoveredCategories.includes(ticket.category) ? (
+                  {activeContract.coverageType === "TOTAL" || activeContract.coveredCategories.includes(ticket.category) ? (
                     <span className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
                       Coberto pelo contrato
                     </span>

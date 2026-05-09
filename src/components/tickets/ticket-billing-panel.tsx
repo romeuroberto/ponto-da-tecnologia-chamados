@@ -160,9 +160,9 @@ function needsCancellationReason(status: FinancialStatus) {
   return status === "CANCELADO";
 }
 
-function getDefaultBilling(profile?: ClientBillingProfile, hasActiveContract?: boolean): SummaryFormState {
+function getDefaultBilling(profile?: ClientBillingProfile): SummaryFormState {
   return {
-    billingType: hasActiveContract ? "CONTRATO" : (profile?.defaultBillingType ?? "AVULSO"),
+    billingType: profile?.defaultBillingType ?? "AVULSO",
     discountAmount: formatCurrencyInput(profile?.defaultDiscountPercent ?? 0),
     internalNotes: profile?.contractNotes ?? ""
   };
@@ -227,7 +227,7 @@ export function TicketBillingPanel({
           discountAmount: formatCurrencyInput(initialBilling.discountAmount),
           internalNotes: initialBilling.internalNotes ?? ""
         }
-      : getDefaultBilling(clientBillingProfile, false)
+      : getDefaultBilling(clientBillingProfile)
   );
   const [entryFields, setEntryFields] = useState(getDefaultEntry(clientBillingProfile));
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);

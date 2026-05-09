@@ -249,7 +249,7 @@ export function TicketServiceOrdersPanel({
           return (
             <div key={`${part.partCatalogItemId}-${index}`} className="grid gap-3 rounded-xl border border-slate-200 p-3">
               <div className="grid gap-3 md:grid-cols-[1.6fr_0.7fr_0.9fr]">
-                <div className="grid gap-2">
+                <div className="grid content-start gap-2">
                   <Label htmlFor={`part-${index}`}>Material do catálogo</Label>
                   <Select id={`part-${index}`} value={part.partCatalogItemId} onChange={(event) => setParts(handlePartSelection(parts, index, event.target.value))}>
                     <option value="">Selecione um material</option>
@@ -267,11 +267,11 @@ export function TicketServiceOrdersPanel({
                     </p>
                   ) : null}
                 </div>
-                <div className="grid gap-2">
+                <div className="grid content-start gap-2">
                   <Label htmlFor={`quantity-${index}`}>Qtd ({selectedPart?.unit ?? "un"})</Label>
                   <Input id={`quantity-${index}`} inputMode="decimal" value={part.quantity} onChange={(event) => setParts(updatePartDraft(parts, index, { quantity: event.target.value }))} placeholder="1" />
                 </div>
-                <div className="grid gap-2">
+                <div className="grid content-start gap-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor={`unit-price-${index}`}>Valor de referência</Label>
                     {selectedPart?.resalePrice != null ? (
@@ -472,7 +472,7 @@ export function TicketServiceOrdersPanel({
                   ) : (
                     <div className="space-y-4">
                       <div className="grid gap-4 md:grid-cols-2">
-                        <div className="grid gap-2">
+                        <div className="grid content-start gap-2">
                           <Label htmlFor={`status-${serviceOrder.id}`}>Status</Label>
                           <Select id={`status-${serviceOrder.id}`} value={editFields.status} onChange={(event) => setEditFields((current) => ({ ...current, status: event.target.value as ServiceOrderStatus }))}>
                             <option value="PLANNED">Planejada</option>
@@ -482,7 +482,7 @@ export function TicketServiceOrdersPanel({
                             <option value="CANCELED">Cancelada</option>
                           </Select>
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid content-start gap-2">
                           <Label htmlFor={`serviceCatalog-${serviceOrder.id}`}>Serviço do catálogo</Label>
                           <Select
                             id={`serviceCatalog-${serviceOrder.id}`}
@@ -504,17 +504,19 @@ export function TicketServiceOrdersPanel({
                           </Select>
                           {selectedEditCatalogItem ? <p className="text-xs text-slate-500">{getCatalogMeta(selectedEditCatalogItem)}</p> : null}
                         </div>
-                        {editServiceSelection === MANUAL_SERVICE_OPTION ? (
-                          <div className="grid gap-2">
-                            <Label htmlFor={`serviceType-${serviceOrder.id}`}>Tipo de serviço</Label>
-                            <Input id={`serviceType-${serviceOrder.id}`} value={editFields.serviceType} onChange={(event) => setEditFields((current) => ({ ...current, serviceType: event.target.value }))} placeholder="Ex.: bancada, visita, diagnóstico" />
-                          </div>
-                        ) : null}
+                      </div>
+                      {editServiceSelection === MANUAL_SERVICE_OPTION ? (
                         <div className="grid gap-2">
+                          <Label htmlFor={`serviceType-${serviceOrder.id}`}>Tipo de serviço</Label>
+                          <Input id={`serviceType-${serviceOrder.id}`} value={editFields.serviceType} onChange={(event) => setEditFields((current) => ({ ...current, serviceType: event.target.value }))} placeholder="Ex.: bancada, visita, diagnóstico" />
+                        </div>
+                      ) : null}
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <div className="grid content-start gap-2">
                           <Label htmlFor={`servicePrice-${serviceOrder.id}`}>Valor do serviço <span className="text-slate-400">(opcional)</span></Label>
                           <Input id={`servicePrice-${serviceOrder.id}`} value={editFields.servicePrice} onChange={(event) => setEditFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setEditFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid content-start gap-2">
                           <Label htmlFor={`technician-${serviceOrder.id}`}>Técnico</Label>
                           <Select id={`technician-${serviceOrder.id}`} value={editFields.assignedTechnicianId} onChange={(event) => setEditFields((current) => ({ ...current, assignedTechnicianId: event.target.value }))}>
                             <option value="">Definir depois</option>
@@ -525,14 +527,14 @@ export function TicketServiceOrdersPanel({
                             ))}
                           </Select>
                         </div>
-                        <div className="grid gap-2">
+                        <div className="grid content-start gap-2">
                           <Label htmlFor={`scheduled-${serviceOrder.id}`}>Agendada para</Label>
                           <Input id={`scheduled-${serviceOrder.id}`} type="date" value={editFields.scheduledStartAt} onChange={(event) => setEditFields((current) => ({ ...current, scheduledStartAt: event.target.value }))} />
                         </div>
-                        <div className="grid gap-2 md:col-span-2">
-                          <Label htmlFor={`notes-${serviceOrder.id}`}>Observações</Label>
-                          <Textarea id={`notes-${serviceOrder.id}`} value={editFields.executionNotes} onChange={(event) => setEditFields((current) => ({ ...current, executionNotes: event.target.value }))} placeholder="Descreva o escopo ou o resultado principal da OS" />
-                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor={`notes-${serviceOrder.id}`}>Observações</Label>
+                        <Textarea id={`notes-${serviceOrder.id}`} value={editFields.executionNotes} onChange={(event) => setEditFields((current) => ({ ...current, executionNotes: event.target.value }))} placeholder="Descreva o escopo ou o resultado principal da OS" />
                       </div>
 
                       {renderPartsEditor(editParts, setEditParts)}
