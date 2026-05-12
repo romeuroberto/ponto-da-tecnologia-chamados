@@ -33,6 +33,78 @@ const coverageColor: Record<ClientContract["coverageType"], string> = {
   PARCIAL: "bg-blue-100 text-blue-800"
 };
 
+interface HistoryEntry {
+  id: string;
+  message: string;
+  createdAt: string;
+  author: { name: string };
+}
+
+function ContractHistorySection({ clientId, contractId }: { clientId: string; contractId: string }) {
+  const [open, setOpen] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[] | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function toggle() {
+    if (!open && history === null) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/clients/${clientId}/contracts/${contractId}/history`);
+        const result = await res.json();
+        if (result.success) setHistory(result.data);
+      } finally {
+        setLoading(false);
+      }
+    }
+    setOpen((v) => !v);
+  }
+
+  return (
+    <div className="border-t border-slate-100 pt-2">
+      <button
+        type="button"
+        onClick={toggle}
+        className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-700"
+      >
+        <svg
+          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-90" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+        {loading ? "Carregando..." : "Histórico"}
+      </button>
+
+      {open && history !== null && (
+        <div className="mt-2 space-y-1.5">
+          {history.length === 0 ? (
+            <p className="text-xs text-slate-400">Nenhum registro de histórico.</p>
+          ) : (
+            history.map((entry) => (
+              <div key={entry.id} className="flex gap-2 text-xs">
+                <span className="shrink-0 text-slate-400">
+                  {new Date(entry.createdAt).toLocaleString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </span>
+                <span className="text-slate-500">{entry.author.name}:</span>
+                <span className="text-slate-700">{entry.message}</span>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ContractList({
   clientId,
   initialContracts,
@@ -176,6 +248,8 @@ export function ContractList({
                 </p>
               )}
             </div>
+
+            <ContractHistorySection clientId={clientId} contractId={contract.id} />
           </div>
         ))}
       </CardContent>

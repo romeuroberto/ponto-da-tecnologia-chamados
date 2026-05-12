@@ -56,7 +56,7 @@ interface ClientBillingProfileRecord {
   hourlyRate: PrismaDecimalLike | null;
   travelRate: PrismaDecimalLike | null;
   defaultDiscountPercent: PrismaDecimalLike | null;
-  contractNotes: string | null;
+  billingInstructions: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -550,7 +550,7 @@ export function mapClientBillingProfile(record: ClientBillingProfileRecord): Cli
     hourlyRate: record.hourlyRate?.toNumber() ?? undefined,
     travelRate: record.travelRate?.toNumber() ?? undefined,
     defaultDiscountPercent: record.defaultDiscountPercent?.toNumber() ?? undefined,
-    contractNotes: record.contractNotes ?? undefined,
+    billingInstructions: record.billingInstructions ?? undefined,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString()
   };

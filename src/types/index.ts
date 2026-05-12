@@ -412,7 +412,7 @@ export interface ClientBillingProfile {
   hourlyRate?: number;
   travelRate?: number;
   defaultDiscountPercent?: number;
-  contractNotes?: string;
+  billingInstructions?: string;
   createdAt: string;
   updatedAt: string;
 }

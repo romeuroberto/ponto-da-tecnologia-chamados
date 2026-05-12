@@ -164,7 +164,7 @@ function getDefaultBilling(profile?: ClientBillingProfile): SummaryFormState {
   return {
     billingType: profile?.defaultBillingType ?? "AVULSO",
     discountAmount: formatCurrencyInput(profile?.defaultDiscountPercent ?? 0),
-    internalNotes: profile?.contractNotes ?? ""
+    internalNotes: profile?.billingInstructions ?? ""
   };
 }
 

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { contractSchema } from "@/lib/validations/contract";
@@ -47,9 +48,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       );
     }
 
-    const data = await contractRepository.create(id, result.data);
+    const data = await contractRepository.create(id, result.data, guard.user.id);
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ success: false, message: "Já existe um contrato com este número." }, { status: 409 });
+    }
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : "Falha ao criar contrato." },
       { status: 500 }

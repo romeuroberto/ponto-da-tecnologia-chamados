@@ -29,7 +29,7 @@ export const clientService = {
             hourlyRate: input.billingProfile.hourlyRate,
             travelRate: input.billingProfile.travelRate,
             defaultDiscountPercent: input.billingProfile.defaultDiscountPercent,
-            contractNotes: input.billingProfile.contractNotes || undefined
+            billingInstructions: input.billingProfile.billingInstructions || undefined
           }
         : undefined
     });
@@ -49,7 +49,7 @@ export const clientService = {
             hourlyRate: input.billingProfile.hourlyRate,
             travelRate: input.billingProfile.travelRate,
             defaultDiscountPercent: input.billingProfile.defaultDiscountPercent,
-            contractNotes: input.billingProfile.contractNotes || undefined
+            billingInstructions: input.billingProfile.billingInstructions || undefined
           }
         : undefined
     });

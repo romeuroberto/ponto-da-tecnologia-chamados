@@ -13,7 +13,7 @@ export const clientSchema = z.object({
     hourlyRate: z.coerce.number().min(0, "Valor/hora não pode ser negativo").optional(),
     travelRate: z.coerce.number().min(0, "Deslocamento não pode ser negativo").optional(),
     defaultDiscountPercent: z.coerce.number().min(0, "Desconto não pode ser negativo").max(100, "Desconto máximo de 100%").optional(),
-    contractNotes: z.string().optional()
+    billingInstructions: z.string().optional()
   }).optional()
 });
 

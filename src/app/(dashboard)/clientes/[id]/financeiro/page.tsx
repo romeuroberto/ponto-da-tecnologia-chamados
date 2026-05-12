@@ -3,258 +3,222 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { formatCurrency } from "@/lib/utils";
+import { MonthlyBillingList } from "@/components/contracts/monthly-billing-list";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
-import { getParam } from "@/server/search-params";
 import { clientService } from "@/server/services/client-service";
 import { billingRepository } from "@/server/repositories/billing-repository";
-import { contractRepository } from "@/server/repositories/contract-repository";
-import type { FinancialStatus } from "@/types";
-
-const STATUS_OPTIONS: Array<{ value: FinancialStatus | ""; label: string }> = [
-  { value: "", label: "Todos" },
-  { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANALISE", label: "Em análise" },
-  { value: "APROVADO", label: "Aprovado" },
-  { value: "FATURADO", label: "Faturado" },
-  { value: "PAGO", label: "Pago" },
-  { value: "CANCELADO", label: "Cancelado" }
-];
-
-const statusBadge: Record<FinancialStatus, { label: string; className: string }> = {
-  PENDENTE:   { label: "Pendente",    className: "bg-slate-100 text-slate-700" },
-  EM_ANALISE: { label: "Em análise",  className: "bg-blue-100 text-blue-700" },
-  APROVADO:   { label: "Aprovado",    className: "bg-emerald-100 text-emerald-700" },
-  FATURADO:   { label: "Faturado",    className: "bg-violet-100 text-violet-700" },
-  PAGO:       { label: "Pago",        className: "bg-green-100 text-green-800 font-semibold" },
-  CANCELADO:  { label: "Cancelado",   className: "bg-rose-100 text-rose-700" }
-};
+import { contractMonthlyBillingRepository } from "@/server/repositories/contract-monthly-billing-repository";
+import { saleRepository } from "@/server/repositories/sale-repository";
 
 const billingTypeLabel: Record<string, string> = {
-  AVULSO:   "Avulso",
+  AVULSO: "Avulso",
   CONTRATO: "Contrato",
   GARANTIA: "Garantia",
   CORTESIA: "Cortesia"
 };
 
-function isOverdue(invoiceDueDate?: string) {
-  if (!invoiceDueDate) return false;
-  return new Date(invoiceDueDate) < new Date();
-}
+const statusLabel: Record<string, string> = {
+  PENDENTE: "Pendente",
+  EM_ANALISE: "Em análise",
+  APROVADO: "Aprovado",
+  FATURADO: "Faturado",
+  PAGO: "Pago",
+  CANCELADO: "Cancelado"
+};
 
-export default async function ClientFinanceiroPage({
-  params,
-  searchParams
-}: {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+const statusColor: Record<string, string> = {
+  PENDENTE: "bg-yellow-100 text-yellow-800",
+  EM_ANALISE: "bg-blue-100 text-blue-800",
+  APROVADO: "bg-emerald-100 text-emerald-800",
+  FATURADO: "bg-purple-100 text-purple-800",
+  PAGO: "bg-slate-100 text-slate-600",
+  CANCELADO: "bg-rose-100 text-rose-700"
+};
+
+export default async function ClientFinanceiroPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole(["ADMIN", "ATTENDANT"]);
-
   const { id } = await params;
-  const sp = await searchParams;
-  const statusParam = getParam(sp.status) ?? "";
 
-  const [client, allBillings, contracts, nextContractNumber] = await Promise.all([
-    clientService.getClient(id),
-    billingRepository.listByClient(id),
-    contractRepository.findByClientId(id),
-    contractRepository.nextNumber()
-  ]);
-
+  const client = await clientService.getClient(id);
   if (!client) notFound();
 
-  const billings = statusParam
-    ? allBillings.filter((b) => b.financialStatus === statusParam)
-    : allBillings;
+  await contractMonthlyBillingRepository.generatePending(id);
 
-  // Métricas — calculadas sempre sobre todos os registros (sem filtro de status)
-  const openStatuses: FinancialStatus[] = ["PENDENTE", "EM_ANALISE", "APROVADO", "FATURADO"];
-  const totalEmAberto = allBillings
-    .filter((b) => openStatuses.includes(b.financialStatus))
-    .reduce((s, b) => s + b.totalAmount, 0);
-  const totalPago = allBillings
-    .filter((b) => b.financialStatus === "PAGO")
-    .reduce((s, b) => s + b.totalAmount, 0);
-  const overdueCount = allBillings.filter(
-    (b) => b.financialStatus === "FATURADO" && isOverdue(b.invoiceDueDate)
-  ).length;
-  const pendingCount = allBillings.filter((b) => openStatuses.includes(b.financialStatus)).length;
+  const [ticketBillings, monthlyBillings, sales] = await Promise.all([
+    billingRepository.listByClient(id),
+    contractMonthlyBillingRepository.listByClient(id),
+    saleRepository.list({ clientId: id })
+  ]);
 
-  const activeContracts = contracts.filter((c) => c.status === "ATIVO");
+  const openTicketBillings = ticketBillings.filter((b) => !["PAGO", "CANCELADO"].includes(b.financialStatus));
+  const paidTicketBillings = ticketBillings.filter((b) => b.financialStatus === "PAGO");
+  const openMonthly = monthlyBillings.filter((b) => b.financialStatus !== "PAGO" && b.financialStatus !== "CANCELADO");
+  const paidMonthly = monthlyBillings.filter((b) => b.financialStatus === "PAGO");
+  const openSales = sales.filter((s) => !["PAGO", "CANCELADO"].includes(s.financialStatus));
+  const paidSales = sales.filter((s) => s.financialStatus === "PAGO");
 
-  const filteredTotal = billings.reduce((s, b) => s + b.totalAmount, 0);
+  const totalOpen =
+    openTicketBillings.reduce((s, b) => s + b.totalAmount, 0) +
+    openMonthly.reduce((s, b) => s + b.amount, 0) +
+    openSales.reduce((s, b) => s + b.totalAmount, 0);
+  const totalPaid =
+    paidTicketBillings.reduce((s, b) => s + b.totalAmount, 0) +
+    paidMonthly.reduce((s, b) => s + b.amount, 0) +
+    paidSales.reduce((s, b) => s + b.totalAmount, 0);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/clientes/${id}` as Route}
-          className="text-sm text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          ← {client.name}
-        </Link>
-      </div>
-
       <PageHeader
-        title="Extrato financeiro"
-        description={`Todas as cobranças de ${client.name}`}
+        title={`Extrato financeiro — ${client.name}`}
+        description="Cobranças de chamados e mensalidades de contrato."
+        action={
+          <Link href={`/clientes/${id}` as Route} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+            ← Voltar ao cliente
+          </Link>
+        }
       />
 
       {/* Cards de resumo */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className={totalEmAberto > 0 ? "border-amber-200 bg-amber-50/40" : "border-slate-200"}>
-          <CardContent className="p-5">
-            <p className="text-sm text-amber-700">Saldo em aberto</p>
-            <p className="mt-1 text-2xl font-semibold text-amber-950">{formatCurrency(totalEmAberto)}</p>
-            <p className="mt-1 text-xs text-amber-600">{pendingCount} cobrança{pendingCount !== 1 ? "s" : ""} pendente{pendingCount !== 1 ? "s" : ""}</p>
-          </CardContent>
-        </Card>
-
-        <Card className={overdueCount > 0 ? "border-rose-200 bg-rose-50/40" : "border-slate-200"}>
-          <CardContent className="p-5">
-            <p className={`text-sm ${overdueCount > 0 ? "text-rose-700" : "text-slate-600"}`}>Faturas vencidas</p>
-            <p className={`mt-1 text-2xl font-semibold ${overdueCount > 0 ? "text-rose-950" : "text-slate-950"}`}>{overdueCount}</p>
-            <p className={`mt-1 text-xs ${overdueCount > 0 ? "text-rose-600" : "text-slate-500"}`}>
-              {overdueCount > 0 ? "Requerem atenção" : "Sem vencimentos em atraso"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-green-200 bg-green-50/40">
-          <CardContent className="p-5">
-            <p className="text-sm text-green-700">Total recebido</p>
-            <p className="mt-1 text-2xl font-semibold text-green-950">{formatCurrency(totalPago)}</p>
-            <p className="mt-1 text-xs text-green-600">
-              {allBillings.filter((b) => b.financialStatus === "PAGO").length} pagamento{allBillings.filter((b) => b.financialStatus === "PAGO").length !== 1 ? "s" : ""} confirmado{allBillings.filter((b) => b.financialStatus === "PAGO").length !== 1 ? "s" : ""}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Contratos ativos</p>
-            <p className="mt-1 text-2xl font-semibold text-slate-950">{activeContracts.length}</p>
-            <p className="mt-1 text-xs text-slate-500">
-              {activeContracts.length > 0
-                ? activeContracts.map((c) => c.contractNumber).join(", ")
-                : "Nenhum contrato ativo"}
-            </p>
-          </CardContent>
-        </Card>
+      <section className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-yellow-700">Em aberto</p>
+          <p className="mt-2 text-2xl font-semibold text-yellow-950">{formatCurrency(totalOpen)}</p>
+          <p className="mt-1 text-xs text-yellow-600">
+            {openTicketBillings.length + openMonthly.length} cobranças pendentes
+          </p>
+        </div>
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Recebido (histórico)</p>
+          <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(totalPaid)}</p>
+          <p className="mt-1 text-xs text-emerald-600">
+            {paidTicketBillings.length + paidMonthly.length} cobranças pagas
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Total de registros</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-950">{ticketBillings.length + monthlyBillings.length + sales.length}</p>
+          <p className="mt-1 text-xs text-slate-400">chamados + mensalidades + vendas</p>
+        </div>
       </section>
 
-      {/* Filtro por status */}
-      <form action={`/clientes/${id}/financeiro`} className="flex flex-wrap gap-2">
-        {STATUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="submit"
-            name="status"
-            value={opt.value}
-            className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
-              statusParam === opt.value
-                ? "border-sky-600 bg-sky-600 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </form>
+      {/* Mensalidades de contrato */}
+      {monthlyBillings.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Mensalidades de contrato</h2>
+          <MonthlyBillingList clientId={id} initialBillings={monthlyBillings} />
+        </section>
+      )}
 
-      {/* Lista de cobranças */}
-      {billings.length > 0 ? (
-        <div className="space-y-3">
-          {/* Cabeçalho desktop */}
-          <div className="hidden grid-cols-[2fr_1.2fr_1fr_1fr_1fr_auto] gap-4 px-4 text-xs font-semibold uppercase tracking-wide text-slate-500 lg:grid">
-            <span>Chamado</span>
-            <span>Tipo</span>
-            <span>Status</span>
-            <span>Vencimento</span>
-            <span className="text-right">Total</span>
-            <span />
-          </div>
-
-          {billings.map((billing) => {
-            const badge = statusBadge[billing.financialStatus];
-            const overdue = billing.financialStatus === "FATURADO" && isOverdue(billing.invoiceDueDate);
-
-            return (
+      {/* Vendas */}
+      {sales.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Vendas</h2>
+          <div className="space-y-2">
+            <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr_1fr] gap-4 px-4 text-xs font-semibold uppercase tracking-wide text-slate-400 lg:grid">
+              <span>Nº / Data</span>
+              <span>Itens</span>
+              <span>Status</span>
+              <span>Valor</span>
+              <span>Pagamento</span>
+            </div>
+            {sales.map((sale) => (
               <Link
-                key={billing.id}
-                href={`/chamados/${billing.ticketId}/financeiro` as Route}
-                className={`block rounded-xl border p-4 transition-colors hover:bg-slate-50 ${
-                  overdue ? "border-rose-200 bg-rose-50/30 hover:bg-rose-50" : "border-slate-200 bg-white"
-                }`}
+                key={sale.id}
+                href={`/vendas/${sale.id}` as Route}
+                className="block rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50"
               >
                 {/* Mobile */}
-                <div className="lg:hidden space-y-2">
+                <div className="lg:hidden space-y-1">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{billing.ticketNumber}</p>
-                      <p className="mt-0.5 font-semibold text-slate-950">{billing.ticketTitle}</p>
+                      <p className="text-xs text-slate-500">{sale.number}</p>
+                      <p className="font-semibold text-slate-950">{formatCurrency(sale.totalAmount)}</p>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}>
-                      {badge.label}
+                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor[sale.financialStatus]}`}>
+                      {statusLabel[sale.financialStatus]}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-500">{billingTypeLabel[billing.billingType]}</span>
-                    <span className="font-semibold text-slate-950">{formatCurrency(billing.totalAmount)}</span>
-                  </div>
-                  {billing.invoiceDueDate && (
-                    <p className={`text-xs ${overdue ? "font-semibold text-rose-700" : "text-slate-500"}`}>
-                      Vencimento: {new Date(billing.invoiceDueDate).toLocaleDateString("pt-BR")}
-                      {overdue ? " — VENCIDO" : ""}
-                    </p>
-                  )}
+                  <p className="text-xs text-slate-500">
+                    {sale.items.length} {sale.items.length === 1 ? "item" : "itens"} · {formatDate(sale.createdAt)}
+                    {sale.paymentMethod ? ` · ${sale.paymentMethod}` : ""}
+                  </p>
                 </div>
-
                 {/* Desktop */}
-                <div className="hidden grid-cols-[2fr_1.2fr_1fr_1fr_1fr_auto] items-center gap-4 lg:grid">
+                <div className="hidden grid-cols-[1.5fr_1fr_1fr_1fr_1fr] items-center gap-4 lg:grid">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{billing.ticketNumber}</p>
-                    <p className="mt-0.5 font-semibold text-slate-950 leading-tight">{billing.ticketTitle}</p>
+                    <p className="text-xs text-slate-500">{sale.number}</p>
+                    <p className="text-sm text-slate-700">{formatDate(sale.createdAt)}</p>
                   </div>
-                  <span className="text-sm text-slate-700">{billingTypeLabel[billing.billingType]}</span>
-                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}>
-                    {badge.label}
+                  <p className="text-sm text-slate-700">
+                    {sale.items.length} {sale.items.length === 1 ? "item" : "itens"}
+                  </p>
+                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor[sale.financialStatus]}`}>
+                    {statusLabel[sale.financialStatus]}
                   </span>
-                  <span className={`text-sm ${overdue ? "font-semibold text-rose-700" : "text-slate-600"}`}>
-                    {billing.invoiceDueDate
-                      ? new Date(billing.invoiceDueDate).toLocaleDateString("pt-BR")
-                      : "—"}
-                    {overdue ? " ⚠" : ""}
-                  </span>
-                  <span className="text-right font-semibold text-slate-950">{formatCurrency(billing.totalAmount)}</span>
-                  <span className="text-xs text-slate-400 text-right whitespace-nowrap">
-                    {billing.entryCount} lanç.
-                  </span>
+                  <p className="text-sm font-semibold text-slate-950">{formatCurrency(sale.totalAmount)}</p>
+                  <p className="text-sm text-slate-500">{sale.paymentMethod ?? "—"}</p>
                 </div>
               </Link>
-            );
-          })}
-
-          <div className="flex justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <span className="text-sm font-semibold text-slate-700">
-              {statusParam ? `Total — ${STATUS_OPTIONS.find((o) => o.value === statusParam)?.label}` : "Total geral"}
-            </span>
-            <span className="text-sm font-semibold text-slate-950">{formatCurrency(filteredTotal)}</span>
+            ))}
           </div>
-        </div>
-      ) : (
-        <EmptyState
-          title={statusParam ? "Nenhuma cobrança com este status" : "Nenhuma cobrança registrada"}
-          description={
-            statusParam
-              ? "Tente selecionar outro filtro de status."
-              : "Este cliente ainda não possui cobranças vinculadas a chamados."
-          }
-        />
+        </section>
       )}
+
+      {/* Cobranças de chamados */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Cobranças de chamados</h2>
+        {ticketBillings.length > 0 ? (
+          <div className="space-y-2">
+            <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-4 text-xs font-semibold uppercase tracking-wide text-slate-400 lg:grid">
+              <span>Chamado</span>
+              <span>Tipo</span>
+              <span>Status</span>
+              <span>Valor</span>
+              <span>Atualizado</span>
+            </div>
+            {ticketBillings.map((billing) => (
+              <Link
+                key={billing.id}
+                href={`/chamados/${billing.ticketId}` as Route}
+                className="block rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50"
+              >
+                {/* Mobile */}
+                <div className="lg:hidden space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs text-slate-500">{billing.ticketNumber}</p>
+                      <p className="font-semibold text-slate-950">{billing.ticketTitle}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor[billing.financialStatus]}`}>
+                      {statusLabel[billing.financialStatus]}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {billingTypeLabel[billing.billingType]} · {formatCurrency(billing.totalAmount)} · {formatDate(billing.updatedAt)}
+                  </p>
+                </div>
+                {/* Desktop */}
+                <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_1fr] items-center gap-4 lg:grid">
+                  <div>
+                    <p className="text-xs text-slate-500">{billing.ticketNumber}</p>
+                    <p className="font-semibold text-slate-950">{billing.ticketTitle}</p>
+                  </div>
+                  <p className="text-sm text-slate-700">{billingTypeLabel[billing.billingType]}</p>
+                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor[billing.financialStatus]}`}>
+                    {statusLabel[billing.financialStatus]}
+                  </span>
+                  <p className="text-sm font-semibold text-slate-950">{formatCurrency(billing.totalAmount)}</p>
+                  <p className="text-sm text-slate-500">{formatDate(billing.updatedAt)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="Nenhuma cobrança de chamado" description="Este cliente não tem cobranças registradas." />
+        )}
+      </section>
     </div>
   );
 }

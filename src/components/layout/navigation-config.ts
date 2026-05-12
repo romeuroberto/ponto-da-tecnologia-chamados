@@ -24,12 +24,20 @@ export interface NavigationItem {
 export const appNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/chamados", label: "Chamados" },
-  { href: "/clientes", label: "Clientes" },
+  {
+    href: "/clientes",
+    label: "Clientes",
+    children: [
+      { href: "/clientes", label: "Lista de clientes" },
+      { href: "/clientes/contratos" as Route, label: "Contratos" }
+    ]
+  },
   {
     href: "/financeiro",
     label: "Financeiro",
     children: [
       { href: "/financeiro", label: "Visão geral" },
+      { href: "/financeiro/clientes" as Route, label: "Por cliente" },
       { href: "/financeiro/despesas", label: "Despesas" },
       { href: "/financeiro/cobrancas", label: "Cobranças" },
       { href: "/financeiro/pagamentos", label: "Pagamentos" },

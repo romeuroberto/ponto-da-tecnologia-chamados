@@ -18,7 +18,7 @@ export interface CreateClientInput {
     hourlyRate?: number;
     travelRate?: number;
     defaultDiscountPercent?: number;
-    contractNotes?: string;
+    billingInstructions?: string;
   };
 }
 
@@ -163,7 +163,7 @@ export const clientRepository = {
                 hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
                 travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                 defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
-                contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                billingInstructions: normalizeOptionalString(input.billingProfile.billingInstructions)
               }
             }
           : undefined
@@ -201,14 +201,14 @@ export const clientRepository = {
                   hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
                   travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                   defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
-                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                  billingInstructions: normalizeOptionalString(input.billingProfile.billingInstructions)
                 },
                 update: {
                   defaultBillingType: input.billingProfile.defaultBillingType,
                   hourlyRate: normalizeOptionalNumber(input.billingProfile.hourlyRate),
                   travelRate: normalizeOptionalNumber(input.billingProfile.travelRate),
                   defaultDiscountPercent: normalizeOptionalNumber(input.billingProfile.defaultDiscountPercent),
-                  contractNotes: normalizeOptionalString(input.billingProfile.contractNotes)
+                  billingInstructions: normalizeOptionalString(input.billingProfile.billingInstructions)
                 }
               }
             }

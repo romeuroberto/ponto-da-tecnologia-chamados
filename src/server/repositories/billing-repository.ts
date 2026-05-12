@@ -174,6 +174,16 @@ async function recalculateTotals(tx: Prisma.TransactionClient, billingId: string
   return mapTicketBilling(updated, osContributions);
 }
 
+export interface ClientBillingSummary {
+  clientId: string;
+  clientName: string;
+  openAmount: number;
+  openCount: number;
+  overdueCount: number;
+  paidAmount: number;
+  paidCount: number;
+}
+
 export interface BillingListItem {
   id: string;
   ticketId: string;
@@ -226,6 +236,54 @@ export const billingRepository = {
       invoiceDueDate: r.invoiceDueDate?.toISOString(),
       updatedAt: r.updatedAt.toISOString()
     }));
+  },
+
+  async listClientSummaries(): Promise<ClientBillingSummary[]> {
+    if (!isDatabaseConfigured()) return [];
+
+    const now = new Date();
+    const openStatuses = ["PENDENTE", "EM_ANALISE", "APROVADO", "FATURADO"];
+
+    const records = await prisma.ticketBilling.findMany({
+      include: {
+        ticket: { include: { client: true } }
+      },
+      orderBy: { updatedAt: "desc" }
+    });
+
+    const map = new Map<string, ClientBillingSummary>();
+
+    for (const r of records) {
+      const client = r.ticket.client;
+      if (!map.has(client.id)) {
+        map.set(client.id, {
+          clientId: client.id,
+          clientName: client.name,
+          openAmount: 0,
+          openCount: 0,
+          overdueCount: 0,
+          paidAmount: 0,
+          paidCount: 0
+        });
+      }
+
+      const entry = map.get(client.id)!;
+      const total = Number(r.totalAmount);
+      const isOpen = openStatuses.includes(r.financialStatus);
+      const isOverdue = r.financialStatus === "FATURADO" && r.invoiceDueDate != null && r.invoiceDueDate < now;
+
+      if (isOpen) {
+        entry.openAmount += total;
+        entry.openCount += 1;
+      }
+      if (isOverdue) entry.overdueCount += 1;
+      if (r.financialStatus === "PAGO") {
+        entry.paidAmount += total;
+        entry.paidCount += 1;
+      }
+    }
+
+    return Array.from(map.values());
   },
 
   async listByClient(clientId: string, input: { financialStatus?: FinancialStatus } = {}): Promise<BillingListItem[]> {

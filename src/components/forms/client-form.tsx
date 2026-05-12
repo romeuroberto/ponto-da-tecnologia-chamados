@@ -26,7 +26,7 @@ type ClientFormState = {
   hourlyRate: string;
   travelRate: string;
   defaultDiscountPercent: string;
-  contractNotes: string;
+  billingInstructions: string;
 };
 
 export function ClientForm({ client }: { client?: Client }) {
@@ -46,7 +46,7 @@ export function ClientForm({ client }: { client?: Client }) {
     hourlyRate: formatCurrencyInput(client?.billingProfile?.hourlyRate ?? 0),
     travelRate: formatCurrencyInput(client?.billingProfile?.travelRate ?? 0),
     defaultDiscountPercent: client?.billingProfile?.defaultDiscountPercent !== undefined ? String(client.billingProfile.defaultDiscountPercent) : "",
-    contractNotes: client?.billingProfile?.contractNotes ?? ""
+    billingInstructions: client?.billingProfile?.billingInstructions ?? ""
   });
 
   function handleChange(field: keyof ClientFormState, value: string) {
@@ -72,7 +72,7 @@ export function ClientForm({ client }: { client?: Client }) {
           hourlyRate: parseCurrencyInput(formData.hourlyRate),
           travelRate: parseCurrencyInput(formData.travelRate),
           defaultDiscountPercent: formData.defaultDiscountPercent ? Number(formData.defaultDiscountPercent) : undefined,
-          contractNotes: formData.contractNotes
+          billingInstructions: formData.billingInstructions
         }
       };
 
@@ -120,7 +120,7 @@ export function ClientForm({ client }: { client?: Client }) {
           hourlyRate: formatCurrencyInput(0),
           travelRate: formatCurrencyInput(0),
           defaultDiscountPercent: "",
-          contractNotes: ""
+          billingInstructions: ""
         });
       }
 
@@ -241,11 +241,11 @@ export function ClientForm({ client }: { client?: Client }) {
             </div>
 
             <div className="mt-4 grid gap-2">
-              <Label htmlFor="contractNotes">Observações financeiras</Label>
+              <Label htmlFor="billingInstructions">Observações financeiras</Label>
               <Textarea
-                id="contractNotes"
-                value={formData.contractNotes}
-                onChange={(event) => handleChange("contractNotes", event.target.value)}
+                id="billingInstructions"
+                value={formData.billingInstructions}
+                onChange={(event) => handleChange("billingInstructions", event.target.value)}
                 placeholder="Regras contratuais, condições especiais ou observações de faturamento"
               />
             </div>

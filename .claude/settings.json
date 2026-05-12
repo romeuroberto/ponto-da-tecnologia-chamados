@@ -35,11 +35,21 @@
       "Bash(rtk find *)",
       "Bash(dir /s /b \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\tickets\")",
       "Bash(rtk tsc *)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\\\(dashboard\\)\\\\clientes\\\\[id]\\\\\" -ErrorAction SilentlyContinue | Select-Object Name, FullName)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\\\(dashboard\\)\\\\clientes\\\\[id]\\\\\" -ErrorAction SilentlyContinue | Select-Object Name, FullName)",
+      "Bash(rtk docker *)",
+      "Bash(docker info *)",
+      "Bash(docker context *)",
+      "Bash(docker -c default compose --project-directory \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\" up -d)",
+      "Bash(docker start *)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\contracts\\\\monthly-billings\\\\[id]\")",
+      "Bash(mkdir -p \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\\\(dashboard\\)\\\\clientes\\\\[id]\\\\financeiro\")",
+      "PowerShell(cd \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\"; $env:FORCE_COLOR = \"0\"; npx prisma migrate dev --name cleanup_billing_profile --accept-data-loss 2>&1)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",
-      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\categories"
+      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\categories",
+      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\contracts\\monthly-billings",
+      "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\(dashboard)\\clientes\\[id]\\financeiro"
     ]
   }
 }

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { contractSchema } from "@/lib/validations/contract";
@@ -42,11 +43,14 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       );
     }
 
-    const data = await contractRepository.update(contractId, result.data);
+    const data = await contractRepository.update(contractId, result.data, guard.user.id);
     if (!data) return NextResponse.json({ success: false, message: "Contrato não encontrado." }, { status: 404 });
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ success: false, message: "Já existe um contrato com este número." }, { status: 409 });
+    }
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : "Falha ao atualizar contrato." },
       { status: 500 }

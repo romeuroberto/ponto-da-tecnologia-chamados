@@ -68,7 +68,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
                 <p><span className="font-semibold text-slate-950">Valor/hora:</span> {client.billingProfile?.hourlyRate !== undefined ? formatCurrency(client.billingProfile.hourlyRate) : "Não definido"}</p>
                 <p><span className="font-semibold text-slate-950">Deslocamento:</span> {client.billingProfile?.travelRate !== undefined ? formatCurrency(client.billingProfile.travelRate) : "Não definido"}</p>
                 <p><span className="font-semibold text-slate-950">Desconto padrão:</span> {client.billingProfile?.defaultDiscountPercent !== undefined ? `${client.billingProfile.defaultDiscountPercent}%` : "Não definido"}</p>
-                <p><span className="font-semibold text-slate-950">Obs. financeiras:</span> {client.billingProfile?.contractNotes ?? "Sem observações financeiras"}</p>
+                <p><span className="font-semibold text-slate-950">Obs. financeiras:</span> {client.billingProfile?.billingInstructions ?? "Sem observações financeiras"}</p>
               </div>
             </CardContent>
           </Card>

@@ -59,7 +59,11 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
   const contractCoversCategory = !!(
     activeContract &&
     ticket.category &&
-    (activeContract.coverageType === "TOTAL" || activeContract.coveredCategories.includes(ticket.category))
+    (
+      activeContract.coverageType === "TOTAL" ||
+      activeContract.coveredCategories.length === 0 ||
+      activeContract.coveredCategories.includes(ticket.category)
+    )
   );
   const relatedExpenses = ticket.expenses ?? [];
   const activeExpenseAmount = relatedExpenses
