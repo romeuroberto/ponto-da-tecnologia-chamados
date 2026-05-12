@@ -65,7 +65,7 @@ const entryTypeLabel: Record<BillingEntryType, string> = {
 };
 
 function getFlowActions(status: FinancialStatus, billingType: BillingType): FlowAction[] {
-  const isNoChargeFlow = billingType === "CORTESIA" || billingType === "GARANTIA";
+  const isNoChargeFlow = billingType === "CORTESIA" || billingType === "GARANTIA" || billingType === "CONTRATO";
 
   switch (status) {
     case "PENDENTE":
@@ -153,7 +153,7 @@ function needsInvoiceData(status: FinancialStatus) {
 }
 
 function needsPaymentData(status: FinancialStatus, billingType: BillingType) {
-  return status === "PAGO" && billingType !== "CORTESIA" && billingType !== "GARANTIA";
+  return status === "PAGO" && billingType !== "CORTESIA" && billingType !== "GARANTIA" && billingType !== "CONTRATO";
 }
 
 function needsCancellationReason(status: FinancialStatus) {
@@ -239,7 +239,7 @@ export function TicketBillingPanel({
   const canManage = canManageTicketBilling(role);
   const isTechnicallyComplete = TERMINAL_TECHNICAL_STATUSES.includes(ticketStatus as typeof TERMINAL_TECHNICAL_STATUSES[number]);
   const currentStatus = billing?.financialStatus ?? "PENDENTE";
-  const activeBillingType: BillingType = billing?.billingType ?? summaryFields.billingType;
+  const activeBillingType: BillingType = summaryFields.billingType;
   const summaryLocked = billing ? isBillingSummaryLocked(billing.financialStatus) : false;
   const entriesLocked = billing ? areBillingEntriesLocked(billing.financialStatus) : false;
   const flowActions = getFlowActions(currentStatus, activeBillingType);
@@ -294,7 +294,7 @@ export function TicketBillingPanel({
 
     startTransition(async () => {
       const data = await callBillingApi({
-        billingType: billing?.billingType ?? summaryFields.billingType,
+        billingType: summaryFields.billingType,
         financialStatus: pendingTransition.targetStatus,
         discountAmount: parseCurrencyInput(summaryFields.discountAmount),
         internalNotes: summaryFields.internalNotes,
