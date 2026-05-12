@@ -70,24 +70,7 @@ export function TicketForm({ clients, users, categories }: { clients: Client[]; 
         return;
       }
 
-      setMessage({
-        type: "success",
-        text: `Chamado ${result.data.number} criado com sucesso.`
-      });
-
-      setFormData({
-        clientId: "",
-        title: "",
-        description: "",
-        category: "",
-        attendanceType: "REMOTE",
-        priority: "MEDIUM",
-        requesterName: "",
-        requesterEmail: "",
-        assigneeId: ""
-      });
-
-      router.refresh();
+      router.push("/chamados");
     });
   }
 

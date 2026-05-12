@@ -100,7 +100,8 @@ export function TicketServiceOrdersPanel({
   role,
   currentUserId,
   serviceCatalogItems,
-  partCatalogItems
+  partCatalogItems,
+  isReseller = false
 }: {
   ticket: Ticket;
   users: AppUser[];
@@ -108,6 +109,7 @@ export function TicketServiceOrdersPanel({
   currentUserId: string;
   serviceCatalogItems: ServiceCatalogItem[];
   partCatalogItems: PartCatalogItem[];
+  isReseller?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -194,24 +196,28 @@ export function TicketServiceOrdersPanel({
     setMessage(null);
   }
 
+  function getServicePrice(item: ServiceCatalogItem | undefined, currentPrice: string): string {
+    if (!item) return currentPrice;
+    const price = isReseller && item.resalePrice != null ? item.resalePrice : item.defaultPrice;
+    return price != null ? formatCurrencyInput(price) : currentPrice;
+  }
+
   function applyCatalogServiceToCreate(serviceName: string) {
     const selectedItem = serviceCatalogItems.find((item) => item.name === serviceName);
-
     setCreateFields((current) => ({
       ...current,
       serviceType: serviceName,
-      servicePrice: selectedItem?.defaultPrice != null ? formatCurrencyInput(selectedItem.defaultPrice) : current.servicePrice,
+      servicePrice: getServicePrice(selectedItem, current.servicePrice),
       executionNotes: current.executionNotes || selectedItem?.description || ""
     }));
   }
 
   function applyCatalogServiceToEdit(serviceName: string) {
     const selectedItem = serviceCatalogItems.find((item) => item.name === serviceName);
-
     setEditFields((current) => ({
       ...current,
       serviceType: serviceName,
-      servicePrice: selectedItem?.defaultPrice != null ? formatCurrencyInput(selectedItem.defaultPrice) : current.servicePrice,
+      servicePrice: getServicePrice(selectedItem, current.servicePrice),
       executionNotes: current.executionNotes || selectedItem?.description || ""
     }));
   }
@@ -222,10 +228,11 @@ export function TicketServiceOrdersPanel({
 
   function handlePartSelection(parts: PartDraft[], index: number, partCatalogItemId: string) {
     const selectedPart = partOptions.find((item) => item.id === partCatalogItemId);
+    const price = isReseller && selectedPart?.resalePrice != null ? selectedPart.resalePrice : (selectedPart?.unitPrice ?? 0);
 
     return updatePartDraft(parts, index, {
       partCatalogItemId,
-      unitPrice: formatCurrencyInput(selectedPart?.unitPrice ?? 0),
+      unitPrice: formatCurrencyInput(price),
       notes: parts[index]?.notes || selectedPart?.description || ""
     });
   }
@@ -235,7 +242,10 @@ export function TicketServiceOrdersPanel({
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-slate-950">Materiais da OS</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-slate-950">Materiais da OS</p>
+              {isReseller && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Tabela de revenda</span>}
+            </div>
             <p className="text-xs text-slate-500">Registre apenas os itens relevantes para este atendimento.</p>
           </div>
           <Button type="button" variant="outline" onClick={() => setParts([...parts, emptyPartDraft()])}>
@@ -513,7 +523,10 @@ export function TicketServiceOrdersPanel({
                       ) : null}
                       <div className="grid gap-4 md:grid-cols-3">
                         <div className="grid content-start gap-2">
-                          <Label htmlFor={`servicePrice-${serviceOrder.id}`}>Valor do serviço <span className="text-slate-400">(opcional)</span></Label>
+                          <Label htmlFor={`servicePrice-${serviceOrder.id}`}>
+                            Valor do serviço <span className="text-slate-400">(opcional)</span>
+                            {isReseller && <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Revenda</span>}
+                          </Label>
                           <Input id={`servicePrice-${serviceOrder.id}`} value={editFields.servicePrice} onChange={(event) => setEditFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setEditFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
                         </div>
                         <div className="grid content-start gap-2">
@@ -627,7 +640,10 @@ export function TicketServiceOrdersPanel({
             ) : null}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid gap-2">
-                <Label htmlFor="new-service-price">Valor do serviço <span className="text-slate-400">(opcional)</span></Label>
+                <Label htmlFor="new-service-price">
+                  Valor do serviço <span className="text-slate-400">(opcional)</span>
+                  {isReseller && <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Revenda</span>}
+                </Label>
                 <Input id="new-service-price" value={createFields.servicePrice} onChange={(event) => setCreateFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setCreateFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
               </div>
               <div className="grid gap-2">

@@ -181,6 +181,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
             currentUserId={currentUser.id}
             serviceCatalogItems={serviceCatalogItems}
             partCatalogItems={partCatalogItems}
+            isReseller={client?.isReseller ?? false}
           />
 
           <Card>

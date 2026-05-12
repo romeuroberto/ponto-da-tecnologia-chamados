@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { BrandMark } from "@/components/layout/brand-mark";
 import { PortalSignOutButton } from "@/components/portal/portal-sign-out-button";
+import Link from "next/link";
 
 export async function PortalTopbar() {
   const session = await auth();
@@ -19,6 +20,12 @@ export async function PortalTopbar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <Link
+          href="/portal-app"
+          className="hidden h-10 items-center justify-center rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 sm:inline-flex"
+        >
+          Modo app
+        </Link>
         <div className="hidden text-right sm:block">
           <p className="text-sm font-semibold text-slate-800">{user?.name ?? "Cliente"}</p>
           <p className="text-xs text-slate-400">{user?.email ?? "Acesso autenticado"}</p>
