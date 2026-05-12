@@ -10,10 +10,12 @@ import { StatusBadge } from "@/components/tickets/status-badge";
 import { ClientPortalAccessSection } from "@/components/clients/client-portal-access-section";
 import { ContractList } from "@/components/contracts/contract-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
 import { canEditClient } from "@/server/auth/permissions";
 import { clientService } from "@/server/services/client-service";
 import { contractRepository } from "@/server/repositories/contract-repository";
+import { ticketCategoryService } from "@/server/services/ticket-category-service";
 import { ticketService } from "@/server/services/ticket-service";
 import { userService } from "@/server/services/user-service";
 
@@ -26,17 +28,27 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const [tickets, portalUser, contracts] = await Promise.all([
+  const [tickets, portalUser, contracts, nextContractNumber, categories] = await Promise.all([
     ticketService.listTickets(),
     userService.getPortalUserByClientId(id),
-    contractRepository.findByClientId(id)
+    contractRepository.findByClientId(id),
+    contractRepository.nextNumber(),
+    ticketCategoryService.listCategories(true)
   ]);
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
   const canEdit = session?.user ? canEditClient(session.user.role) : false;
 
   return (
     <div className="space-y-6">
-      <PageHeader title={client.name} description={`Contato principal: ${client.contactName}`} />
+      <PageHeader
+        title={client.name}
+        description={`Contato principal: ${client.contactName}`}
+        action={
+          <Link href={`/clientes/${client.id}/financeiro` as Route}>
+            <Button variant="outline" size="sm">Extrato financeiro</Button>
+          </Link>
+        }
+      />
       <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
         {canEdit ? (
           <ClientForm client={client} />
@@ -94,7 +106,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
 
           <ClientPortalAccessSection clientId={client.id} portalUser={portalUser} canEdit={canEdit} />
 
-          <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} />
+          <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} nextContractNumber={nextContractNumber} categories={categories} />
         </div>
       </div>
     </div>

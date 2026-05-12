@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-import type { ClientContract } from "@/types";
+import type { ClientContract, TicketCategory } from "@/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,11 +36,15 @@ const coverageColor: Record<ClientContract["coverageType"], string> = {
 export function ContractList({
   clientId,
   initialContracts,
-  canEdit
+  canEdit,
+  nextContractNumber,
+  categories = []
 }: {
   clientId: string;
   initialContracts: ClientContract[];
   canEdit: boolean;
+  nextContractNumber?: string;
+  categories?: TicketCategory[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -91,6 +95,8 @@ export function ContractList({
             <ContractForm
               clientId={clientId}
               contract={editingContract ?? undefined}
+              suggestedNumber={editingContract ? undefined : nextContractNumber}
+              categories={categories}
               onDone={handleFormDone}
             />
           </div>

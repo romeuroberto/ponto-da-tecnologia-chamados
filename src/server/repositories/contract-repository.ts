@@ -73,5 +73,19 @@ export const contractRepository = {
     if (!existing) return false;
     await prisma.clientContract.delete({ where: { id } });
     return true;
+  },
+
+  async nextNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const prefix = `CONT-${year}-`;
+    const records = await prisma.clientContract.findMany({
+      where: { contractNumber: { startsWith: prefix } },
+      select: { contractNumber: true }
+    });
+    const max = records.reduce((acc, r) => {
+      const seq = parseInt(r.contractNumber.slice(prefix.length), 10);
+      return isNaN(seq) ? acc : Math.max(acc, seq);
+    }, 0);
+    return `${prefix}${String(max + 1).padStart(3, "0")}`;
   }
 };

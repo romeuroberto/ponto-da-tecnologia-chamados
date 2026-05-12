@@ -120,11 +120,12 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
           <p className="font-semibold text-slate-900">Itens da venda</p>
 
           <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 md:grid-cols-[2fr_1fr_1fr_auto]">
-            <div className="grid gap-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-xs">Material</Label>
               <PartCombobox parts={parts} value={selectedPartId} onChange={handlePartChange} disabled={isPending} />
+              <div className="h-4" />
             </div>
-            <div className="grid gap-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-xs">Quantidade ({parts.find((p) => p.id === selectedPartId)?.unit ?? "un"})</Label>
               <input
                 type="number"
@@ -134,8 +135,9 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
                 onChange={(e) => setQty(e.target.value)}
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
               />
+              <div className="h-4" />
             </div>
-            <div className="grid gap-1">
+            <div className="flex flex-col gap-1">
               <Label className="text-xs">Preço unit. (R$)</Label>
               <input
                 type="number"
@@ -146,24 +148,26 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
                 placeholder="0,00"
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
               />
-              {(() => {
-                const selected = parts.find((p) => p.id === selectedPartId);
-                if (!selected) return null;
-                return (
-                  <div className="flex gap-3 text-xs text-slate-500">
-                    <button type="button" className="hover:text-slate-800 hover:underline" onClick={() => setUnitPrice(String(selected.unitPrice))}>
-                      Normal: {formatCurrency(selected.unitPrice)}
-                    </button>
-                    {selected.resalePrice != null ? (
-                      <button type="button" className="text-sky-600 hover:text-sky-800 hover:underline" onClick={() => setUnitPrice(String(selected.resalePrice))}>
-                        Revenda: {formatCurrency(selected.resalePrice)}
+              <div className="flex h-4 gap-3 text-xs text-slate-500">
+                {(() => {
+                  const selected = parts.find((p) => p.id === selectedPartId);
+                  if (!selected) return null;
+                  return (
+                    <>
+                      <button type="button" className="hover:text-slate-800 hover:underline" onClick={() => setUnitPrice(String(selected.unitPrice))}>
+                        Normal: {formatCurrency(selected.unitPrice)}
                       </button>
-                    ) : null}
-                  </div>
-                );
-              })()}
+                      {selected.resalePrice != null ? (
+                        <button type="button" className="text-sky-600 hover:text-sky-800 hover:underline" onClick={() => setUnitPrice(String(selected.resalePrice))}>
+                          Revenda: {formatCurrency(selected.resalePrice)}
+                        </button>
+                      ) : null}
+                    </>
+                  );
+                })()}
+              </div>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end pb-4">
               <Button type="button" variant="secondary" onClick={handleAddItem} disabled={!selectedPartId}>
                 Adicionar
               </Button>

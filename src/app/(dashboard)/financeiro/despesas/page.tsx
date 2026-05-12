@@ -13,6 +13,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ResultsSummary } from "@/components/ui/results-summary";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { PAYMENT_METHODS } from "@/lib/billing-rules";
 import { formatCurrency } from "@/lib/utils";
 import { expenseCancelSchema, expensePaySchema, expenseSchema, recurringExpenseSchema } from "@/lib/validations/expense";
@@ -417,7 +418,7 @@ export default async function ExpensesPage({
                         </div>
                         <div className="grid gap-1">
                           <label className="text-xs font-medium text-slate-500">Valor base (R$)</label>
-                          <Input name="re_baseAmount" type="number" step="0.01" min="0.01" defaultValue={re.baseAmount} placeholder="0,00" required />
+                          <CurrencyInput name="re_baseAmount" defaultValue={re.baseAmount} required />
                         </div>
                         <div className="grid gap-1">
                           <label className="text-xs font-medium text-slate-500">Forma de pagamento</label>
@@ -483,7 +484,7 @@ export default async function ExpensesPage({
                 </div>
                 <div className="grid gap-1">
                   <label className="text-xs font-medium text-slate-500">Valor base (R$)</label>
-                  <Input name="re_baseAmount" type="number" step="0.01" min="0.01" placeholder="0,00" required />
+                  <CurrencyInput name="re_baseAmount" required />
                 </div>
                 <div className="grid gap-1">
                   <label className="text-xs font-medium text-slate-500">Forma de pagamento</label>
@@ -584,7 +585,7 @@ export default async function ExpensesPage({
                   <option key={value} value={value}>{label}</option>
                 ))}
               </Select>
-              <Input name="amount" type="number" step="0.01" min="0.01" placeholder="Valor" required />
+              <CurrencyInput name="amount" placeholder="Valor" required />
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <Input name="expenseDate" type="date" required />
@@ -672,11 +673,8 @@ export default async function ExpensesPage({
                           <option key={value} value={value}>{label}</option>
                         ))}
                       </Select>
-                      <Input
+                      <CurrencyInput
                         name="amount"
-                        type="number"
-                        step="0.01"
-                        min="0.01"
                         defaultValue={expense.amount}
                         disabled={expense.status === "CANCELADA" || expense.status === "PAGA"}
                         required

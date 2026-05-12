@@ -2,9 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 
 import { auth } from "@/auth";
-import { ClientFilters } from "@/components/clients/client-filters";
 import { PageHeader } from "@/components/layout/page-header";
-import { ActiveFilters } from "@/components/ui/active-filters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -32,10 +30,7 @@ export default async function ClientsPage({
   const role = session?.user?.role;
   const canCreate = role ? canCreateClient(role) : false;
   const canEdit = role ? canEditClient(role) : false;
-  const activeFilters = [
-    q ? { label: "Busca", value: q } : null,
-    sort !== "name_asc" ? { label: "Ordenação", value: sort } : null
-  ].filter((item): item is { label: string; value: string } => Boolean(item));
+  const hasActiveFilters = q || sort !== "name_asc";
 
   return (
     <div className="space-y-6">
@@ -51,8 +46,34 @@ export default async function ClientsPage({
         }
       />
       <ResultsSummary label="clientes" total={result.total} page={result.page} totalPages={result.totalPages} />
-      <ActiveFilters pathname="/clientes" filters={activeFilters} />
-      <ClientFilters defaults={{ q, sort }} activeFiltersCount={activeFilters.length} />
+
+      <form action="/clientes" className="flex flex-wrap gap-3">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="Buscar por cliente, contato ou e-mail..."
+          className="h-9 flex-1 min-w-48 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+        />
+        <select
+          name="sort"
+          defaultValue={sort}
+          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-500"
+        >
+          <option value="name_asc">Nome A-Z</option>
+          <option value="name_desc">Nome Z-A</option>
+          <option value="tickets_desc">Mais chamados</option>
+          <option value="tickets_asc">Menos chamados</option>
+        </select>
+        <input type="hidden" name="page" value="1" />
+        <button type="submit" className="h-9 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700">
+          Buscar
+        </button>
+        {hasActiveFilters ? (
+          <Link href="/clientes" className="flex h-9 items-center rounded-lg border border-slate-200 px-4 text-sm text-slate-600 hover:bg-slate-50">
+            Limpar
+          </Link>
+        ) : null}
+      </form>
       {result.items.length === 0 ? (
         <div className="mt-2">
           <EmptyState title="Nenhum cliente encontrado" description="Tente outro termo de busca ou limpe os filtros aplicados." />
