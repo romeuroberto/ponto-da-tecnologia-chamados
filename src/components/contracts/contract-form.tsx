@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 
 import type { ClientContract, TicketCategory } from "@/types";
-import { formatCurrencyInput, parseCurrencyInput } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -19,7 +19,6 @@ type ContractFormState = {
   endDate: string;
   status: ClientContract["status"];
   coverageType: ClientContract["coverageType"];
-  monthlyValue: string;
   notes: string;
 };
 
@@ -145,7 +144,6 @@ export function ContractForm({
     endDate: toDateInputValue(contract?.endDate),
     status: contract?.status ?? "ATIVO",
     coverageType: contract?.coverageType ?? "PARCIAL",
-    monthlyValue: formatCurrencyInput(contract?.monthlyValue ?? 0),
     notes: contract?.notes ?? ""
   });
 
@@ -159,6 +157,9 @@ export function ContractForm({
     setMessage(null);
     setFieldErrors({});
 
+    const fd = new FormData(event.currentTarget);
+    const rawMonthlyValue = parseFloat(fd.get("monthlyValue") as string);
+
     startTransition(async () => {
       const payload = {
         contractNumber: formData.contractNumber,
@@ -166,7 +167,7 @@ export function ContractForm({
         endDate: formData.endDate || undefined,
         status: formData.status,
         coverageType: formData.coverageType,
-        monthlyValue: parseCurrencyInput(formData.monthlyValue) || undefined,
+        monthlyValue: rawMonthlyValue > 0 ? rawMonthlyValue : undefined,
         coveredCategories: selectedCategories,
         notes: formData.notes || undefined
       };
@@ -259,11 +260,11 @@ export function ContractForm({
 
         <div className="space-y-1">
           <Label htmlFor="monthlyValue">Valor da mensalidade</Label>
-          <Input
+          <CurrencyInput
             id="monthlyValue"
-            value={formData.monthlyValue}
-            onChange={(e) => handleChange("monthlyValue", formatCurrencyInput(e.target.value))}
-            placeholder="R$ 0,00"
+            name="monthlyValue"
+            defaultValue={contract?.monthlyValue}
+            placeholder="0,00"
           />
         </div>
 
