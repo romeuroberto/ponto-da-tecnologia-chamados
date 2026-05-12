@@ -137,6 +137,22 @@ export const paymentInstructionRepository = {
     }
   },
 
+  async findById(id: string): Promise<PaymentInstruction | null> {
+    try {
+      const record = await prisma.paymentInstruction.findUnique({ where: { id } });
+      return record ? mapPaymentInstruction(record) : null;
+    } catch {
+      return null;
+    }
+  },
+
+  async updateQrCodePath(id: string, qrCodeImagePath: string | null): Promise<void> {
+    await prisma.paymentInstruction.update({
+      where: { id },
+      data: { qrCodeImagePath }
+    });
+  },
+
   async delete(id: string): Promise<boolean> {
     try {
       await prisma.paymentInstruction.delete({

@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 
 import { FormMessage } from "@/components/forms/form-message";
 import { PageHeader } from "@/components/layout/page-header";
+import { QrCodeUploader } from "@/components/payment/qr-code-uploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -162,8 +163,9 @@ export default async function PaymentInstructionsPage({
 
             <div className="grid gap-4 lg:grid-cols-3">
               <div className="grid gap-2">
-                <label htmlFor="qrCodeImagePath" className="text-sm font-medium text-slate-700">Caminho do QR code</label>
-                <Input id="qrCodeImagePath" name="qrCodeImagePath" placeholder="/uploads/..." />
+                <label className="text-sm font-medium text-slate-700">QR code (após criar)</label>
+                <p className="text-xs text-slate-400">Salve a instrução primeiro, depois faça o upload do QR code.</p>
+                <input type="hidden" name="qrCodeImagePath" value="" />
               </div>
               <div className="grid gap-2">
                 <label htmlFor="bankName" className="text-sm font-medium text-slate-700">Banco</label>
@@ -249,8 +251,12 @@ export default async function PaymentInstructionsPage({
                   <Input name="pixCopyPaste" defaultValue={instruction.pixCopyPaste ?? ""} placeholder="Pix copia e cola" className="lg:col-span-2" />
                 </div>
 
+                <input type="hidden" name="qrCodeImagePath" value={instruction.qrCodeImagePath ?? ""} />
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <Input name="qrCodeImagePath" defaultValue={instruction.qrCodeImagePath ?? ""} placeholder="Caminho do QR code" />
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium text-slate-700">QR code</label>
+                    <QrCodeUploader instructionId={instruction.id} currentPath={instruction.qrCodeImagePath} />
+                  </div>
                   <Input name="bankName" defaultValue={instruction.bankName ?? ""} placeholder="Banco" />
                   <Input name="bankAgency" defaultValue={instruction.bankAgency ?? ""} placeholder="Agência" />
                 </div>

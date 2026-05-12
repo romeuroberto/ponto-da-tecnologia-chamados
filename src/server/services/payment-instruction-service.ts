@@ -69,6 +69,14 @@ export const paymentInstructionService = {
     return updated;
   },
 
+  async findById(id: string) {
+    return paymentInstructionRepository.findById(id);
+  },
+
+  async updateQrCodePath(id: string, qrCodeImagePath: string | null) {
+    return paymentInstructionRepository.updateQrCodePath(id, qrCodeImagePath);
+  },
+
   async delete(id: string) {
     if (!isDatabaseConfigured()) {
       throw new Error("DATABASE_URL não configurada. Configure o banco antes de remover meios de pagamento.");

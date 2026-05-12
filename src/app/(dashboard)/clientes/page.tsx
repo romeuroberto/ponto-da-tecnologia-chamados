@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { ResultsSummary } from "@/components/ui/results-summary";
 import { canCreateClient, canEditClient } from "@/server/auth/permissions";
 import { getParam } from "@/server/search-params";
 import { clientService } from "@/server/services/client-service";
@@ -45,8 +44,6 @@ export default async function ClientsPage({
           ) : null
         }
       />
-      <ResultsSummary label="clientes" total={result.total} page={result.page} totalPages={result.totalPages} />
-
       <form action="/clientes" className="flex flex-wrap gap-3">
         <input
           name="q"
@@ -73,6 +70,9 @@ export default async function ClientsPage({
             Limpar
           </Link>
         ) : null}
+        <span className="flex h-9 items-center text-sm text-slate-400">
+          {result.total} encontrado{result.total !== 1 ? "s" : ""}
+        </span>
       </form>
       {result.items.length === 0 ? (
         <div className="mt-2">
