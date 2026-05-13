@@ -52,6 +52,10 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
     saleRepository.list({ clientId: id })
   ]);
 
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
   const openTicketBillings = ticketBillings.filter((b) => !["PAGO", "CANCELADO"].includes(b.financialStatus));
   const paidTicketBillings = ticketBillings.filter((b) => b.financialStatus === "PAGO");
   const openMonthly = monthlyBillings.filter((b) => b.financialStatus !== "PAGO" && b.financialStatus !== "CANCELADO");
@@ -59,10 +63,15 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
   const openSales = sales.filter((s) => !["PAGO", "CANCELADO"].includes(s.financialStatus));
   const paidSales = sales.filter((s) => s.financialStatus === "PAGO");
 
-  const totalOpen =
+  // Apenas meses vencidos ou do mês atual — exclui mensalidades futuras
+  const dueMonthly = openMonthly.filter(
+    (b) => b.referenceYear < currentYear || (b.referenceYear === currentYear && b.referenceMonth <= currentMonth)
+  );
+
+  const totalOpenOther =
     openTicketBillings.reduce((s, b) => s + b.totalAmount, 0) +
-    openMonthly.reduce((s, b) => s + b.amount, 0) +
     openSales.reduce((s, b) => s + b.totalAmount, 0);
+  const totalDueMonthly = dueMonthly.reduce((s, b) => s + b.amount, 0);
   const totalPaid =
     paidTicketBillings.reduce((s, b) => s + b.totalAmount, 0) +
     paidMonthly.reduce((s, b) => s + b.amount, 0) +
@@ -81,19 +90,26 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
       />
 
       {/* Cards de resumo */}
-      <section className="grid gap-4 sm:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-yellow-200 bg-yellow-50 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-yellow-700">Em aberto</p>
-          <p className="mt-2 text-2xl font-semibold text-yellow-950">{formatCurrency(totalOpen)}</p>
+          <p className="mt-2 text-2xl font-semibold text-yellow-950">{formatCurrency(totalOpenOther)}</p>
           <p className="mt-1 text-xs text-yellow-600">
-            {openTicketBillings.length + openMonthly.length} cobranças pendentes
+            {openTicketBillings.length + openSales.length} cobranças pendentes
+          </p>
+        </div>
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-orange-700">Mensalidades em aberto</p>
+          <p className="mt-2 text-2xl font-semibold text-orange-950">{formatCurrency(totalDueMonthly)}</p>
+          <p className="mt-1 text-xs text-orange-600">
+            {dueMonthly.length} {dueMonthly.length === 1 ? "mensalidade" : "mensalidades"} vencida{dueMonthly.length === 1 ? "" : "s"} ou no mês atual
           </p>
         </div>
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Recebido (histórico)</p>
           <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(totalPaid)}</p>
           <p className="mt-1 text-xs text-emerald-600">
-            {paidTicketBillings.length + paidMonthly.length} cobranças pagas
+            {paidTicketBillings.length + paidMonthly.length + paidSales.length} cobranças pagas
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4">

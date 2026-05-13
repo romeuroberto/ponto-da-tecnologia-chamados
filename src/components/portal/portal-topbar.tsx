@@ -21,7 +21,7 @@ export async function PortalTopbar() {
 
       <div className="flex items-center gap-3">
         <Link
-          href="/portal-app"
+          href="/portal-app?portal_view=app"
           className="hidden h-10 items-center justify-center rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 sm:inline-flex"
         >
           Modo app

@@ -1,14 +1,22 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 import { auth } from "@/auth";
 import { PortalLoginForm } from "@/components/portal/portal-login-form";
 
-export default async function PortalPage() {
+export default async function PortalPage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await auth();
+  const params = await searchParams;
+  const callbackParam = params.callbackUrl;
+  const callbackUrl = typeof callbackParam === "string" && callbackParam.startsWith("/") ? callbackParam : "/portal/dashboard";
 
   if (session?.user?.role === "CLIENT") {
-    redirect("/portal/dashboard" as Route);
+    redirect(callbackUrl as Route);
   }
 
   return (
@@ -40,6 +48,21 @@ export default async function PortalPage() {
             <p className="mt-2 text-sm leading-6 text-slate-600">Notas fiscais e comprovantes disponíveis sem bloquear o uso.</p>
           </div>
         </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/portal?callbackUrl=/portal-app&portal_view=app"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+          >
+            Entrar no modo app
+          </Link>
+          <Link
+            href="/portal?callbackUrl=/portal/dashboard&portal_view=full"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200/70 bg-white/70 px-5 text-sm font-semibold text-slate-500 transition hover:border-slate-300 hover:bg-white hover:text-slate-700"
+          >
+            Portal completo após login
+          </Link>
+        </div>
       </div>
 
       <div className="mx-auto w-full max-w-md">
@@ -47,7 +70,7 @@ export default async function PortalPage() {
           <h2 className="text-2xl font-semibold text-slate-950">Acessar portal</h2>
           <p className="mt-1 text-sm text-slate-500">Entre com as credenciais enviadas pela nossa equipe.</p>
         </div>
-        <PortalLoginForm />
+        <PortalLoginForm callbackUrl={callbackUrl} />
       </div>
     </div>
   );

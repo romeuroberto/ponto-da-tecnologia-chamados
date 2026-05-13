@@ -38,6 +38,8 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
   const canEdit = session?.user ? canEditClient(session.user.role) : false;
 
+  const recentTickets = clientTickets.slice(0, 5);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -49,66 +51,90 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
           </Link>
         }
       />
-      <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-        {canEdit ? (
-          <ClientForm client={client} />
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do cliente</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 p-6 text-sm text-slate-700">
-              <p><span className="font-semibold text-slate-950">Nome:</span> {client.name}</p>
-              <p><span className="font-semibold text-slate-950">Contato:</span> {client.contactName}</p>
-              <p><span className="font-semibold text-slate-950">E-mail:</span> {client.email ?? "Não informado"}</p>
-              <p><span className="font-semibold text-slate-950">Telefone:</span> {client.phone ?? "Não informado"}</p>
-              <p><span className="font-semibold text-slate-950">Observações:</span> {client.notes ?? "Sem observações"}</p>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p><span className="font-semibold text-slate-950">Tipo padrão:</span> {client.billingProfile?.defaultBillingType ?? "Não definido"}</p>
-                <p><span className="font-semibold text-slate-950">Valor/hora:</span> {client.billingProfile?.hourlyRate !== undefined ? formatCurrency(client.billingProfile.hourlyRate) : "Não definido"}</p>
-                <p><span className="font-semibold text-slate-950">Deslocamento:</span> {client.billingProfile?.travelRate !== undefined ? formatCurrency(client.billingProfile.travelRate) : "Não definido"}</p>
-                <p><span className="font-semibold text-slate-950">Desconto padrão:</span> {client.billingProfile?.defaultDiscountPercent !== undefined ? `${client.billingProfile.defaultDiscountPercent}%` : "Não definido"}</p>
-                <p><span className="font-semibold text-slate-950">Obs. financeiras:</span> {client.billingProfile?.billingInstructions ?? "Sem observações financeiras"}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chamados do cliente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {clientTickets.length > 0 ? (
-                clientTickets.map((ticket) => (
-                  <Link
-                    key={ticket.id}
-                    href={`/chamados/${ticket.id}` as Route}
-                    className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ticket.number}</p>
-                        <p className="mt-1 font-semibold text-slate-950">{ticket.title}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={ticket.status} />
-                        <PriorityBadge priority={ticket.priority} />
-                      </div>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-sm text-slate-500">Nenhum chamado registrado para este cliente.</p>
-              )}
-            </CardContent>
-          </Card>
 
+      <div className="grid gap-6 xl:grid-cols-3">
+        <div>
+          {canEdit ? (
+            <ClientForm client={client} />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Dados do cliente</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 p-6 text-sm text-slate-700">
+                <p><span className="font-semibold text-slate-950">Nome:</span> {client.name}</p>
+                <p><span className="font-semibold text-slate-950">Contato:</span> {client.contactName}</p>
+                <p><span className="font-semibold text-slate-950">E-mail:</span> {client.email ?? "Não informado"}</p>
+                <p><span className="font-semibold text-slate-950">Telefone:</span> {client.phone ?? "Não informado"}</p>
+                <p><span className="font-semibold text-slate-950">Observações:</span> {client.notes ?? "Sem observações"}</p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <p><span className="font-semibold text-slate-950">Tipo padrão:</span> {client.billingProfile?.defaultBillingType ?? "Não definido"}</p>
+                  <p><span className="font-semibold text-slate-950">Valor/hora:</span> {client.billingProfile?.hourlyRate !== undefined ? formatCurrency(client.billingProfile.hourlyRate) : "Não definido"}</p>
+                  <p><span className="font-semibold text-slate-950">Deslocamento:</span> {client.billingProfile?.travelRate !== undefined ? formatCurrency(client.billingProfile.travelRate) : "Não definido"}</p>
+                  <p><span className="font-semibold text-slate-950">Desconto padrão:</span> {client.billingProfile?.defaultDiscountPercent !== undefined ? `${client.billingProfile.defaultDiscountPercent}%` : "Não definido"}</p>
+                  <p><span className="font-semibold text-slate-950">Obs. financeiras:</span> {client.billingProfile?.billingInstructions ?? "Sem observações financeiras"}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div>
           <ClientPortalAccessSection clientId={client.id} portalUser={portalUser} canEdit={canEdit} />
+        </div>
 
+        <div>
           <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} nextContractNumber={nextContractNumber} categories={categories} />
         </div>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
+          <CardTitle>Chamados do cliente</CardTitle>
+          {clientTickets.length > 5 ? (
+            <Link
+              href={`/chamados?client=${client.id}` as Route}
+              className="text-sm font-medium text-sky-600 hover:text-sky-800"
+            >
+              Ver todos ({clientTickets.length})
+            </Link>
+          ) : null}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {recentTickets.length > 0 ? (
+            <>
+              {recentTickets.map((ticket) => (
+                <Link
+                  key={ticket.id}
+                  href={`/chamados/${ticket.id}` as Route}
+                  className="block rounded-xl border border-slate-200 p-4 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{ticket.number}</p>
+                      <p className="mt-1 font-semibold text-slate-950">{ticket.title}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={ticket.status} />
+                      <PriorityBadge priority={ticket.priority} />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+              {clientTickets.length > 5 ? (
+                <Link
+                  href={`/chamados?client=${client.id}` as Route}
+                  className="block rounded-xl border border-dashed border-slate-200 p-3 text-center text-sm text-slate-500 transition-colors hover:border-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                >
+                  Ver todos os {clientTickets.length} chamados
+                </Link>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-sm text-slate-500">Nenhum chamado registrado para este cliente.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { ArrowRight, CreditCard, FileText, LifeBuoy, Plus, Wallet } from "lucide-react";
 
+import { PortalAppEmptyState } from "@/components/portal-app/portal-app-empty-state";
 import { PortalAppTicketCard } from "@/components/portal-app/portal-app-ticket-card";
 import { formatCurrency } from "@/lib/utils";
 import { requirePortalUser } from "@/server/auth/session";
@@ -12,7 +13,7 @@ export default async function PortalAppHomePage() {
   const dashboard = await portalService.getDashboard(user.clientId);
 
   const shortcuts = [
-    { href: "/portal/chamados/novo" as Route, label: "Novo chamado", detail: "Abrir uma solicitação", icon: Plus },
+    { href: "/portal-app/chamados/novo" as Route, label: "Novo chamado", detail: "Abrir uma solicitação", icon: Plus },
     { href: "/portal-app/financeiro" as Route, label: "Financeiro", detail: "Ver cobranças e pagamentos", icon: Wallet },
     { href: "/portal-app/documentos" as Route, label: "Documentos", detail: "Notas e comprovantes", icon: FileText },
     { href: "/portal-app/vendas" as Route, label: "Vendas", detail: "Histórico comercial", icon: CreditCard }
@@ -77,11 +78,11 @@ export default async function PortalAppHomePage() {
           {dashboard.recentTickets.length > 0 ? (
             dashboard.recentTickets.map((ticket) => <PortalAppTicketCard key={ticket.id} ticket={ticket} />)
           ) : (
-            <div className="rounded-[1.5rem] bg-slate-50 px-4 py-6 text-center">
-              <LifeBuoy className="mx-auto h-5 w-5 text-slate-400" />
-              <p className="mt-3 font-semibold text-slate-700">Nenhum chamado ainda</p>
-              <p className="mt-1 text-sm text-slate-500">Quando houver atendimento aberto, ele aparecerá aqui.</p>
-            </div>
+            <PortalAppEmptyState
+              icon={LifeBuoy}
+              title="Nenhum chamado ainda"
+              description="Quando houver atendimento aberto, ele aparecerá aqui."
+            />
           )}
         </div>
       </section>

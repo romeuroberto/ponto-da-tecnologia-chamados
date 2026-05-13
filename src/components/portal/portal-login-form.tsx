@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function PortalLoginForm() {
+export function PortalLoginForm({ callbackUrl = "/portal/dashboard" }: { callbackUrl?: string }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -28,7 +28,7 @@ export function PortalLoginForm() {
         return;
       }
 
-      window.location.href = "/portal/dashboard";
+      window.location.href = callbackUrl;
     });
   }
 

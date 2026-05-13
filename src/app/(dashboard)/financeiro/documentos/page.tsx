@@ -2,13 +2,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { FormMessage } from "@/components/forms/form-message";
+import { FiscalDocumentForm } from "@/components/fiscal/fiscal-document-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { fiscalDocumentTypeLabel, financialStatusLabel, portalTicketStatusLabel } from "@/lib/portal";
+import { ClientSelectFilter } from "@/components/ui/client-select-filter";
+import { fiscalDocumentTypeLabel } from "@/lib/portal";
 import { fiscalDocumentSchema } from "@/lib/validations/portal-admin";
 import { formatCurrency, formatDate, parseCurrencyInput } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
@@ -108,18 +107,7 @@ export default async function FiscalDocumentsPage({
           <CardTitle>Selecionar cliente para emissão</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action="/financeiro/documentos" className="flex flex-wrap items-end gap-3">
-            <div className="grid w-full max-w-sm gap-2">
-              <label htmlFor="clientIdFilter" className="text-sm font-medium text-slate-700">Cliente</label>
-              <Select id="clientIdFilter" name="clientId" defaultValue={selectedClientId}>
-                <option value="">Selecione um cliente</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>{client.name}</option>
-                ))}
-              </Select>
-            </div>
-            <Button type="submit" variant="secondary">Carregar vínculos</Button>
-          </form>
+          <ClientSelectFilter clients={clients} selectedClientId={selectedClientId} action="/financeiro/documentos" />
         </CardContent>
       </Card>
 
@@ -129,108 +117,13 @@ export default async function FiscalDocumentsPage({
             <CardTitle>Novo documento fiscal</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={createDocument} className="grid gap-5">
-              <input type="hidden" name="clientId" value={selectedClientId} />
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Cliente selecionado: <span className="font-semibold text-slate-900">{clientMap.get(selectedClientId)?.name ?? "Cliente não encontrado"}</span>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-4">
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Tipo</label>
-                  <Select name="type" defaultValue="NFSE">
-                    <option value="NFSE">NFS-e</option>
-                    <option value="NFE">NF-e</option>
-                    <option value="RECIBO">Recibo</option>
-                    <option value="OUTRO">Outro</option>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Número</label>
-                  <Input name="number" required />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Série</label>
-                  <Input name="series" />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Data de emissão</label>
-                  <Input name="issueDate" type="date" required />
-                </div>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-3">
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Valor total</label>
-                  <Input name="totalAmount" placeholder="0,00" />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Nome do arquivo</label>
-                  <Input name="fileName" placeholder="nf-0001.pdf" required />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium text-slate-700">Caminho do arquivo</label>
-                  <Input name="filePath" placeholder="/uploads/fiscal/nf-0001.pdf" required />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-slate-700">Observações</label>
-                <Textarea name="notes" />
-              </div>
-
-              <div className="grid gap-5 xl:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <h3 className="font-semibold text-slate-950">Chamados para agrupar</h3>
-                  <p className="mt-1 text-sm text-slate-500">Selecione um ou mais chamados para vincular ao documento.</p>
-                  <div className="mt-4 max-h-72 space-y-2 overflow-auto pr-2">
-                    {ticketResult.items.length > 0 ? (
-                      ticketResult.items.map((ticket) => (
-                        <label key={ticket.id} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
-                          <input type="checkbox" name="ticketIds" value={ticket.id} className="mt-1" />
-                          <span>
-                            <span className="font-semibold text-slate-950">{ticket.number}</span>
-                            <span className="block text-slate-600">{ticket.title}</span>
-                            <span className="block text-xs text-slate-400">
-                              Status: {portalTicketStatusLabel[ticket.status]} · Atualizado em {formatDate(ticket.updatedAt)}
-                            </span>
-                          </span>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-500">Nenhum chamado encontrado para este cliente.</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 p-4">
-                  <h3 className="font-semibold text-slate-950">Vendas para agrupar</h3>
-                  <p className="mt-1 text-sm text-slate-500">Selecione também vendas quando a nota cobrir peças ou produtos.</p>
-                  <div className="mt-4 max-h-72 space-y-2 overflow-auto pr-2">
-                    {sales.length > 0 ? (
-                      sales.map((sale) => (
-                        <label key={sale.id} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
-                          <input type="checkbox" name="saleIds" value={sale.id} className="mt-1" />
-                          <span>
-                            <span className="font-semibold text-slate-950">{sale.number}</span>
-                            <span className="block text-slate-600">{sale.items.length} item(s)</span>
-                            <span className="block text-xs text-slate-400">
-                              Status: {financialStatusLabel[sale.financialStatus]} · {formatCurrency(sale.totalAmount)}
-                            </span>
-                          </span>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-500">Nenhuma venda encontrada para este cliente.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="submit">Lançar documento fiscal</Button>
-              </div>
-            </form>
+            <FiscalDocumentForm
+              clientId={selectedClientId}
+              clientName={clientMap.get(selectedClientId)?.name ?? "Cliente não encontrado"}
+              tickets={ticketResult.items}
+              sales={sales}
+              createDocument={createDocument}
+            />
           </CardContent>
         </Card>
       ) : null}

@@ -1,7 +1,8 @@
 import type { Route } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { LifeBuoy, Plus } from "lucide-react";
 
+import { PortalAppEmptyState } from "@/components/portal-app/portal-app-empty-state";
 import { PortalAppTicketCard } from "@/components/portal-app/portal-app-ticket-card";
 import { requirePortalUser } from "@/server/auth/session";
 import { ticketService } from "@/server/services/ticket-service";
@@ -26,7 +27,7 @@ export default async function PortalAppTicketsPage() {
             <p className="mt-2 text-sm leading-6 text-slate-500">Uma fila simples para acompanhar o atendimento no celular.</p>
           </div>
           <Link
-            href={"/portal/chamados/novo" as Route}
+            href={"/portal-app/chamados/novo" as Route}
             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm transition hover:bg-sky-700"
             aria-label="Novo chamado"
           >
@@ -50,10 +51,11 @@ export default async function PortalAppTicketsPage() {
         {result.items.length > 0 ? (
           result.items.map((ticket) => <PortalAppTicketCard key={ticket.id} ticket={ticket} />)
         ) : (
-          <div className="rounded-[1.8rem] border border-slate-200 bg-white px-4 py-8 text-center shadow-sm">
-            <p className="font-semibold text-slate-700">Nenhum chamado encontrado</p>
-            <p className="mt-1 text-sm text-slate-500">Abra um novo chamado quando precisar acionar o suporte.</p>
-          </div>
+          <PortalAppEmptyState
+            icon={LifeBuoy}
+            title="Nenhum chamado encontrado"
+            description="Abra um novo chamado quando precisar acionar o suporte."
+          />
         )}
       </section>
     </div>

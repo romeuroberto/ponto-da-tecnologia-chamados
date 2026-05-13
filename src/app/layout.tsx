@@ -6,8 +6,19 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Central de Chamados · Ponto da Tecnologia",
   description: "Sistema interno de gestão e acompanhamento de chamados de suporte.",
+  manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icon.svg"
+    icon: "/icon.svg",
+    apple: "/apple-icon"
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Portal do Cliente"
+  },
+  applicationName: "Portal do Cliente",
+  other: {
+    "mobile-web-app-capable": "yes"
   }
 };
 
@@ -26,4 +37,3 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
-

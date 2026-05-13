@@ -43,7 +43,14 @@
       "Bash(docker start *)",
       "Bash(mkdir -p \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\api\\\\contracts\\\\monthly-billings\\\\[id]\")",
       "Bash(mkdir -p \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\\\\src\\\\app\\\\\\(dashboard\\)\\\\clientes\\\\[id]\\\\financeiro\")",
-      "PowerShell(cd \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\"; $env:FORCE_COLOR = \"0\"; npx prisma migrate dev --name cleanup_billing_profile --accept-data-loss 2>&1)"
+      "PowerShell(cd \"c:\\\\Users\\\\User\\\\Desktop\\\\Projetos VS\\\\ponto-da-tecnologia-chamados\"; $env:FORCE_COLOR = \"0\"; npx prisma migrate dev --name cleanup_billing_profile --accept-data-loss 2>&1)",
+      "Bash(xargs grep -l \"Expense\\\\|ExpenseCategory\")",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(rtk read *)",
+      "Bash(findstr -i anthropic)",
+      "Bash(findstr /i \"anthropic\")",
+      "Bash(npm uninstall *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",
