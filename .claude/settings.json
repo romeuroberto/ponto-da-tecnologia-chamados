@@ -50,7 +50,16 @@
       "Bash(rtk read *)",
       "Bash(findstr -i anthropic)",
       "Bash(findstr /i \"anthropic\")",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l \"checkin\\\\|checkIn\\\\|CheckIn\")",
+      "Bash(xargs grep -l \"FieldVisitCheckin\")",
+      "Bash(xargs grep -l \"interface Ticket\\\\|type Ticket\")",
+      "Bash(node -e \"const m = require\\('./node_modules/pdf-parse/dist/pdf-parse/esm/index.js'\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const p = require\\('./node_modules/pdf-parse/package.json'\\); console.log\\(JSON.stringify\\({main: p.main, module: p.module, exports: p.exports}, null, 2\\)\\)\")",
+      "Bash(node -e \"const m = require\\('./node_modules/pdf-parse/dist/pdf-parse/cjs/index.cjs'\\); console.log\\(typeof m.PDFParse, Object.keys\\(m\\).slice\\(0,10\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

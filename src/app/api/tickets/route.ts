@@ -20,6 +20,7 @@ export async function GET(request: Request) {
       status: (searchParams.get("status") as Parameters<typeof ticketService.searchTickets>[0]["status"]) ?? undefined,
       priority: (searchParams.get("priority") as Parameters<typeof ticketService.searchTickets>[0]["priority"]) ?? undefined,
       client: searchParams.get("client") ?? undefined,
+      unassigned: searchParams.get("unassigned") === "1",
       from: searchParams.get("from") ?? undefined,
       to: searchParams.get("to") ?? undefined,
       sort: (searchParams.get("sort") as Parameters<typeof ticketService.searchTickets>[0]["sort"]) ?? undefined,

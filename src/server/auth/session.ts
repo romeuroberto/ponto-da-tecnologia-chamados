@@ -18,8 +18,14 @@ export async function requireUser() {
   return session.user;
 }
 
-export async function requireRole(roles: UserRole[]) {
-  const user = await requireUser();
+export async function requireRole(roles: UserRole[], unauthenticatedRedirectTo?: Route) {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect(unauthenticatedRedirectTo ?? "/login");
+  }
+
+  const user = session.user;
 
   if (!roles.includes(user.role)) {
     redirect("/dashboard");

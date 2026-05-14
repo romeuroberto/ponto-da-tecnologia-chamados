@@ -53,6 +53,7 @@ export function FieldVisitCheckin({
 
   const checkedIn = Boolean(ticket.checkedInAt);
   const checkedOut = Boolean(ticket.checkedOutAt);
+  const isTerminated = ticket.status === "CLOSED" || ticket.status === "CANCELED";
 
   return (
     <Card className="border-sky-200 bg-sky-50/40">
@@ -83,7 +84,11 @@ export function FieldVisitCheckin({
           ) : null}
         </div>
 
-        {!checkedIn ? (
+        {isTerminated ? (
+          <p className="text-center text-xs text-slate-500">
+            Check-in indisponível para chamados {ticket.status === "CANCELED" ? "cancelados" : "encerrados"}.
+          </p>
+        ) : !checkedIn ? (
           <Button type="button" className="w-full" disabled={isPending} onClick={handleCheckIn}>
             {isPending ? "Registrando..." : "Registrar check-in"}
           </Button>

@@ -26,6 +26,13 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
       );
     }
 
+    if (current.status === "CLOSED" || current.status === "CANCELED") {
+      return NextResponse.json(
+        { success: false, message: "Não é possível registrar check-in em chamados encerrados ou cancelados." },
+        { status: 409 }
+      );
+    }
+
     const ticket = await ticketService.checkIn(id, guard.user.id);
 
     return NextResponse.json({ success: true, data: ticket });
@@ -56,6 +63,13 @@ export async function DELETE(_: Request, context: { params: Promise<{ id: string
       return NextResponse.json(
         { success: false, message: "Seu perfil só pode registrar check-out em chamados atribuídos a você." },
         { status: 403 }
+      );
+    }
+
+    if (current.status === "CLOSED" || current.status === "CANCELED") {
+      return NextResponse.json(
+        { success: false, message: "Não é possível registrar check-out em chamados encerrados ou cancelados." },
+        { status: 409 }
       );
     }
 

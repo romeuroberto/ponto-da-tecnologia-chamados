@@ -430,6 +430,12 @@ export function TicketBillingPanel({
           Lançamentos podem ser registrados, mas não é possível faturar ou registrar pagamento enquanto o chamado não estiver Resolvido ou Encerrado.
         </div>
       ) : null}
+      {ticketStatus === "CANCELED" ? (
+        <div className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
+          <span className="font-semibold">Este chamado foi cancelado.</span>{" "}
+          O ciclo financeiro ainda pode ser gerenciado, mas certifique-se de que qualquer cobrança registrada aqui é intencional (ex.: taxa de visita, serviço parcialmente executado).
+        </div>
+      ) : null}
       {message ? <FormMessage type={message.type} message={message.text} /> : null}
 
       <Card>

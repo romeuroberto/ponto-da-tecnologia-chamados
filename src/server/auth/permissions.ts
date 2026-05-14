@@ -56,6 +56,18 @@ export function canOperateOnTicket(role: UserRole, userId: string, assigneeId?: 
   return !assigneeId || assigneeId === userId;
 }
 
+export function canManageAssignedServiceOrder(role: UserRole, userId: string, assignedTechnicianId?: string) {
+  if (role === "ADMIN" || role === "ATTENDANT") {
+    return true;
+  }
+
+  if (role !== "TECHNICIAN") {
+    return false;
+  }
+
+  return assignedTechnicianId === userId;
+}
+
 export function canViewFinancialModule(role: UserRole) {
   return role === "ADMIN" || role === "ATTENDANT";
 }

@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { auth } from "@/auth";
 import { PortalSignOutButton } from "@/components/portal/portal-sign-out-button";
 
@@ -16,13 +14,7 @@ export async function PortalAppTopbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/portal/dashboard?portal_view=full"
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-600 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
-          >
-            Portal completo
-          </Link>
-          <PortalSignOutButton callbackUrl="/portal?callbackUrl=/portal-app&portal_view=app" />
+          <PortalSignOutButton callbackUrl="/portal-app-login?callbackUrl=/portal-app&portal_view=app" />
         </div>
       </div>
     </header>

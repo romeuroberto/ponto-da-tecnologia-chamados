@@ -1,5 +1,4 @@
 import type { Route } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CreditCard, FileText, LifeBuoy, Smartphone } from "lucide-react";
 
@@ -88,13 +87,6 @@ export default async function PortalAppLoginPage({
           </div>
           <PortalLoginForm callbackUrl={callbackUrl} />
         </div>
-
-        <Link
-          href="/portal?callbackUrl=/portal/dashboard&portal_view=full"
-          className="text-center text-sm font-semibold text-slate-500 transition hover:text-slate-700"
-        >
-          Abrir versão completa do portal
-        </Link>
       </div>
     </div>
   );

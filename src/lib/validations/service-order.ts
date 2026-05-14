@@ -29,3 +29,10 @@ export const serviceOrderUpdateSchema = z.object({
   customerApprovalAt: z.string().datetime().optional().or(z.literal("")),
   parts: z.array(serviceOrderPartSchema).max(50, "Muitos materiais informados.").optional().default([])
 });
+
+export const serviceOrderTechnicianUpdateSchema = z.object({
+  status: z.enum(["PLANNED", "IN_EXECUTION", "PAUSED", "COMPLETED"]),
+  executionNotes: z.string().trim().max(5000, "Observações muito longas").optional().or(z.literal("")),
+  customerApprovalName: z.string().trim().max(120, "Nome muito longo").optional().or(z.literal("")),
+  customerApprovalAt: z.string().datetime().optional().or(z.literal(""))
+});

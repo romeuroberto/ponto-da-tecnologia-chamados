@@ -2,7 +2,6 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 
-import { PDFParse } from "pdf-parse";
 import { NextResponse } from "next/server";
 
 import { requireApiUser } from "@/server/auth/api-guard";
@@ -104,6 +103,8 @@ export async function POST(request: Request) {
     await writeFile(absolutePath, bytes);
 
     // Extract text from PDF and parse fields
+    // Dynamic import prevents Turbopack from bundling pdfjs-dist at build time
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: bytes });
     const result = await parser.getText();
     await parser.destroy();

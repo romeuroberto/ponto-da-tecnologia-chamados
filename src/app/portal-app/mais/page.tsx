@@ -1,15 +1,9 @@
 import Link from "next/link";
-import { CreditCard, ExternalLink, FileText, LayoutDashboard, Receipt, ShieldCheck } from "lucide-react";
+import { CreditCard, ExternalLink, FileText, Receipt, ShieldCheck } from "lucide-react";
 
 import { requirePortalUser } from "@/server/auth/session";
 
 const entries = [
-  {
-    href: "/portal/dashboard",
-    label: "Portal completo",
-    detail: "Abrir a visão completa em tela maior",
-    icon: LayoutDashboard
-  },
   {
     href: "/portal-app/financeiro",
     label: "Financeiro",
@@ -31,7 +25,7 @@ const entries = [
 ] as const;
 
 export default async function PortalAppMorePage() {
-  const user = await requirePortalUser();
+  const user = await requirePortalUser("/portal-app-login?callbackUrl=/portal-app/mais&portal_view=app");
 
   return (
     <div className="space-y-5">

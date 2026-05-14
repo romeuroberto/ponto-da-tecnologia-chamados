@@ -150,6 +150,83 @@ export const serviceOrderService = {
     return serviceOrder;
   },
 
+  async updateAssignedTechnicianServiceOrder(
+    ticketId: string,
+    serviceOrderId: string,
+    input: {
+      status: "PLANNED" | "IN_EXECUTION" | "PAUSED" | "COMPLETED";
+      executionNotes?: string;
+      customerApprovalName?: string;
+      customerApprovalAt?: string;
+    },
+    authorId: string
+  ) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de usar ordens de serviço.");
+    }
+
+    const [ticket, author, serviceOrder] = await Promise.all([
+      ticketRepository.findById(ticketId),
+      userRepository.findById(authorId),
+      serviceOrderRepository.findById(ticketId, serviceOrderId)
+    ]);
+
+    if (!ticket) {
+      throw new Error("Chamado não encontrado.");
+    }
+
+    if (!serviceOrder) {
+      throw new Error("Ordem de serviço não encontrada.");
+    }
+
+    if (!author?.active) {
+      throw new Error("Sua sessão não corresponde mais a um usuário ativo. Entre novamente.");
+    }
+
+    const nextStartedAt =
+      input.status === "IN_EXECUTION"
+        ? serviceOrder.startedAt ?? new Date().toISOString()
+        : serviceOrder.startedAt;
+
+    const nextFinishedAt =
+      input.status === "COMPLETED"
+        ? serviceOrder.finishedAt ?? new Date().toISOString()
+        : input.status === "PLANNED" || input.status === "PAUSED"
+          ? undefined
+          : serviceOrder.finishedAt;
+
+    const updatedServiceOrder = await serviceOrderRepository.update(ticketId, serviceOrderId, {
+      status: input.status,
+      serviceType: serviceOrder.serviceType,
+      servicePrice: serviceOrder.servicePrice,
+      assignedTechnicianId: serviceOrder.assignedTechnicianId,
+      scheduledStartAt: serviceOrder.scheduledStartAt,
+      startedAt: nextStartedAt,
+      finishedAt: nextFinishedAt,
+      executionNotes: input.executionNotes || serviceOrder.executionNotes,
+      customerApprovalName: input.customerApprovalName || serviceOrder.customerApprovalName,
+      customerApprovalAt: input.customerApprovalAt || serviceOrder.customerApprovalAt,
+      parts: serviceOrder.parts.map((part) => ({
+        partCatalogItemId: part.partCatalogItemId,
+        partName: part.partName,
+        partCode: part.partCode,
+        quantity: part.quantity,
+        unitPrice: part.unitPrice,
+        notes: part.notes
+      }))
+    });
+
+    if (!updatedServiceOrder) {
+      throw new Error("Ordem de serviço não encontrada.");
+    }
+
+    if (input.status === "COMPLETED") {
+      await billingRepository.recalculateForTicket(ticketId);
+    }
+
+    return updatedServiceOrder;
+  },
+
   async deleteTicketServiceOrder(ticketId: string, serviceOrderId: string) {
     if (!isDatabaseConfigured()) {
       throw new Error("DATABASE_URL não configurada.");

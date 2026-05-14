@@ -43,6 +43,22 @@ function getPortalAppDestination(pathname: string) {
   return null;
 }
 
+function getFieldAppDestination(pathname: string) {
+  if (pathname === "/dashboard") {
+    return "/field-app";
+  }
+
+  if (pathname === "/chamados") {
+    return "/field-app/chamados";
+  }
+
+  if (pathname.startsWith("/chamados/")) {
+    return pathname.replace("/chamados", "/field-app/chamados");
+  }
+
+  return null;
+}
+
 export async function proxy(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
   const role = token?.role as string | undefined;
@@ -81,6 +97,24 @@ export async function proxy(req: NextRequest) {
     }
 
     return NextResponse.next();
+  }
+
+  if (role === "TECHNICIAN") {
+    if (pathname.startsWith("/field-app")) {
+      return NextResponse.next();
+    }
+
+    if (isMobile) {
+      const destination = getFieldAppDestination(pathname);
+
+      if (destination) {
+        return NextResponse.redirect(new URL(destination, req.nextUrl));
+      }
+    }
+  }
+
+  if (role && role !== "TECHNICIAN" && pathname.startsWith("/field-app")) {
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
   }
 
   // Non-CLIENT authenticated users should not access /portal/*

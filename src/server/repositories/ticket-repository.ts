@@ -43,6 +43,9 @@ export interface TicketSearchInput {
   status?: TicketStatus;
   priority?: TicketPriority;
   client?: string;
+  assigneeId?: string;
+  unassigned?: boolean;
+  attendanceType?: TicketAttendanceType;
   from?: string;
   to?: string;
   sort?: "updated_desc" | "updated_asc" | "created_desc" | "created_asc" | "priority_desc" | "priority_asc";
@@ -133,6 +136,18 @@ export const ticketRepository = {
         filtered = filtered.filter((ticket) => ticket.clientId === filters.client || ticket.clientName === filters.client);
       }
 
+      if (filters.assigneeId) {
+        filtered = filtered.filter((ticket) => ticket.assigneeId === filters.assigneeId);
+      }
+
+      if (filters.unassigned) {
+        filtered = filtered.filter((ticket) => !ticket.assigneeId);
+      }
+
+      if (filters.attendanceType) {
+        filtered = filtered.filter((ticket) => ticket.attendanceType === filters.attendanceType);
+      }
+
       if (filters.from) {
         const fromDate = new Date(`${filters.from}T00:00:00`);
         filtered = filtered.filter((ticket) => new Date(ticket.createdAt) >= fromDate);
@@ -191,6 +206,9 @@ export const ticketRepository = {
       ...(filters.status ? { status: filters.status } : {}),
       ...(filters.priority ? { priority: filters.priority } : {}),
       ...(filters.client ? { clientId: filters.client } : {}),
+      ...(filters.assigneeId ? { assigneeId: filters.assigneeId } : {}),
+      ...(filters.unassigned ? { assigneeId: null } : {}),
+      ...(filters.attendanceType ? { attendanceType: filters.attendanceType } : {}),
       ...(filters.from || filters.to
         ? {
             createdAt: {
@@ -476,9 +494,10 @@ export const ticketRepository = {
   },
 
   async checkIn(id: string, authorId: string) {
-    const ticket = await prisma.ticket.findUnique({ where: { id }, select: { id: true, checkedInAt: true } });
+    const ticket = await prisma.ticket.findUnique({ where: { id }, select: { id: true, status: true, checkedInAt: true } });
 
     if (!ticket) return null;
+    if (ticket.status === "CLOSED" || ticket.status === "CANCELED") return null;
     if (ticket.checkedInAt) return null;
 
     const record = await runTicketQuery(
@@ -512,9 +531,10 @@ export const ticketRepository = {
   },
 
   async checkOut(id: string, authorId: string) {
-    const ticket = await prisma.ticket.findUnique({ where: { id }, select: { id: true, checkedInAt: true, checkedOutAt: true } });
+    const ticket = await prisma.ticket.findUnique({ where: { id }, select: { id: true, status: true, checkedInAt: true, checkedOutAt: true } });
 
     if (!ticket) return null;
+    if (ticket.status === "CLOSED" || ticket.status === "CANCELED") return null;
     if (!ticket.checkedInAt) return null;
     if (ticket.checkedOutAt) return null;
 
@@ -680,5 +700,72 @@ export const ticketRepository = {
     );
 
     return mapTicket(record);
+  },
+
+  async claimByTechnician(id: string, technicianId: string) {
+    if (!isDatabaseConfigured()) {
+      const ticket = tickets.find((item) => item.id === id);
+
+      if (!ticket || ticket.assigneeId) {
+        return null;
+      }
+
+      return {
+        ...ticket,
+        assigneeId: technicianId,
+        status: ticket.status === "OPEN" ? "IN_PROGRESS" : ticket.status
+      };
+    }
+
+    const current = await prisma.ticket.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        assigneeId: true,
+        status: true
+      }
+    });
+
+    if (!current || current.assigneeId) {
+      return null;
+    }
+
+    const nextStatus = current.status === "OPEN" ? "IN_PROGRESS" : current.status;
+    const updateResult = await prisma.ticket.updateMany({
+      where: { id, assigneeId: null },
+      data: {
+        assigneeId: technicianId,
+        status: nextStatus
+      }
+    });
+
+    if (updateResult.count === 0) {
+      return null;
+    }
+
+    await prisma.ticketHistory.createMany({
+      data: [
+        {
+          ticketId: id,
+          authorId: technicianId,
+          eventType: "ASSIGNEE_CHANGE",
+          message: "Chamado assumido pelo técnico."
+        },
+        ...(current.status !== nextStatus
+          ? [
+              {
+                ticketId: id,
+                authorId: technicianId,
+                eventType: "STATUS_CHANGE" as const,
+                message: `Status alterado para ${statusLabels[nextStatus]}.`,
+                previousStatus: current.status,
+                nextStatus
+              }
+            ]
+          : [])
+      ]
+    });
+
+    return this.findById(id);
   }
 };

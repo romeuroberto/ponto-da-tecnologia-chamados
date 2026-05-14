@@ -145,5 +145,28 @@ export const ticketService = {
       authorId,
       ...input
     });
+  },
+  async claimTicket(id: string, technicianId: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de operar chamados reais.");
+    }
+
+    const technician = await userRepository.findById(technicianId);
+
+    if (!technician?.active || technician.role !== "TECHNICIAN") {
+      throw new Error("Sua sessao nao corresponde a um tecnico ativo.");
+    }
+
+    const currentTicket = await ticketRepository.findById(id);
+
+    if (!currentTicket) {
+      return null;
+    }
+
+    if (currentTicket.status === "CLOSED" || currentTicket.status === "CANCELED") {
+      throw new Error("Nao e possivel assumir chamados encerrados ou cancelados.");
+    }
+
+    return ticketRepository.claimByTechnician(id, technicianId);
   }
 };
