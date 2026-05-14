@@ -279,8 +279,74 @@ export function CatalogManager({
     });
   }
 
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [serviceShowInactive, setServiceShowInactive] = useState(false);
+  const [serviceSort, setServiceSort] = useState<"name-asc" | "name-desc" | "price-asc" | "price-desc">("name-asc");
+  const [servicePriceMin, setServicePriceMin] = useState("");
+  const [servicePriceMax, setServicePriceMax] = useState("");
+
+  const [partSearch, setPartSearch] = useState("");
+  const [partShowInactive, setPartShowInactive] = useState(false);
+  const [partSort, setPartSort] = useState<"name-asc" | "name-desc" | "price-asc" | "price-desc">("name-asc");
+  const [partPriceMin, setPartPriceMin] = useState("");
+  const [partPriceMax, setPartPriceMax] = useState("");
+
   const showServices = mode === "all" || mode === "services";
   const showParts = mode === "all" || mode === "parts";
+
+  // Service stats (computed from full list, not filtered)
+  const serviceTotalCount = serviceItems.length;
+  const serviceActiveCount = serviceItems.filter((i) => i.active).length;
+  const serviceInactiveCount = serviceTotalCount - serviceActiveCount;
+  const serviceAvgPrice = serviceTotalCount > 0
+    ? serviceItems.reduce((sum, i) => sum + i.defaultPrice, 0) / serviceTotalCount
+    : 0;
+
+  // Part stats (computed from full list, not filtered)
+  const partTotalCount = partItems.length;
+  const partActiveCount = partItems.filter((i) => i.active).length;
+  const partZeroStockCount = partItems.filter((i) => i.active && i.stockQuantity <= 0).length;
+  const partAvgPrice = partTotalCount > 0
+    ? partItems.reduce((sum, i) => sum + i.unitPrice, 0) / partTotalCount
+    : 0;
+
+  const filteredServices = (() => {
+    const q = serviceSearch.trim().toLowerCase();
+    const min = servicePriceMin ? parseCurrencyInput(servicePriceMin) : null;
+    const max = servicePriceMax ? parseCurrencyInput(servicePriceMax) : null;
+    const filtered = serviceItems.filter((item) => {
+      if (!serviceShowInactive && !item.active) return false;
+      if (q && !item.name.toLowerCase().includes(q) && !(item.code?.toLowerCase().includes(q) ?? false)) return false;
+      if (min !== null && item.defaultPrice < min) return false;
+      if (max !== null && item.defaultPrice > max) return false;
+      return true;
+    });
+    return filtered.sort((a, b) => {
+      if (serviceSort === "name-desc") return b.name.localeCompare(a.name);
+      if (serviceSort === "price-asc") return a.defaultPrice - b.defaultPrice;
+      if (serviceSort === "price-desc") return b.defaultPrice - a.defaultPrice;
+      return a.name.localeCompare(b.name);
+    });
+  })();
+
+  const filteredParts = (() => {
+    const q = partSearch.trim().toLowerCase();
+    const min = partPriceMin ? parseCurrencyInput(partPriceMin) : null;
+    const max = partPriceMax ? parseCurrencyInput(partPriceMax) : null;
+    const filtered = partItems.filter((item) => {
+      if (!partShowInactive && !item.active) return false;
+      if (q && !item.name.toLowerCase().includes(q) && !(item.code?.toLowerCase().includes(q) ?? false)) return false;
+      if (min !== null && item.unitPrice < min) return false;
+      if (max !== null && item.unitPrice > max) return false;
+      return true;
+    });
+    return filtered.sort((a, b) => {
+      if (partSort === "name-desc") return b.name.localeCompare(a.name);
+      if (partSort === "price-asc") return a.unitPrice - b.unitPrice;
+      if (partSort === "price-desc") return b.unitPrice - a.unitPrice;
+      return a.name.localeCompare(b.name);
+    });
+  })();
 
   return (
     <div className="space-y-6">
@@ -293,6 +359,27 @@ export function CatalogManager({
               <CardTitle>Serviços</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+              {serviceTotalCount > 0 ? (
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                  <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Total</p>
+                    <p className="mt-1 text-xl font-semibold text-slate-950">{serviceTotalCount}</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Ativos</p>
+                    <p className="mt-1 text-xl font-semibold text-emerald-950">{serviceActiveCount}</p>
+                  </div>
+                  <div className={`rounded-xl border px-4 py-3 ${serviceInactiveCount > 0 ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white"}`}>
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${serviceInactiveCount > 0 ? "text-amber-600" : "text-slate-400"}`}>Inativos</p>
+                    <p className={`mt-1 text-xl font-semibold ${serviceInactiveCount > 0 ? "text-amber-950" : "text-slate-950"}`}>{serviceInactiveCount}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ticket médio</p>
+                    <p className="mt-1 text-xl font-semibold text-slate-950">{formatCurrency(serviceAvgPrice)}</p>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-2">
@@ -353,8 +440,72 @@ export function CatalogManager({
                 </Button>
               </div>
 
+              <div className="space-y-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Input
+                    placeholder="Buscar por nome ou código..."
+                    value={serviceSearch}
+                    onChange={(e) => setServiceSearch(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Select
+                    value={serviceSort}
+                    onChange={(e) => setServiceSort(e.target.value as typeof serviceSort)}
+                    className="sm:w-44"
+                  >
+                    <option value="name-asc">Nome A-Z</option>
+                    <option value="name-desc">Nome Z-A</option>
+                    <option value="price-asc">Menor preço</option>
+                    <option value="price-desc">Maior preço</option>
+                  </Select>
+                  <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={serviceShowInactive}
+                      onChange={(e) => setServiceShowInactive(e.target.checked)}
+                    />
+                    Mostrar inativos
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 shrink-0">Preço de</span>
+                  <Input
+                    placeholder="R$ mín"
+                    value={servicePriceMin}
+                    onChange={(e) => setServicePriceMin(e.target.value)}
+                    onBlur={() => setServicePriceMin((v) => v ? formatCurrencyInput(parseCurrencyInput(v)) : "")}
+                    className="w-28"
+                  />
+                  <span className="text-xs text-slate-400 shrink-0">até</span>
+                  <Input
+                    placeholder="R$ máx"
+                    value={servicePriceMax}
+                    onChange={(e) => setServicePriceMax(e.target.value)}
+                    onBlur={() => setServicePriceMax((v) => v ? formatCurrencyInput(parseCurrencyInput(v)) : "")}
+                    className="w-28"
+                  />
+                  {(servicePriceMin || servicePriceMax) ? (
+                    <button
+                      type="button"
+                      onClick={() => { setServicePriceMin(""); setServicePriceMax(""); }}
+                      className="text-xs text-slate-400 hover:text-slate-600"
+                    >
+                      Limpar
+                    </button>
+                  ) : null}
+                </div>
+                <p className="text-xs text-slate-400">
+                  Exibindo {filteredServices.length} de {serviceTotalCount} serviços
+                  {!serviceShowInactive && serviceInactiveCount > 0 ? ` · ${serviceInactiveCount} inativo${serviceInactiveCount > 1 ? "s" : ""} oculto${serviceInactiveCount > 1 ? "s" : ""}` : ""}
+                </p>
+              </div>
+
+              {filteredServices.length === 0 ? (
+                <p className="py-4 text-center text-sm text-slate-400">Nenhum serviço encontrado.</p>
+              ) : null}
+
               <div className="space-y-3">
-                {serviceItems.map((item) => {
+                {filteredServices.map((item) => {
                   const isEditing = editingServiceId === item.id;
                   const draft = serviceDrafts[item.id];
                   const fieldError = serviceEditErrors[item.id];
@@ -440,6 +591,27 @@ export function CatalogManager({
               <CardTitle>Materiais</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
+              {partTotalCount > 0 ? (
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                  <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Total</p>
+                    <p className="mt-1 text-xl font-semibold text-slate-950">{partTotalCount}</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Ativos</p>
+                    <p className="mt-1 text-xl font-semibold text-emerald-950">{partActiveCount}</p>
+                  </div>
+                  <div className={`rounded-xl border px-4 py-3 ${partZeroStockCount > 0 ? "border-rose-200 bg-rose-50" : "border-slate-200 bg-white"}`}>
+                    <p className={`text-xs font-semibold uppercase tracking-wide ${partZeroStockCount > 0 ? "text-rose-600" : "text-slate-400"}`}>Sem estoque</p>
+                    <p className={`mt-1 text-xl font-semibold ${partZeroStockCount > 0 ? "text-rose-950" : "text-slate-950"}`}>{partZeroStockCount}</p>
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Preço médio</p>
+                    <p className="mt-1 text-xl font-semibold text-slate-950">{formatCurrency(partAvgPrice)}</p>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-2">
@@ -531,8 +703,72 @@ export function CatalogManager({
                 </Button>
               </div>
 
+              <div className="space-y-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Input
+                    placeholder="Buscar por nome ou código..."
+                    value={partSearch}
+                    onChange={(e) => setPartSearch(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Select
+                    value={partSort}
+                    onChange={(e) => setPartSort(e.target.value as typeof partSort)}
+                    className="sm:w-44"
+                  >
+                    <option value="name-asc">Nome A-Z</option>
+                    <option value="name-desc">Nome Z-A</option>
+                    <option value="price-asc">Menor preço</option>
+                    <option value="price-desc">Maior preço</option>
+                  </Select>
+                  <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={partShowInactive}
+                      onChange={(e) => setPartShowInactive(e.target.checked)}
+                    />
+                    Mostrar inativos
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 shrink-0">Preço de</span>
+                  <Input
+                    placeholder="R$ mín"
+                    value={partPriceMin}
+                    onChange={(e) => setPartPriceMin(e.target.value)}
+                    onBlur={() => setPartPriceMin((v) => v ? formatCurrencyInput(parseCurrencyInput(v)) : "")}
+                    className="w-28"
+                  />
+                  <span className="text-xs text-slate-400 shrink-0">até</span>
+                  <Input
+                    placeholder="R$ máx"
+                    value={partPriceMax}
+                    onChange={(e) => setPartPriceMax(e.target.value)}
+                    onBlur={() => setPartPriceMax((v) => v ? formatCurrencyInput(parseCurrencyInput(v)) : "")}
+                    className="w-28"
+                  />
+                  {(partPriceMin || partPriceMax) ? (
+                    <button
+                      type="button"
+                      onClick={() => { setPartPriceMin(""); setPartPriceMax(""); }}
+                      className="text-xs text-slate-400 hover:text-slate-600"
+                    >
+                      Limpar
+                    </button>
+                  ) : null}
+                </div>
+                <p className="text-xs text-slate-400">
+                  Exibindo {filteredParts.length} de {partTotalCount} materiais
+                  {!partShowInactive && (partTotalCount - partActiveCount) > 0 ? ` · ${partTotalCount - partActiveCount} inativo${(partTotalCount - partActiveCount) > 1 ? "s" : ""} oculto${(partTotalCount - partActiveCount) > 1 ? "s" : ""}` : ""}
+                </p>
+              </div>
+
+              {filteredParts.length === 0 ? (
+                <p className="py-4 text-center text-sm text-slate-400">Nenhum material encontrado.</p>
+              ) : null}
+
               <div className="space-y-3">
-                {partItems.map((item) => {
+                {filteredParts.map((item) => {
                   const isEditing = editingPartId === item.id;
                   const draft = partDrafts[item.id];
                   const fieldError = partEditErrors[item.id];

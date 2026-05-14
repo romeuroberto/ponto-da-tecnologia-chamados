@@ -102,14 +102,11 @@ export async function POST(request: Request) {
     const publicPath = `/uploads/fiscal/${filename}`;
     await writeFile(absolutePath, bytes);
 
-    // Extract text from PDF and parse fields
-    // Dynamic import prevents Turbopack from bundling pdfjs-dist at build time
-    const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse({ data: bytes });
-    const result = await parser.getText();
-    await parser.destroy();
+    const { extractText } = await import("unpdf");
+    const { text } = await extractText(new Uint8Array(bytes));
+    const normalizedText = Array.isArray(text) ? text.join("\n") : text;
 
-    const extracted = extractFields(result.text);
+    const extracted = extractFields(normalizedText);
 
     return NextResponse.json({
       success: true,

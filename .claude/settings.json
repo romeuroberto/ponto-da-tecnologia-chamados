@@ -59,7 +59,8 @@
       "Bash(node -e \"const p = require\\('./node_modules/pdf-parse/package.json'\\); console.log\\(JSON.stringify\\({main: p.main, module: p.module, exports: p.exports}, null, 2\\)\\)\")",
       "Bash(node -e \"const m = require\\('./node_modules/pdf-parse/dist/pdf-parse/cjs/index.cjs'\\); console.log\\(typeof m.PDFParse, Object.keys\\(m\\).slice\\(0,10\\)\\)\")",
       "Bash(node -e ' *)",
-      "Bash(node -e *)"
+      "Bash(node -e *)",
+      "Bash(npm ls *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\Projetos VS\\ponto-da-tecnologia-chamados\\src\\app\\api\\tickets\\[id]",

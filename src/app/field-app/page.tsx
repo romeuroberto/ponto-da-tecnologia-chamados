@@ -4,6 +4,7 @@ import { CheckCircle2, Clock3, MapPinned, NotebookPen, TimerReset } from "lucide
 
 import { FieldAppClaimTicketButton } from "@/components/field-app/field-app-claim-ticket-button";
 import { FieldAppTicketCard } from "@/components/field-app/field-app-ticket-card";
+import { compareAvailableFieldTickets } from "@/lib/field-app";
 import { PortalAppEmptyState } from "@/components/portal-app/portal-app-empty-state";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/server/auth/session";
@@ -31,6 +32,7 @@ export default async function FieldAppHomePage() {
     sort: "updated_desc",
     pageSize: 8
   });
+  const availableTickets = [...availableResult.items].sort(compareAvailableFieldTickets);
 
   return (
     <div className="space-y-5">
@@ -157,14 +159,25 @@ export default async function FieldAppHomePage() {
           </Link>
         </div>
 
-        {availableResult.items.length > 0 ? (
+        {availableTickets.length > 0 ? (
           <div className="space-y-3">
-            {availableResult.items.slice(0, 3).map((ticket) => (
+            {availableTickets.slice(0, 3).map((ticket) => (
               <FieldAppTicketCard
                 key={ticket.id}
                 ticket={ticket}
+                href={`/field-app/chamados/${ticket.id}` as Route}
                 showPreview
-                footer={<FieldAppClaimTicketButton ticketId={ticket.id} />}
+                footer={
+                  <div className="space-y-3">
+                    <Link
+                      href={`/field-app/chamados/${ticket.id}` as Route}
+                      className="block text-center text-sm font-semibold text-emerald-700"
+                    >
+                      Ver detalhes
+                    </Link>
+                    <FieldAppClaimTicketButton ticketId={ticket.id} />
+                  </div>
+                }
               />
             ))}
           </div>

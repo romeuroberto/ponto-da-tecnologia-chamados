@@ -1,7 +1,11 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ClipboardList, MapPinned, Paperclip, UserRound } from "lucide-react";
 
+import { FieldAppClaimTicketButton } from "@/components/field-app/field-app-claim-ticket-button";
 import { FieldAppServiceOrderCard } from "@/components/field-app/field-app-service-order-card";
+import { FieldAppVisitReportPanel } from "@/components/field-app/field-app-visit-report-panel";
 import { TicketAttachments } from "@/components/tickets/ticket-attachments";
 import { TicketFlowActions } from "@/components/tickets/ticket-flow-actions";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
@@ -16,7 +20,14 @@ export default async function FieldAppTicketDetailsPage({ params }: { params: Pr
   const { id } = await params;
   const ticket = await ticketService.getTicket(id);
 
-  if (!ticket || ticket.assigneeId !== currentUser.id) {
+  if (!ticket) {
+    redirect("/field-app/chamados");
+  }
+
+  const isAssignedToCurrentUser = ticket.assigneeId === currentUser.id;
+  const isAvailableToClaim = !ticket.assigneeId;
+
+  if (!isAssignedToCurrentUser && !isAvailableToClaim) {
     redirect("/field-app/chamados");
   }
 
@@ -33,6 +44,18 @@ export default async function FieldAppTicketDetailsPage({ params }: { params: Pr
             {getAttendanceTypeLabel(ticket.attendanceType)}
           </span>
         </div>
+
+        {isAvailableToClaim ? (
+          <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+            <p className="text-sm font-semibold text-emerald-950">Chamado disponível para assumir</p>
+            <p className="mt-1 text-sm leading-6 text-emerald-800">
+              Este atendimento ainda está sem responsável. Revise os detalhes abaixo e assuma quando fizer sentido para sua rotina.
+            </p>
+            <div className="mt-4">
+              <FieldAppClaimTicketButton ticketId={ticket.id} />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="grid grid-cols-2 gap-3">
@@ -66,7 +89,9 @@ export default async function FieldAppTicketDetailsPage({ params }: { params: Pr
         {ticket.attendanceType === "FIELD_VISIT" ? (
           <div className="mt-4 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-4 text-sm text-sky-950">
             <p className="font-semibold">
-              {!ticket.checkedInAt
+              {!isAssignedToCurrentUser
+                ? "Ao assumir este chamado, você poderá registrar check-in e check-out desta visita."
+                : !ticket.checkedInAt
                 ? "Ao chegar no cliente, registre o check-in."
                 : !ticket.checkedOutAt
                   ? "Visita em andamento. Registre o check-out ao finalizar."
@@ -79,7 +104,23 @@ export default async function FieldAppTicketDetailsPage({ params }: { params: Pr
         ) : null}
       </section>
 
-      <TicketFlowActions ticket={ticket} users={[]} role={currentUser.role} currentUserId={currentUser.id} />
+      {isAssignedToCurrentUser ? (
+        <>
+          <TicketFlowActions ticket={ticket} users={[]} role={currentUser.role} currentUserId={currentUser.id} />
+          <FieldAppVisitReportPanel ticket={ticket} />
+        </>
+      ) : (
+        <section className="rounded-[1.8rem] border border-slate-200 bg-white px-4 py-5 shadow-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">Modo de visualização</p>
+          <h2 className="mt-1 text-lg font-semibold text-slate-950">Leitura antes de assumir</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Enquanto o chamado estiver sem responsável, esta tela permanece somente leitura. Ao assumir, as ações de status, histórico, anexo e visita ficam disponíveis.
+          </p>
+          <div className="mt-4">
+            <FieldAppClaimTicketButton ticketId={ticket.id} />
+          </div>
+        </section>
+      )}
 
       {ticket.serviceOrders.length > 0 ? (
         <section className="rounded-[1.8rem] border border-slate-200 bg-white px-4 py-5 shadow-sm">
@@ -95,12 +136,7 @@ export default async function FieldAppTicketDetailsPage({ params }: { params: Pr
 
           <div className="mt-4 space-y-3">
             {ticket.serviceOrders.map((serviceOrder) => (
-              <FieldAppServiceOrderCard
-                key={serviceOrder.id}
-                ticketId={ticket.id}
-                serviceOrder={serviceOrder}
-                currentUserId={currentUser.id}
-              />
+              <FieldAppServiceOrderCard key={serviceOrder.id} ticketId={ticket.id} serviceOrder={serviceOrder} currentUserId={currentUser.id} />
             ))}
           </div>
         </section>
@@ -131,6 +167,15 @@ export default async function FieldAppTicketDetailsPage({ params }: { params: Pr
       </section>
 
       <TicketAttachments attachments={ticket.attachments} />
+
+      {isAvailableToClaim ? (
+        <Link
+          href={"/field-app/chamados?scope=available" as Route}
+          className="pb-2 text-center text-sm font-semibold text-emerald-700"
+        >
+          Voltar para chamados disponíveis
+        </Link>
+      ) : null}
     </div>
   );
 }

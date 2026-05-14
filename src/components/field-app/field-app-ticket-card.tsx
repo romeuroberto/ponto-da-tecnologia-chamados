@@ -3,8 +3,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { MapPinned, UserRound } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { getSlaInfo, getSlaLabel } from "@/lib/sla";
 import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
 import { formatDate } from "@/lib/utils";
 import type { Ticket } from "@/types";
@@ -20,6 +22,14 @@ export function FieldAppTicketCard({
   footer?: ReactNode;
   showPreview?: boolean;
 }) {
+  const slaInfo = getSlaInfo(ticket);
+  const slaTone = {
+    on_track: "bg-emerald-50 text-emerald-700",
+    warning: "bg-amber-50 text-amber-700",
+    breached: "bg-rose-50 text-rose-700",
+    stopped: "bg-slate-100 text-slate-600"
+  } as const;
+
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -36,6 +46,7 @@ export function FieldAppTicketCard({
           <MapPinned className="h-3.5 w-3.5" />
           {getAttendanceTypeLabel(ticket.attendanceType)}
         </span>
+        {slaInfo.state !== "stopped" ? <Badge className={slaTone[slaInfo.state]}>{getSlaLabel(ticket)}</Badge> : null}
       </div>
 
       <div className="mt-4 grid gap-2 rounded-2xl bg-slate-50 p-3 text-sm">

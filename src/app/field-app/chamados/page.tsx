@@ -5,6 +5,7 @@ import { Clock3, LifeBuoy, MapPinned, TimerReset } from "lucide-react";
 import { FieldAppClaimTicketButton } from "@/components/field-app/field-app-claim-ticket-button";
 import { FieldAppTicketCard } from "@/components/field-app/field-app-ticket-card";
 import { PortalAppEmptyState } from "@/components/portal-app/portal-app-empty-state";
+import { compareAvailableFieldTickets } from "@/lib/field-app";
 import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
 import { cn } from "@/lib/utils";
 import { getParam } from "@/server/search-params";
@@ -53,6 +54,7 @@ export default async function FieldAppTicketsPage({
   const fieldVisitCount = result.items.filter((ticket) => ticket.attendanceType === "FIELD_VISIT").length;
   const summaryLabel = attendanceType ? getAttendanceTypeLabel(attendanceType as TicketAttendanceType) : "Todos os atendimentos";
   const scopeLabel = scope === "available" ? "Chamados em aberto sem responsável" : "Chamados atribuídos ao seu usuário";
+  const visibleTickets = scope === "available" ? [...result.items].sort(compareAvailableFieldTickets) : result.items;
 
   return (
     <div className="space-y-5">
@@ -185,13 +187,25 @@ export default async function FieldAppTicketsPage({
 
       {result.items.length > 0 ? (
         <div className="space-y-3">
-          {result.items.map((ticket) => (
+          {visibleTickets.map((ticket) => (
             <FieldAppTicketCard
               key={ticket.id}
               ticket={ticket}
-              href={scope === "mine" ? (`/field-app/chamados/${ticket.id}` as Route) : undefined}
+              href={`/field-app/chamados/${ticket.id}` as Route}
               showPreview={scope === "available"}
-              footer={scope === "available" ? <FieldAppClaimTicketButton ticketId={ticket.id} /> : undefined}
+              footer={
+                scope === "available" ? (
+                  <div className="space-y-3">
+                    <Link
+                      href={`/field-app/chamados/${ticket.id}` as Route}
+                      className="block text-center text-sm font-semibold text-emerald-700"
+                    >
+                      Ver detalhes
+                    </Link>
+                    <FieldAppClaimTicketButton ticketId={ticket.id} />
+                  </div>
+                ) : undefined
+              }
             />
           ))}
         </div>
