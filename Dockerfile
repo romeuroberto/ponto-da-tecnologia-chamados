@@ -1,8 +1,13 @@
+# ── Base Alpine (runner e migrator) ───────────────────────────────────────────
 FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat openssl
 
-# ── Dependências ─────────────────────────────────────────────────────────────
-FROM base AS deps
+# ── Base Debian (build stages — evita SIGILL com SWC/Turbopack em CPUs sem AVX2)
+FROM node:20-slim AS build-base
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
+
+# ── Dependências (Debian para compatibilidade com binários SWC) ───────────────
+FROM build-base AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -16,7 +21,7 @@ RUN node_modules/.bin/prisma generate
 CMD ["node_modules/.bin/prisma", "migrate", "deploy"]
 
 # ── Build ─────────────────────────────────────────────────────────────────────
-FROM base AS builder
+FROM build-base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -38,7 +43,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Apenas o runtime do Prisma Client (não precisa do CLI)
+# Copia o runtime Prisma gerado para Alpine (linux-musl-openssl-3.0.x)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma  ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma  ./node_modules/@prisma
 
