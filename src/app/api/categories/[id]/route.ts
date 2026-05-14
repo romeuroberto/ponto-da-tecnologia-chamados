@@ -5,7 +5,6 @@ import { requireApiUser } from "@/server/auth/api-guard";
 import { ticketCategoryService } from "@/server/services/ticket-category-service";
 
 const categoryUpdateSchema = z.object({
-  name: z.string().min(1, "Nome obrigatório"),
   label: z.string().min(1, "Label obrigatório"),
   suggestedRole: z.enum(["ATTENDANT", "TECHNICIAN"]).nullable().optional(),
   active: z.boolean().optional(),

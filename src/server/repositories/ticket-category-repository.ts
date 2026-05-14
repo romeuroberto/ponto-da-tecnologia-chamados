@@ -8,7 +8,10 @@ export interface CreateTicketCategoryInput {
   sortOrder?: number;
 }
 
-export interface UpdateTicketCategoryInput extends CreateTicketCategoryInput {
+export interface UpdateTicketCategoryInput {
+  label: string;
+  suggestedRole?: "ATTENDANT" | "TECHNICIAN" | null;
+  sortOrder?: number;
   active?: boolean;
 }
 
@@ -42,7 +45,6 @@ export const ticketCategoryRepository = {
     const record = await prisma.ticketCategory.update({
       where: { id },
       data: {
-        name: input.name,
         label: input.label,
         suggestedRole: input.suggestedRole ?? null,
         active: input.active,

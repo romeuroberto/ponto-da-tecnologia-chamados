@@ -51,66 +51,73 @@ export function CategoryManager({ initialCategories }: { initialCategories: Tick
     if (!editing) return;
     setMessage(null);
 
-    const payload = {
-      name: editing.name.trim(),
-      label: editing.label.trim(),
-      suggestedRole: editing.suggestedRole || null,
-      sortOrder: Number(editing.sortOrder) || 0
-    };
+    const isNew = editing.id === null;
+    const label = editing.label.trim();
+    const name = editing.name.trim();
 
-    if (!payload.name || !payload.label) {
+    if (!label || (isNew && !name)) {
       setMessage({ type: "error", text: "Nome e label são obrigatórios." });
       return;
     }
 
+    const payload = isNew
+      ? { name, label, suggestedRole: editing.suggestedRole || null, sortOrder: Number(editing.sortOrder) || 0 }
+      : { label, suggestedRole: editing.suggestedRole || null, sortOrder: Number(editing.sortOrder) || 0 };
+
     startTransition(async () => {
-      const isNew = editing.id === null;
-      const url = isNew ? "/api/categories" : `/api/categories/${editing.id}`;
-      const method = isNew ? "POST" : "PUT";
+      try {
+        const url = isNew ? "/api/categories" : `/api/categories/${editing.id}`;
+        const method = isNew ? "POST" : "PUT";
 
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+        const response = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-      const result = await response.json();
+        const result = await response.json();
 
-      if (!response.ok) {
-        setMessage({ type: "error", text: result.message ?? "Não foi possível salvar a categoria." });
-        return;
+        if (!response.ok) {
+          setMessage({ type: "error", text: result.message ?? "Não foi possível salvar a categoria." });
+          return;
+        }
+
+        setCategories((current) =>
+          isNew
+            ? [...current, result.data].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
+            : current.map((c) => (c.id === result.data.id ? result.data : c))
+        );
+        setEditing(null);
+        setMessage({ type: "success", text: isNew ? "Categoria criada com sucesso." : "Categoria atualizada." });
+      } catch {
+        setMessage({ type: "error", text: "Erro de conexão. Tente novamente." });
       }
-
-      setCategories((current) =>
-        isNew
-          ? [...current, result.data].sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-          : current.map((c) => (c.id === result.data.id ? result.data : c))
-      );
-      setEditing(null);
-      setMessage({ type: "success", text: isNew ? "Categoria criada com sucesso." : "Categoria atualizada." });
     });
   }
 
   function toggleActive(cat: TicketCategory) {
     startTransition(async () => {
-      const response = await fetch(`/api/categories/${cat.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: cat.name,
-          label: cat.label,
-          suggestedRole: cat.suggestedRole ?? null,
-          sortOrder: cat.sortOrder,
-          active: !cat.active
-        })
-      });
+      try {
+        const response = await fetch(`/api/categories/${cat.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            label: cat.label,
+            suggestedRole: cat.suggestedRole ?? null,
+            sortOrder: cat.sortOrder,
+            active: !cat.active
+          })
+        });
 
-      const result = await response.json();
-      if (!response.ok) {
-        setMessage({ type: "error", text: result.message ?? "Falha ao alterar status." });
-        return;
+        const result = await response.json();
+        if (!response.ok) {
+          setMessage({ type: "error", text: result.message ?? "Falha ao alterar status." });
+          return;
+        }
+        setCategories((current) => current.map((c) => (c.id === cat.id ? result.data : c)));
+      } catch {
+        setMessage({ type: "error", text: "Erro de conexão. Tente novamente." });
       }
-      setCategories((current) => current.map((c) => (c.id === cat.id ? result.data : c)));
     });
   }
 
@@ -129,7 +136,7 @@ export function CategoryManager({ initialCategories }: { initialCategories: Tick
             <CardTitle>{editing.id ? "Editar categoria" : "Nova categoria"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="cat-name">Nome (slug interno)</Label>
                 <Input
@@ -150,8 +157,6 @@ export function CategoryManager({ initialCategories }: { initialCategories: Tick
                   placeholder="Ex: CFTV e Câmeras"
                 />
               </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="cat-role">Perfil sugerido para atribuição</Label>
                 <Select

@@ -32,11 +32,11 @@ export function hasRole(role: UserRole, roles: UserRole[]) {
   return roles.includes(role);
 }
 
-export async function requirePortalUser() {
+export async function requirePortalUser(redirectTo: Route = "/portal" as Route) {
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/portal" as Route);
+    redirect(redirectTo);
   }
 
   if (session.user.role !== "CLIENT" || !session.user.clientId) {
