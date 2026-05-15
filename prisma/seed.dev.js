@@ -328,7 +328,7 @@ const issueTemplates = [
   }
 ];
 
-const statusCycle = ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "RESOLVED", "CLOSED", "CANCELED"];
+const statusCycle = ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "CLOSED", "CANCELED"];
 const priorityCycle = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 const billingTypeCycle = ["AVULSO", "CONTRATO", "GARANTIA", "CORTESIA"];
 const financialStatusCycle = ["PENDENTE", "EM_ANALISE", "APROVADO", "FATURADO", "PAGO", "CANCELADO"];
@@ -369,7 +369,6 @@ function statusLabel(status) {
     OPEN: "aberto",
     IN_PROGRESS: "em atendimento",
     WAITING_CUSTOMER: "aguardando cliente",
-    RESOLVED: "resolvido",
     CLOSED: "encerrado",
     CANCELED: "cancelado"
   };
@@ -435,15 +434,6 @@ function buildTicketHistory({
       previousStatus: "OPEN",
       nextStatus: status,
       createdAt: updatedAt
-    });
-  }
-
-  if (status === "RESOLVED") {
-    history.push({
-      authorId: assigneeId ?? openedById,
-      eventType: "COMMENT",
-      message: "Correcao aplicada e aguardando validacao final do cliente.",
-      createdAt: minutesAfter(updatedAt, 20)
     });
   }
 
@@ -552,10 +542,6 @@ function buildFinancialStatus(ticketStatus, index, billingType) {
 
   if (ticketStatus === "CLOSED") {
     return index % 3 === 0 ? "PAGO" : "FATURADO";
-  }
-
-  if (ticketStatus === "RESOLVED") {
-    return index % 2 === 0 ? "APROVADO" : "FATURADO";
   }
 
   if (ticketStatus === "CANCELED") {
@@ -792,7 +778,7 @@ async function main() {
       }
     ];
 
-    if (status === "WAITING_CUSTOMER" || status === "RESOLVED") {
+    if (status === "WAITING_CUSTOMER") {
       comments.push({
         authorId: fallbackAdmin.id,
         message: "Cliente orientado sobre o proximo passo e validacao pendente.",
@@ -800,7 +786,7 @@ async function main() {
       });
     }
 
-    const shouldCreateBilling = status !== "OPEN" && (index % 2 === 0 || status === "RESOLVED" || status === "CLOSED");
+    const shouldCreateBilling = status !== "OPEN" && (index % 2 === 0 || status === "CLOSED");
     const billingType = client.billingProfile?.defaultBillingType ?? billingTypeCycle[index % billingTypeCycle.length];
     const financialStatus = buildFinancialStatus(status, index, billingType);
     const billingCreatedAt = minutesAfter(updatedAt, 25);

@@ -35,7 +35,7 @@ function FilterFields({ clients, defaults }: Omit<TicketFiltersProps, "activeFil
           <option value="OPEN">Aberto</option>
           <option value="IN_PROGRESS">Em atendimento</option>
           <option value="WAITING_CUSTOMER">Aguardando cliente</option>
-          <option value="RESOLVED">Resolvido</option>
+          <option value="WAITING_PARTS">Aguardando peças</option>
           <option value="CLOSED">Encerrado</option>
         </Select>
         <Select name="priority" defaultValue={defaults.priority}>

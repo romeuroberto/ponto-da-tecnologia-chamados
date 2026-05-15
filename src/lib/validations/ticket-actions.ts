@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ticketUpdateSchema = z.object({
-  status: z.enum(["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "RESOLVED", "CLOSED", "CANCELED"]).optional(),
+  status: z.enum(["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS", "CLOSED", "CANCELED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
   assigneeId: z.string().optional().or(z.literal("")),
   closingReason: z.string().trim().max(500, "Motivo muito longo").optional().or(z.literal("")),

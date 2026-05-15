@@ -18,7 +18,7 @@ enum TicketStatus {
   OPEN
   IN_PROGRESS
   WAITING_CUSTOMER
-  RESOLVED
+  WAITING_PARTS
   CLOSED
   CANCELED
 }
@@ -268,8 +268,10 @@ model Ticket {
   resolvedAt      DateTime?
   closedAt        DateTime?
   closingReason   String?
-  checkedInAt     DateTime?
-  checkedOutAt    DateTime?
+  checkedInAt          DateTime?
+  checkedOutAt         DateTime?
+  waitingPartsStartedAt DateTime?
+  slaWaitingPartsMs    Int       @default(0)
   clientId        String
   assigneeId      String?
   openedById      String

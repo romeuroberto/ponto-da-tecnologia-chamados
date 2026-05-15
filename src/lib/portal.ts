@@ -4,7 +4,7 @@ export const portalTicketStatusLabel: Record<TicketStatus, string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em atendimento",
   WAITING_CUSTOMER: "Aguardando você",
-  RESOLVED: "Resolvido",
+  WAITING_PARTS: "Aguardando peças",
   CLOSED: "Encerrado",
   CANCELED: "Cancelado"
 };
@@ -13,7 +13,7 @@ export const portalTicketStatusClass: Record<TicketStatus, string> = {
   OPEN: "bg-sky-100 text-sky-800 border-sky-200",
   IN_PROGRESS: "bg-indigo-100 text-indigo-800 border-indigo-200",
   WAITING_CUSTOMER: "bg-amber-100 text-amber-900 border-amber-200",
-  RESOLVED: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  WAITING_PARTS: "bg-purple-100 text-purple-800 border-purple-200",
   CLOSED: "bg-slate-100 text-slate-700 border-slate-200",
   CANCELED: "bg-rose-100 text-rose-800 border-rose-200"
 };

@@ -16,7 +16,7 @@ export default async function PortalTicketsPage() {
   });
 
   const waitingCount = result.items.filter((t) => t.status === "WAITING_CUSTOMER").length;
-  const resolvedCount = result.items.filter((t) => t.status === "RESOLVED" || t.status === "CLOSED").length;
+  const resolvedCount = result.items.filter((t) => t.status === "CLOSED").length;
 
   return (
     <div className="space-y-6 lg:space-y-8">

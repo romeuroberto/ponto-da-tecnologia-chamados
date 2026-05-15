@@ -23,7 +23,7 @@ function buildSortHref(sort: string, params: Record<string, string | undefined>)
   return (`/chamados?${searchParams.toString()}`) as Route;
 }
 
-const FINANCIAL_PENDING_STATUSES = ["RESOLVED", "CLOSED"] as const;
+const FINANCIAL_PENDING_STATUSES = ["CLOSED"] as const;
 
 function FinancialBadge({ ticket, userRole }: { ticket: Ticket; userRole: UserRole }) {
   if (userRole !== "ADMIN" && userRole !== "ATTENDANT") return null;

@@ -4,7 +4,7 @@ export type TicketStatus =
   | "OPEN"
   | "IN_PROGRESS"
   | "WAITING_CUSTOMER"
-  | "RESOLVED"
+  | "WAITING_PARTS"
   | "CLOSED"
   | "CANCELED";
 
@@ -440,6 +440,8 @@ export interface Ticket {
   closingReason?: string;
   checkedInAt?: string;
   checkedOutAt?: string;
+  waitingPartsStartedAt?: string;
+  slaWaitingPartsMs: number;
   history: TicketHistoryItem[];
   attachments: TicketAttachment[];
   billing?: TicketBilling;

@@ -40,7 +40,7 @@ export default async function FinancialDashboardPage({
   const quickFilters: Array<{ href: Route; label: string }> = [
     { href: "/financeiro/despesas", label: "Despesas" },
     { href: "/relatorios", label: "Relatórios completos" },
-    { href: "/chamados?status=RESOLVED", label: "Chamados resolvidos" },
+    { href: "/chamados?status=CLOSED", label: "Chamados encerrados" },
     { href: "/clientes", label: "Clientes" }
   ];
 

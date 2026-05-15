@@ -39,7 +39,7 @@ function buildTrend(records: Array<{ createdAt: string | Date; updatedAt: string
       openedMap.set(createdKey, (openedMap.get(createdKey) ?? 0) + 1);
     }
 
-    if (record.status === "RESOLVED" || record.status === "CLOSED") {
+    if (record.status === "CLOSED") {
       const resolvedKey = formatDayKey(new Date(record.updatedAt));
       if (resolvedMap.has(resolvedKey)) {
         resolvedMap.set(resolvedKey, (resolvedMap.get(resolvedKey) ?? 0) + 1);
@@ -88,11 +88,11 @@ export const dashboardService = {
         summary: dashboardSummary,
         myAssignedTickets,
         myAssignedCount: myAssignedTickets.length,
-        myActiveAssignedCount: myAssignedTickets.filter((ticket) => ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)).length,
+        myActiveAssignedCount: myAssignedTickets.filter((ticket) => ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"].includes(ticket.status)).length,
         recentTickets: [...tickets].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).slice(0, 5),
         criticalCount: criticalTickets.length,
         unassignedCount: unassignedTickets.length,
-        resolvedTodayCount: tickets.filter((ticket) => ticket.status === "RESOLVED" || ticket.status === "CLOSED").length,
+        resolvedTodayCount: tickets.filter((ticket) => ticket.status === "CLOSED").length,
         criticalTickets,
         unassignedTickets,
         waitingCustomerTickets,
@@ -121,7 +121,7 @@ export const dashboardService = {
       prisma.ticket.count({ where: { assigneeId: null } }),
       prisma.ticket.count({
         where: {
-          OR: [{ status: "RESOLVED" }, { status: "CLOSED" }],
+          status: "CLOSED",
           updatedAt: { gte: startOfToday }
         }
       }),
@@ -173,7 +173,7 @@ export const dashboardService = {
         include: ticketInclude,
         where: {
           status: {
-            in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"]
+            in: ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"]
           }
         }
       }),
@@ -204,7 +204,7 @@ export const dashboardService = {
       myAssignedTickets: myAssignedRecords.map(mapTicket),
       myAssignedCount: myAssignedRecords.length,
       myActiveAssignedCount: myAssignedRecords.filter((ticket) =>
-        ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)
+        ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"].includes(ticket.status)
       ).length,
       recentTickets: recentRecords.map(mapTicket),
       criticalCount,

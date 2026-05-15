@@ -17,8 +17,8 @@ const filters: Array<{ label: string; value: "" | TicketStatus }> = [
   { label: "Todos", value: "" },
   { label: "Abertos", value: "OPEN" },
   { label: "Em atendimento", value: "IN_PROGRESS" },
-  { label: "Aguardando", value: "WAITING_CUSTOMER" },
-  { label: "Resolvidos", value: "RESOLVED" },
+  { label: "Aguardando cliente", value: "WAITING_CUSTOMER" },
+  { label: "Aguardando peças", value: "WAITING_PARTS" },
   { label: "Encerrados", value: "CLOSED" }
 ];
 

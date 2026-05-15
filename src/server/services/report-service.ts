@@ -8,7 +8,7 @@ const statusLabels: Record<TicketStatus, string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em atendimento",
   WAITING_CUSTOMER: "Aguardando cliente",
-  RESOLVED: "Resolvido",
+  WAITING_PARTS: "Aguardando peças",
   CLOSED: "Encerrado",
   CANCELED: "Cancelado"
 };
@@ -95,7 +95,7 @@ function getCompletionDate(ticket: Ticket) {
     return new Date(ticket.resolvedAt);
   }
 
-  if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
+  if (ticket.status === "CLOSED") {
     return new Date(ticket.updatedAt);
   }
 
@@ -196,8 +196,8 @@ export const reportService = {
     const allTickets = await ticketService.listTickets();
     const tickets = filterTicketsByRange(allTickets, filters.from, filters.to);
     const total = tickets.length;
-    const active = tickets.filter((ticket) => ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)).length;
-    const completed = tickets.filter((ticket) => ticket.status === "RESOLVED" || ticket.status === "CLOSED").length;
+    const active = tickets.filter((ticket) => ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"].includes(ticket.status)).length;
+    const completed = tickets.filter((ticket) => ticket.status === "CLOSED").length;
     const canceled = tickets.filter((ticket) => ticket.status === "CANCELED").length;
 
     const slaEvaluated = tickets.map((ticket) => getSlaInfo(ticket));
@@ -243,10 +243,10 @@ export const reportService = {
         };
 
         current.total += 1;
-        if (["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)) {
+        if (["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"].includes(ticket.status)) {
           current.active += 1;
         }
-        if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
+        if (ticket.status === "CLOSED") {
           current.completed += 1;
         }
 
@@ -268,10 +268,10 @@ export const reportService = {
         };
 
         current.total += 1;
-        if (["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER"].includes(ticket.status)) {
+        if (["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"].includes(ticket.status)) {
           current.active += 1;
         }
-        if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
+        if (ticket.status === "CLOSED") {
           current.completed += 1;
         }
 

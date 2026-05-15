@@ -20,7 +20,7 @@ export default async function FieldAppHomePage() {
 
   const inProgressCount = items.filter((ticket) => ticket.status === "IN_PROGRESS").length;
   const waitingCustomerCount = items.filter((ticket) => ticket.status === "WAITING_CUSTOMER").length;
-  const closedTodayCount = items.filter((ticket) => ticket.status === "CLOSED" || ticket.status === "RESOLVED").length;
+  const closedTodayCount = items.filter((ticket) => ticket.status === "CLOSED").length;
   const fieldVisitCount = items.filter((ticket) => ticket.attendanceType === "FIELD_VISIT").length;
   const pendingFieldVisits = items.filter(
     (ticket) => ticket.attendanceType === "FIELD_VISIT" && ticket.status !== "CLOSED" && ticket.status !== "CANCELED"

@@ -48,6 +48,7 @@ function getFlowActions(status: Ticket["status"], role: AppUser["role"], contrac
     case "IN_PROGRESS":
       return [
         { label: "Aguardar resposta do cliente", targetStatus: "WAITING_CUSTOMER", variant: "outline", requiresReason: false },
+        { label: "Aguardar peças", targetStatus: "WAITING_PARTS", variant: "outline", requiresReason: false },
         concludeAction,
         ...(isAttendant
           ? [{ label: "Cancelar chamado", targetStatus: "CANCELED" as const, variant: "outline" as const, requiresReason: true }]
@@ -60,10 +61,9 @@ function getFlowActions(status: Ticket["status"], role: AppUser["role"], contrac
         { ...concludeAction, variant: "outline" }
       ];
 
-    case "RESOLVED":
+    case "WAITING_PARTS":
       return [
-        concludeAction,
-        { label: "Reabrir chamado", targetStatus: "OPEN", variant: "outline", requiresReason: false }
+        { label: "Retomar atendimento (peças chegaram)", targetStatus: "IN_PROGRESS", variant: "default", requiresReason: false }
       ];
 
     case "CLOSED":
@@ -239,7 +239,7 @@ export function TicketFlowActions({
             <p className="mt-1">{flow.nextAction}</p>
           </div>
 
-          {contractCoversCategory && (ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_CUSTOMER" || ticket.status === "RESOLVED") ? (
+          {contractCoversCategory && (ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_CUSTOMER") ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               <p className="font-semibold">Coberto pelo contrato</p>
               <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Ao concluir o atendimento, você pode encerrar sem gerar cobrança.</p>
@@ -339,24 +339,14 @@ export function TicketFlowActions({
             <Button type="button" className="w-full" disabled={isPending || !comment.trim()} onClick={submitComment}>
               {isPending ? "Enviando..." : "Adicionar ao histórico"}
             </Button>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {canComment ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Enviar anexo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="attachment">Arquivo</Label>
+            <div className="space-y-3 border-t border-slate-200 pt-4">
+              <Label htmlFor="attachment">Anexo</Label>
               <Input id="attachment" type="file" onChange={(e) => setAttachment(e.target.files?.[0] ?? null)} />
               <p className="text-xs text-slate-500">Limite de 5 MB por arquivo.</p>
+              <Button type="button" className="w-full" variant="outline" disabled={isPending} onClick={submitAttachment}>
+                {isPending ? "Enviando..." : "Enviar anexo"}
+              </Button>
             </div>
-            <Button type="button" className="w-full" disabled={isPending} onClick={submitAttachment}>
-              {isPending ? "Enviando..." : "Enviar anexo"}
-            </Button>
           </CardContent>
         </Card>
       ) : null}

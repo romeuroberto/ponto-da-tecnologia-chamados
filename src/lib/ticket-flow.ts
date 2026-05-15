@@ -30,7 +30,7 @@ const technicalStatusLabels: Record<Ticket["status"], string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em atendimento",
   WAITING_CUSTOMER: "Aguardando cliente",
-  RESOLVED: "Concluído tecnicamente",
+  WAITING_PARTS: "Aguardando peças",
   CLOSED: "Concluído tecnicamente",
   CANCELED: "Cancelado"
 };
@@ -128,7 +128,12 @@ export function getTicketFlowSummary(ticket: Ticket): TicketFlowSummary {
     overallDescription = "O atendimento depende de retorno, teste ou validação do cliente para seguir.";
     nextAction = "Retomar o atendimento assim que houver resposta ou concluir se a validação já ocorreu.";
     currentStageId = "execution";
-  } else if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
+  } else if (ticket.status === "WAITING_PARTS") {
+    overallLabel = "Aguardando peças";
+    overallDescription = "O atendimento está pausado aguardando a chegada de peças ou materiais. SLA suspenso.";
+    nextAction = "Retomar o atendimento assim que as peças chegarem.";
+    currentStageId = "execution";
+  } else if (ticket.status === "CLOSED") {
     const hasBilling = Boolean(ticket.billing);
     const financialDone = financialStatus === "PAGO" || financialStatus === "CANCELADO";
 

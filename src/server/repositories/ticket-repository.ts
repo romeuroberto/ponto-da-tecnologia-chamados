@@ -57,7 +57,7 @@ const statusLabels: Record<TicketStatus, string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em atendimento",
   WAITING_CUSTOMER: "Aguardando cliente",
-  RESOLVED: "Resolvido",
+  WAITING_PARTS: "Aguardando peças",
   CLOSED: "Encerrado",
   CANCELED: "Cancelado"
 };
@@ -349,7 +349,7 @@ export const ticketRepository = {
           where: { id },
           data: {
             status,
-            resolvedAt: status === "RESOLVED" ? new Date() : undefined,
+            resolvedAt: undefined,
             closedAt: status === "CLOSED" ? new Date() : undefined,
             history: {
               create: {
@@ -368,7 +368,7 @@ export const ticketRepository = {
           where: { id },
           data: {
             status,
-            resolvedAt: status === "RESOLVED" ? new Date() : undefined,
+            resolvedAt: undefined,
             closedAt: status === "CLOSED" ? new Date() : undefined,
             history: {
               create: {
@@ -387,7 +387,7 @@ export const ticketRepository = {
           where: { id },
           data: {
             status,
-            resolvedAt: status === "RESOLVED" ? new Date() : undefined,
+            resolvedAt: undefined,
             closedAt: status === "CLOSED" ? new Date() : undefined,
             history: {
               create: {
@@ -416,7 +416,9 @@ export const ticketRepository = {
         assigneeId: true,
         closingReason: true,
         resolvedAt: true,
-        closedAt: true
+        closedAt: true,
+        slaWaitingPartsMs: true,
+        waitingPartsStartedAt: true
       }
     });
 
@@ -426,8 +428,17 @@ export const ticketRepository = {
 
     const historyEntries = [];
     const isReopening =
-      (current.status === "RESOLVED" || current.status === "CLOSED" || current.status === "CANCELED") &&
-      (input.status === "OPEN" || input.status === "IN_PROGRESS" || input.status === "WAITING_CUSTOMER");
+      (current.status === "CLOSED" || current.status === "CANCELED") &&
+      (input.status === "OPEN" || input.status === "IN_PROGRESS" || input.status === "WAITING_CUSTOMER" || input.status === "WAITING_PARTS");
+
+    const now = new Date();
+    const enteringWaitingParts = input.status === "WAITING_PARTS" && current.status !== "WAITING_PARTS";
+    const leavingWaitingParts = current.status === "WAITING_PARTS" && input.status !== "WAITING_PARTS";
+    const additionalWaitingPartsMs =
+      leavingWaitingParts && current.waitingPartsStartedAt
+        ? now.getTime() - current.waitingPartsStartedAt.getTime()
+        : 0;
+    const slaWaitingPartsMs = (current.slaWaitingPartsMs ?? 0) + additionalWaitingPartsMs;
 
     if (current.status !== input.status) {
       historyEntries.push({
@@ -478,9 +489,11 @@ export const ticketRepository = {
       status: input.status,
       priority: input.priority,
       assigneeId: normalizeOptionalString(input.assigneeId),
-      resolvedAt: input.status === "RESOLVED" || input.status === "CLOSED" ? current.resolvedAt ?? new Date() : null,
-      closedAt: input.status === "CLOSED" || input.status === "CANCELED" ? current.closedAt ?? new Date() : null,
+      resolvedAt: input.status === "CLOSED" ? current.resolvedAt ?? now : null,
+      closedAt: input.status === "CLOSED" || input.status === "CANCELED" ? current.closedAt ?? now : null,
       closingReason: input.status === "CLOSED" || input.status === "CANCELED" ? normalizeOptionalString(input.closingReason) : null,
+      waitingPartsStartedAt: enteringWaitingParts ? now : leavingWaitingParts ? null : undefined,
+      slaWaitingPartsMs,
       history: historyEntries.length > 0 ? { create: historyEntries } : undefined
     };
 

@@ -47,7 +47,7 @@ export function TicketDetailActions({
   const canComment = canCommentTicket(role);
   const canSaveFields = canEditStatus || canEditPriorityValue || canEditAssignment;
   const requiresClosingReason = fields.status === "CANCELED";
-  const canReopen = canEditStatus && (ticket.status === "RESOLVED" || ticket.status === "CLOSED" || ticket.status === "CANCELED");
+  const canReopen = canEditStatus && (ticket.status === "CLOSED" || ticket.status === "CANCELED");
   const flow = getTicketFlowSummary(ticket);
   const groupedUsers = groupAssignableUsers(users, ticket.category);
 
@@ -192,80 +192,83 @@ export function TicketDetailActions({
               <p className="mt-1">{flow.nextAction}</p>
             </div>
 
-            {contractCoversCategory && (ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_CUSTOMER" || ticket.status === "RESOLVED") ? (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                <p className="font-semibold">Coberto pelo contrato</p>
-                <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Ao concluir o atendimento, você pode encerrar sem gerar cobrança.</p>
-                <Button type="button" className="mt-3 w-full bg-emerald-700 text-white hover:bg-emerald-800" disabled={isPending} onClick={closeByContract}>
-                  {isPending ? "Encerrando..." : "Encerrar sem cobrança"}
-                </Button>
-              </div>
-            ) : null}
-            {canEditStatus ? (
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status técnico</Label>
-                <Select id="status" value={fields.status} onChange={(event) => setFields((current) => ({ ...current, status: event.target.value as Ticket["status"] }))}>
-                  <option value="OPEN">Aberto</option>
-                  <option value="IN_PROGRESS">Em atendimento</option>
-                  <option value="WAITING_CUSTOMER">Aguardando cliente</option>
-                  {ticket.status === "RESOLVED" ? <option value="RESOLVED">Resolvido (legado)</option> : null}
-                  <option value="CLOSED">Concluído técnico</option>
-                  <option value="CANCELED">Cancelado</option>
-                </Select>
-              </div>
-            ) : null}
-            {canEditPriorityValue ? (
-              <div className="grid gap-2">
-                <Label htmlFor="priority">Prioridade</Label>
-                <Select id="priority" value={fields.priority} onChange={(event) => setFields((current) => ({ ...current, priority: event.target.value as Ticket["priority"] }))}>
-                  <option value="LOW">Baixa</option>
-                  <option value="MEDIUM">Média</option>
-                  <option value="HIGH">Alta</option>
-                  <option value="CRITICAL">Crítica</option>
-                </Select>
-              </div>
-            ) : null}
-            {canEditAssignment ? (
-              <div className="grid gap-2">
-                <Label htmlFor="assignee">Responsável</Label>
-                <Select id="assignee" value={fields.assigneeId} onChange={(event) => setFields((current) => ({ ...current, assigneeId: event.target.value }))}>
-                  <option value="">Não atribuído</option>
-                  {groupedUsers.suggestedUsers.length > 0 ? (
-                    <optgroup label={groupedUsers.suggestion.label}>
-                      {groupedUsers.suggestedUsers.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {formatUserWithRole(user)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ) : null}
-                  {groupedUsers.otherUsers.length > 0 ? (
-                    <optgroup label="Outros perfis operacionais">
-                      {groupedUsers.otherUsers.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {formatUserWithRole(user)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ) : null}
-                </Select>
-                <p className="text-xs text-slate-500">{groupedUsers.suggestion.description}</p>
-              </div>
-            ) : null}
-            {requiresClosingReason ? (
-              <div className="grid gap-2">
-                <Label htmlFor="closingReason">Motivo do cancelamento</Label>
-                <Textarea id="closingReason" value={fields.closingReason} onChange={(event) => setFields((current) => ({ ...current, closingReason: event.target.value }))} placeholder="Descreva por que o chamado foi cancelado" />
-              </div>
-            ) : null}
-            <Button type="button" className="w-full" disabled={isPending} onClick={saveFields}>
-              {isPending ? "Salvando..." : "Salvar alterações"}
-            </Button>
             {canReopen ? (
               <Button type="button" variant="outline" className="w-full" disabled={isPending} onClick={reopenTicket}>
                 {isPending ? "Processando..." : "Reabrir chamado"}
               </Button>
-            ) : null}
+            ) : (
+              <>
+                {contractCoversCategory && (ticket.status === "IN_PROGRESS" || ticket.status === "WAITING_CUSTOMER") ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    <p className="font-semibold">Coberto pelo contrato</p>
+                    <p className="mt-0.5">Esta categoria está inclusa no contrato do cliente. Ao concluir o atendimento, você pode encerrar sem gerar cobrança.</p>
+                    <Button type="button" className="mt-3 w-full bg-emerald-700 text-white hover:bg-emerald-800" disabled={isPending} onClick={closeByContract}>
+                      {isPending ? "Encerrando..." : "Encerrar sem cobrança"}
+                    </Button>
+                  </div>
+                ) : null}
+                {canEditStatus ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="status">Status técnico</Label>
+                    <Select id="status" value={fields.status} onChange={(event) => setFields((current) => ({ ...current, status: event.target.value as Ticket["status"] }))}>
+                      <option value="OPEN">Aberto</option>
+                      <option value="IN_PROGRESS">Em atendimento</option>
+                      <option value="WAITING_CUSTOMER">Aguardando cliente</option>
+                      <option value="WAITING_PARTS">Aguardando peças</option>
+                      <option value="CLOSED">Concluído técnico</option>
+                      <option value="CANCELED">Cancelado</option>
+                    </Select>
+                  </div>
+                ) : null}
+                {canEditPriorityValue ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="priority">Prioridade</Label>
+                    <Select id="priority" value={fields.priority} onChange={(event) => setFields((current) => ({ ...current, priority: event.target.value as Ticket["priority"] }))}>
+                      <option value="LOW">Baixa</option>
+                      <option value="MEDIUM">Média</option>
+                      <option value="HIGH">Alta</option>
+                      <option value="CRITICAL">Crítica</option>
+                    </Select>
+                  </div>
+                ) : null}
+                {canEditAssignment ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="assignee">Responsável</Label>
+                    <Select id="assignee" value={fields.assigneeId} onChange={(event) => setFields((current) => ({ ...current, assigneeId: event.target.value }))}>
+                      <option value="">Não atribuído</option>
+                      {groupedUsers.suggestedUsers.length > 0 ? (
+                        <optgroup label={groupedUsers.suggestion.label}>
+                          {groupedUsers.suggestedUsers.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              {formatUserWithRole(user)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : null}
+                      {groupedUsers.otherUsers.length > 0 ? (
+                        <optgroup label="Outros perfis operacionais">
+                          {groupedUsers.otherUsers.map((user) => (
+                            <option key={user.id} value={user.id}>
+                              {formatUserWithRole(user)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : null}
+                    </Select>
+                    <p className="text-xs text-slate-500">{groupedUsers.suggestion.description}</p>
+                  </div>
+                ) : null}
+                {requiresClosingReason ? (
+                  <div className="grid gap-2">
+                    <Label htmlFor="closingReason">Motivo do cancelamento</Label>
+                    <Textarea id="closingReason" value={fields.closingReason} onChange={(event) => setFields((current) => ({ ...current, closingReason: event.target.value }))} placeholder="Descreva por que o chamado foi cancelado" />
+                  </div>
+                ) : null}
+                <Button type="button" className="w-full" disabled={isPending} onClick={saveFields}>
+                  {isPending ? "Salvando..." : "Salvar alterações"}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : null}
@@ -280,24 +283,14 @@ export function TicketDetailActions({
             <Button type="button" className="w-full" disabled={isPending || !comment.trim()} onClick={submitComment}>
               {isPending ? "Enviando..." : "Adicionar ao histórico"}
             </Button>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {canComment ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Enviar anexo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="attachment">Arquivo</Label>
+            <div className="space-y-3 border-t border-slate-200 pt-4">
+              <Label htmlFor="attachment">Anexo</Label>
               <Input id="attachment" type="file" onChange={(event) => setAttachment(event.target.files?.[0] ?? null)} />
               <p className="text-xs text-slate-500">Limite de 5 MB por arquivo.</p>
+              <Button type="button" className="w-full" variant="outline" disabled={isPending} onClick={submitAttachment}>
+                {isPending ? "Enviando..." : "Enviar anexo"}
+              </Button>
             </div>
-            <Button type="button" className="w-full" disabled={isPending} onClick={submitAttachment}>
-              {isPending ? "Enviando..." : "Enviar anexo"}
-            </Button>
           </CardContent>
         </Card>
       ) : null}

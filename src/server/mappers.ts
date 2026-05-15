@@ -156,6 +156,8 @@ interface TicketRecord {
   closingReason: string | null;
   checkedInAt: Date | null;
   checkedOutAt: Date | null;
+  waitingPartsStartedAt: Date | null;
+  slaWaitingPartsMs: number;
   client: ClientRecord;
   assignee: UserRecord | null;
   openedBy: UserRecord;
@@ -580,6 +582,8 @@ export function mapTicket(record: TicketRecord): Ticket {
     closingReason: record.closingReason ?? undefined,
     checkedInAt: record.checkedInAt?.toISOString() ?? undefined,
     checkedOutAt: record.checkedOutAt?.toISOString() ?? undefined,
+    waitingPartsStartedAt: record.waitingPartsStartedAt?.toISOString() ?? undefined,
+    slaWaitingPartsMs: record.slaWaitingPartsMs,
     history: record.history.map(mapTicketHistory),
     attachments: (record.attachments ?? []).map(mapTicketAttachment),
     expenses: (record.expenses ?? []).map(mapExpense),

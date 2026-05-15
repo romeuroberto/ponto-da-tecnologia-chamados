@@ -31,13 +31,15 @@ export default async function PortalAppTicketDetailPage({ params }: { params: Pr
   const customerActionMessage =
     ticket.status === "WAITING_CUSTOMER"
       ? "Nosso time aguarda seu retorno para continuar o atendimento."
-      : ticket.status === "IN_PROGRESS"
-        ? "Seu chamado está em atendimento neste momento."
-        : ticket.status === "OPEN"
-          ? "Recebemos sua solicitação e ela está entrando em triagem."
-          : ticket.status === "RESOLVED" || ticket.status === "CLOSED"
-            ? "Este atendimento já foi concluído."
-            : "Este chamado foi encerrado sem continuidade.";
+      : ticket.status === "WAITING_PARTS"
+        ? "O atendimento está pausado aguardando a chegada de peças ou materiais."
+        : ticket.status === "IN_PROGRESS"
+          ? "Seu chamado está em atendimento neste momento."
+          : ticket.status === "OPEN"
+            ? "Recebemos sua solicitação e ela está entrando em triagem."
+            : ticket.status === "CLOSED"
+              ? "Este atendimento já foi concluído."
+              : "Este chamado foi encerrado sem continuidade.";
 
   const StatusIcon =
     ticket.status === "WAITING_CUSTOMER"

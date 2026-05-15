@@ -50,7 +50,7 @@ export const billingService = {
       throw new Error("Sua sessão não corresponde mais a um usuário ativo. Entre novamente.");
     }
 
-    const TERMINAL_TECHNICAL_STATUSES = ["RESOLVED", "CLOSED", "CANCELED"];
+    const TERMINAL_TECHNICAL_STATUSES = ["CLOSED", "CANCELED"];
     const REQUIRES_TERMINAL_TECHNICAL = ["FATURADO", "PAGO"];
 
     if (

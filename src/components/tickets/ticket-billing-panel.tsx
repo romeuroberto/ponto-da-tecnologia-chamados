@@ -199,7 +199,7 @@ const statusBadge: Record<FinancialStatus, { label: string; className: string }>
   CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
 };
 
-const TERMINAL_TECHNICAL_STATUSES = ["RESOLVED", "CLOSED", "CANCELED"] as const;
+const TERMINAL_TECHNICAL_STATUSES = ["CLOSED", "CANCELED"] as const;
 
 export function TicketBillingPanel({
   ticketId,

@@ -13,7 +13,7 @@ const technicalStatusLabels: Record<string, string> = {
   OPEN: "Aberto",
   IN_PROGRESS: "Em atendimento",
   WAITING_CUSTOMER: "Aguardando cliente",
-  RESOLVED: "Concluído tecnicamente",
+  WAITING_PARTS: "Aguardando peças",
   CLOSED: "Concluído tecnicamente",
   CANCELED: "Cancelado"
 };
