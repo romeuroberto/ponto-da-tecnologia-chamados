@@ -80,6 +80,7 @@ export const tickets: Ticket[] = [
     openedByName: "Carlos Souza",
     createdAt: "2026-04-30T09:15:00.000Z",
     updatedAt: "2026-04-30T11:20:00.000Z",
+    slaWaitingPartsMs: 0,
     attachments: [],
     serviceOrders: [],
     history: [
@@ -119,6 +120,7 @@ export const tickets: Ticket[] = [
     openedByName: "Mariana Costa",
     createdAt: "2026-04-30T08:40:00.000Z",
     updatedAt: "2026-04-30T10:05:00.000Z",
+    slaWaitingPartsMs: 0,
     attachments: [],
     serviceOrders: [],
     history: [
@@ -156,6 +158,7 @@ export const tickets: Ticket[] = [
     openedByName: "Carlos Souza",
     createdAt: "2026-04-29T15:10:00.000Z",
     updatedAt: "2026-04-29T15:10:00.000Z",
+    slaWaitingPartsMs: 0,
     attachments: [],
     serviceOrders: [],
     history: [
