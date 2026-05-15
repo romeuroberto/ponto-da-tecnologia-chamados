@@ -12,6 +12,7 @@ const slaWeight = {
   breached: 3,
   warning: 2,
   on_track: 1,
+  paused: 0,
   stopped: 0
 } as const;
 
