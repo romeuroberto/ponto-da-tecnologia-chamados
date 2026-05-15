@@ -27,7 +27,8 @@ export function FieldAppTicketCard({
     on_track: "bg-emerald-50 text-emerald-700",
     warning: "bg-amber-50 text-amber-700",
     breached: "bg-rose-50 text-rose-700",
-    stopped: "bg-slate-100 text-slate-600"
+    stopped: "bg-slate-100 text-slate-600",
+    paused: "bg-purple-50 text-purple-700"
   } as const;
 
   const content = (
