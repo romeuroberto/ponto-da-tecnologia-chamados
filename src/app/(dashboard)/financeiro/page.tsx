@@ -3,7 +3,7 @@ import type { Route } from "next";
 
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { PageHeader } from "@/components/layout/page-header";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -37,64 +37,46 @@ export default async function FinancialDashboardPage({
     to: to || undefined
   });
 
-  const quickFilters: Array<{ href: Route; label: string }> = [
-    { href: "/financeiro/despesas", label: "Despesas" },
-    { href: "/relatorios", label: "Relatórios completos" },
-    { href: "/chamados?status=CLOSED", label: "Chamados encerrados" },
-    { href: "/clientes", label: "Clientes" }
-  ];
-
   return (
     <div className="space-y-6">
       <PageHeader
         title="Dashboard Financeiro"
         description="Visão dedicada de faturamento, cobrança, despesas e caixa do período."
         action={
-          <div className="flex flex-wrap gap-2">
-            {quickFilters.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <Button variant="outline">{item.label}</Button>
-              </Link>
-            ))}
-            <a
-              href={financialExportHref}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
-            >
-              Exportar financeiro CSV
-            </a>
-          </div>
+          <a href={financialExportHref} className={buttonVariants({ variant: "outline" })}>
+            Exportar CSV
+          </a>
         }
       />
 
+      {/* Filtro de período */}
       <form action="/financeiro">
         <Card>
-          <CardContent className="grid gap-4 p-4 md:grid-cols-4">
-            <Input name="from" type="date" defaultValue={from} />
-            <Input name="to" type="date" defaultValue={to} />
+          <CardContent className="flex flex-wrap items-center gap-3 p-4">
+            <Input name="from" type="date" defaultValue={from} className="w-auto" />
+            <Input name="to" type="date" defaultValue={to} className="w-auto" />
             <Button type="submit" variant="secondary">
-              Atualizar dashboard
+              Filtrar
             </Button>
-            <a
-              href="/financeiro"
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50"
-            >
-              Limpar período
+            <a href="/financeiro" className={buttonVariants({ variant: "outline" })}>
+              Limpar
             </a>
           </CardContent>
         </Card>
       </form>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Card className="border-sky-200 bg-sky-50/60">
-          <CardContent className="p-5">
-            <p className="text-sm text-sky-700">Chamados com financeiro</p>
-            <p className="mt-2 text-3xl font-semibold text-sky-950">{dashboard.summary.totalTicketsWithBilling}</p>
-          </CardContent>
-        </Card>
+      {/* KPIs principais */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="border-emerald-200 bg-emerald-50/60">
           <CardContent className="p-5">
-            <p className="text-sm text-emerald-700">Total financeiro</p>
+            <p className="text-sm text-emerald-700">Total faturado</p>
             <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(dashboard.summary.totalAmount)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-sky-200 bg-sky-50/60">
+          <CardContent className="p-5">
+            <p className="text-sm text-sky-700">Recebido</p>
+            <p className="mt-2 text-2xl font-semibold text-sky-950">{formatCurrency(dashboard.summary.paidAmount)}</p>
           </CardContent>
         </Card>
         <Card className="border-rose-200 bg-rose-50/60">
@@ -105,18 +87,41 @@ export default async function FinancialDashboardPage({
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Faturados</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.invoicedCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Pagos</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.paidCount}</p>
+            <p className="text-sm text-slate-600">Ticket médio</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.averageTicketValue)}</p>
           </CardContent>
         </Card>
       </section>
 
+      {/* KPIs secundários */}
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-slate-600">Chamados com financeiro</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.totalTicketsWithBilling}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-slate-600">Aprovados a faturar</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.approvedCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-slate-600">Em aberto já faturado</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.invoicedOpenAmount)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-5">
+            <p className="text-sm text-slate-600">Descontos concedidos</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.discountAmount)}</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Caixa do período */}
       <section className="grid gap-4 md:grid-cols-3">
         <Card className="border-emerald-200 bg-emerald-50/60">
           <CardContent className="p-5">
@@ -138,24 +143,8 @@ export default async function FinancialDashboardPage({
         </Card>
       </section>
 
+      {/* Status do pipeline e tipos de cobrança */}
       <section className="grid gap-6 xl:grid-cols-2">
-        <TrendChart
-          title="Faturamentos recentes"
-          description="Quantidade de chamados faturados nos últimos 7 dias."
-          total={dashboard.trend.reduce((sum, item) => sum + item.invoiced, 0)}
-          data={dashboard.trend.map((item) => ({ label: item.label, value: item.invoiced }))}
-          tone="blue"
-        />
-        <TrendChart
-          title="Recebimentos recentes"
-          description="Quantidade de chamados pagos nos últimos 7 dias."
-          total={dashboard.trend.reduce((sum, item) => sum + item.paid, 0)}
-          data={dashboard.trend.map((item) => ({ label: item.label, value: item.paid }))}
-          tone="green"
-        />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
             <CardTitle>Status financeiro</CardTitle>
@@ -191,21 +180,40 @@ export default async function FinancialDashboardPage({
         </Card>
       </section>
 
+      {/* Gráficos de tendência */}
+      <section className="grid gap-6 xl:grid-cols-2">
+        <TrendChart
+          title="Faturamentos recentes"
+          description="Quantidade de chamados faturados nos últimos 7 dias."
+          total={dashboard.trend.reduce((sum, item) => sum + item.invoiced, 0)}
+          data={dashboard.trend.map((item) => ({ label: item.label, value: item.invoiced }))}
+          tone="blue"
+        />
+        <TrendChart
+          title="Recebimentos recentes"
+          description="Quantidade de chamados pagos nos últimos 7 dias."
+          total={dashboard.trend.reduce((sum, item) => sum + item.paid, 0)}
+          data={dashboard.trend.map((item) => ({ label: item.label, value: item.paid }))}
+          tone="green"
+        />
+      </section>
+
+      {/* Despesas */}
       <section className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Despesas do período</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
+          <CardContent className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 px-4 py-3">
-              <p className="text-sm text-slate-600">Total de despesas</p>
+              <p className="text-sm text-slate-600">Total de lançamentos</p>
               <p className="mt-1 text-2xl font-semibold text-slate-950">{dashboard.expenses.totalCount}</p>
             </div>
             <div className="rounded-xl border border-slate-200 px-4 py-3">
               <p className="text-sm text-slate-600">Pendentes</p>
               <p className="mt-1 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.expenses.pendingAmount)}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 px-4 py-3 sm:col-span-2">
+            <div className="rounded-xl border border-slate-200 px-4 py-3">
               <p className="text-sm text-slate-600">Pagas</p>
               <p className="mt-1 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.expenses.paidAmount)}</p>
             </div>
@@ -234,6 +242,7 @@ export default async function FinancialDashboardPage({
         </Card>
       </section>
 
+      {/* Clientes e atividade recente */}
       <section className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader>
@@ -285,47 +294,13 @@ export default async function FinancialDashboardPage({
         </Card>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Pendentes e em análise</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.pendingCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Recebido</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.paidAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Ticket médio</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.averageTicketValue)}</p>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Em aberto já faturado</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.invoicedOpenAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Aprovados aguardando faturamento</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.approvedCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Descontos concedidos</p>
-            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.discountAmount)}</p>
-          </CardContent>
-        </Card>
-      </section>
+      {/* Navegação rápida */}
+      <nav className="flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+        <Link href="/financeiro/cobrancas" className={buttonVariants({ variant: "outline" })}>Cobranças</Link>
+        <Link href="/financeiro/despesas" className={buttonVariants({ variant: "outline" })}>Despesas</Link>
+        <Link href="/financeiro/clientes" className={buttonVariants({ variant: "outline" })}>Clientes</Link>
+        <Link href="/relatorios" className={buttonVariants({ variant: "outline" })}>Relatórios completos</Link>
+      </nav>
     </div>
   );
 }
