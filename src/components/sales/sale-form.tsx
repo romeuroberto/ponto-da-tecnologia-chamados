@@ -36,12 +36,15 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
     setUnitPrice(String(autoPrice));
   }
   const [internalNotes, setInternalNotes] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState("");
   const [items, setItems] = useState<SaleLineItem[]>([]);
   const [selectedPartId, setSelectedPartId] = useState("");
   const [qty, setQty] = useState("1");
   const [unitPrice, setUnitPrice] = useState("");
 
-  const total = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const deliveryFeeValue = parseFloat(deliveryFee) || 0;
+  const total = subtotal + deliveryFeeValue;
 
   function handleAddItem() {
     const part = parts.find((p) => p.id === selectedPartId);
@@ -80,7 +83,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
       const res = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId, internalNotes: internalNotes || undefined, items })
+        body: JSON.stringify({ clientId, internalNotes: internalNotes || undefined, deliveryFee: deliveryFeeValue > 0 ? deliveryFeeValue : undefined, items })
       });
       const json = await res.json();
       if (!res.ok) {
@@ -97,10 +100,22 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
       {error && <p className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
 
       <Card>
-        <CardContent className="grid gap-4 p-6 md:grid-cols-2">
+        <CardContent className="grid gap-4 p-6 md:grid-cols-3">
           <div className="grid gap-2">
             <Label>Cliente</Label>
             <ClientCombobox clients={clients} value={clientId} onChange={handleClientChange} disabled={isPending} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Taxa de entrega (R$)</Label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={deliveryFee}
+              onChange={(e) => setDeliveryFee(e.target.value)}
+              placeholder="0,00"
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+            />
           </div>
           <div className="grid gap-2">
             <Label>Observações internas</Label>
@@ -192,7 +207,13 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
                   </button>
                 </div>
               ))}
-              <div className="flex justify-end rounded-lg bg-slate-50 px-2 py-2">
+              <div className="flex flex-col items-end gap-1 rounded-lg bg-slate-50 px-2 py-2">
+                {deliveryFeeValue > 0 && (
+                  <>
+                    <span className="text-sm text-slate-500">Subtotal: {formatCurrency(subtotal)}</span>
+                    <span className="text-sm text-slate-500">Taxa de entrega: {formatCurrency(deliveryFeeValue)}</span>
+                  </>
+                )}
                 <span className="text-sm font-semibold text-slate-950">Total: {formatCurrency(total)}</span>
               </div>
             </div>

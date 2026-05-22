@@ -26,6 +26,7 @@ interface PartCatalogRecord {
   unitPrice: { toNumber(): number };
   resalePrice: { toNumber(): number } | null;
   stockQuantity: { toNumber(): number };
+  minimumStock?: { toNumber(): number } | null;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +51,7 @@ export interface PartCatalogUpsertInput {
   costPrice: number;
   unitPrice: number;
   resalePrice?: number | null;
+  minimumStock?: number | null;
   active: boolean;
 }
 
@@ -117,6 +119,7 @@ function mapPartCatalogItem(record: PartCatalogRecord): PartCatalogItem {
     unitPrice: record.unitPrice.toNumber(),
     resalePrice: record.resalePrice?.toNumber() ?? undefined,
     stockQuantity: record.stockQuantity.toNumber(),
+    minimumStock: record.minimumStock != null ? record.minimumStock.toNumber() : undefined,
     active: record.active,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString()
@@ -247,6 +250,7 @@ export const catalogRepository = {
         costPrice: input.costPrice,
         unitPrice: input.unitPrice,
         resalePrice: input.resalePrice ?? null,
+        minimumStock: input.minimumStock ?? null,
         active: input.active
       }
     });
@@ -275,6 +279,7 @@ export const catalogRepository = {
         costPrice: input.costPrice,
         unitPrice: input.unitPrice,
         resalePrice: input.resalePrice ?? null,
+        minimumStock: input.minimumStock ?? null,
         active: input.active
       }
     });

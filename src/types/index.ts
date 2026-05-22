@@ -58,6 +58,9 @@ export type BillingHistoryEventType =
 
 export type StockMovementType = "ENTRY" | "SALE_EXIT" | "SERVICE_ORDER_EXIT" | "ADJUSTMENT";
 
+export type EquipmentStatus = "DISPONIVEL" | "LOCADO" | "MANUTENCAO" | "BAIXADO";
+export type RentalContractStatus = "RASCUNHO" | "ATIVO" | "ENCERRADO" | "EXPIRADO";
+
 export type HistoryEventType =
   | "COMMENT"
   | "STATUS_CHANGE"
@@ -186,6 +189,7 @@ export interface PartCatalogItem {
   unitPrice: number;
   resalePrice?: number;
   stockQuantity: number;
+  minimumStock?: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -225,6 +229,7 @@ export interface Sale {
   paymentDate?: string;
   paymentReference?: string;
   internalNotes?: string;
+  deliveryFee: number;
   totalAmount: number;
   paidAt?: string;
   canceledAt?: string;
@@ -462,4 +467,70 @@ export interface PaginationResult<T> {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface Equipment {
+  id: string;
+  model: string;
+  serialNumber: string;
+  patrimonyCode?: string;
+  status: EquipmentStatus;
+  purchaseDate?: string;
+  purchaseCost?: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RentalContractItem {
+  id: string;
+  rentalContractId: string;
+  equipmentId: string;
+  equipmentModel: string;
+  equipmentSerialNumber: string;
+  monthlyPrice: number;
+  installedAt: string;
+  returnedAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RentalBilling {
+  id: string;
+  rentalContractId: string;
+  clientId: string;
+  clientName: string;
+  referenceMonth: number;
+  referenceYear: number;
+  amount: number;
+  dueDate?: string;
+  financialStatus: FinancialStatus;
+  paymentMethod?: string;
+  paymentDate?: string;
+  paymentReference?: string;
+  paidAt?: string;
+  canceledAt?: string;
+  notes?: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RentalContract {
+  id: string;
+  contractNumber: string;
+  clientId: string;
+  clientName: string;
+  status: RentalContractStatus;
+  startDate: string;
+  endDate?: string;
+  noticeDays: number;
+  totalMonthlyValue: number;
+  notes?: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+  items: RentalContractItem[];
+  billings: RentalBilling[];
 }

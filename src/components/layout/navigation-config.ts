@@ -52,6 +52,14 @@ export const appNavigation: NavigationItem[] = [
       { href: "/estoque", label: "Estoque" }
     ]
   },
+  {
+    href: "/locacoes",
+    label: "Locações",
+    children: [
+      { href: "/locacoes", label: "Contratos" },
+      { href: "/locacoes/equipamentos" as Route, label: "Equipamentos" }
+    ]
+  },
   { href: "/relatorios", label: "Relatórios" },
   {
     href: "/catalogos",
@@ -79,6 +87,7 @@ export function filterNavigationByRole(items: NavigationItem[], role?: AppUser["
     if (item.href === "/empresa") return role === "ADMIN";
     if (item.href === "/catalogos") return canViewCatalogModule(role);
     if (item.href === "/vendas") return canViewSalesModule(role);
+    if (item.href === "/locacoes") return role === "ADMIN" || role === "ATTENDANT";
     return true;
   });
 }

@@ -180,6 +180,7 @@ export interface ReceiptData {
   items: ReceiptItem[];
   subtotalAmount: number;
   discountAmount: number;
+  deliveryFee?: number;
   totalAmount: number;
   isCortesia?: boolean;
   paymentMethod?: string;
@@ -276,16 +277,24 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
 
         {/* ── Totais ───────────────────────────────────── */}
         <View style={s.totalsBlock}>
-          {data.discountAmount > 0 ? (
+          {(data.discountAmount > 0 || (data.deliveryFee ?? 0) > 0) ? (
             <>
               <View style={s.subRow}>
                 <Text style={s.subLabel}>Subtotal</Text>
                 <Text style={s.subValue}>{fmt(data.subtotalAmount)}</Text>
               </View>
-              <View style={s.subRow}>
-                <Text style={s.subLabel}>Desconto</Text>
-                <Text style={s.discountValue}>- {fmt(data.discountAmount)}</Text>
-              </View>
+              {(data.deliveryFee ?? 0) > 0 ? (
+                <View style={s.subRow}>
+                  <Text style={s.subLabel}>Taxa de entrega</Text>
+                  <Text style={s.subValue}>{fmt(data.deliveryFee ?? 0)}</Text>
+                </View>
+              ) : null}
+              {data.discountAmount > 0 ? (
+                <View style={s.subRow}>
+                  <Text style={s.subLabel}>Desconto</Text>
+                  <Text style={s.discountValue}>- {fmt(data.discountAmount)}</Text>
+                </View>
+              ) : null}
             </>
           ) : null}
           <View style={s.totalRule} />

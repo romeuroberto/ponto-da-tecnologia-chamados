@@ -2,7 +2,7 @@ import type { FinancialStatus } from "@/types";
 import { isDatabaseConfigured } from "@/server/db-support";
 import { generateSaleNumber } from "@/server/number-generator";
 import { saleRepository, type UpdateSaleStatusInput } from "@/server/repositories/sale-repository";
-import { stockRepository } from "@/server/repositories/stock-repository";
+import { stockRepository, type ListMovementsInput } from "@/server/repositories/stock-repository";
 
 export const saleService = {
   async listSales(input: { financialStatus?: FinancialStatus; clientId?: string; q?: string; from?: string; to?: string } = {}) {
@@ -24,6 +24,7 @@ export const saleService = {
   async createSale(input: {
     clientId: string;
     internalNotes?: string;
+    deliveryFee?: number;
     createdById: string;
     items: Array<{
       partCatalogItemId: string;
@@ -47,7 +48,7 @@ export const saleService = {
     });
 
     const number = await generateSaleNumber();
-    return saleRepository.create({ number, clientId: input.clientId, internalNotes: input.internalNotes, createdById: input.createdById, items });
+    return saleRepository.create({ number, clientId: input.clientId, internalNotes: input.internalNotes, deliveryFee: input.deliveryFee, createdById: input.createdById, items });
   },
 
   async updateSaleStatus(id: string, input: UpdateSaleStatusInput) {
@@ -67,7 +68,18 @@ export const saleService = {
     return stockRepository.addEntry(input);
   },
 
-  async listMovements(partCatalogItemId?: string) {
-    return stockRepository.listMovements(partCatalogItemId);
+  async addStockAdjustment(input: { partCatalogItemId: string; newQuantity: number; notes?: string; createdById: string }) {
+    return stockRepository.addAdjustment(input);
+  },
+
+  async listMovements(input: ListMovementsInput = {}) {
+    if (!isDatabaseConfigured()) {
+      return { movements: [], total: 0, totalPages: 1 };
+    }
+    return stockRepository.listMovements(input);
+  },
+
+  async deletePart(id: string) {
+    return stockRepository.deletePart(id);
   }
 };

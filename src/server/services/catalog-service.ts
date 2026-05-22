@@ -52,6 +52,7 @@ export const catalogService = {
       costPrice: input.costPrice,
       unitPrice: input.unitPrice,
       resalePrice: input.resalePrice ?? null,
+      minimumStock: input.minimumStock ?? null,
       active: input.active
     });
 
@@ -85,6 +86,7 @@ export const catalogService = {
       costPrice: input.costPrice,
       unitPrice: input.unitPrice,
       resalePrice: input.resalePrice ?? null,
+      minimumStock: input.minimumStock ?? null,
       active: input.active
     });
   }

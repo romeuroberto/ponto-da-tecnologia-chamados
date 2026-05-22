@@ -7,7 +7,7 @@ import type { PartCatalogItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { PartCombobox } from "@/components/ui/part-combobox";
 
 export function StockEntryForm({ parts }: { parts: PartCatalogItem[] }) {
   const router = useRouter();
@@ -51,12 +51,7 @@ export function StockEntryForm({ parts }: { parts: PartCatalogItem[] }) {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid gap-1.5">
             <Label>Material</Label>
-            <Select value={partId} onChange={(e) => setPartId(e.target.value)}>
-              <option value="">Selecione</option>
-              {parts.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}{p.code ? ` (${p.code})` : ""}</option>
-              ))}
-            </Select>
+            <PartCombobox parts={parts} value={partId} onChange={setPartId} />
           </div>
           <div className="grid gap-1.5">
             <Label>Quantidade</Label>

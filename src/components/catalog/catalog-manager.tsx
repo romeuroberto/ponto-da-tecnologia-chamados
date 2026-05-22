@@ -40,6 +40,7 @@ type PartFormState = {
   costPrice: string;
   unitPrice: string;
   resalePrice: string;
+  minimumStock: string;
   initialQuantity: string;
   active: boolean;
 };
@@ -63,6 +64,7 @@ const emptyPartForm: PartFormState = {
   costPrice: formatCurrencyInput(0),
   unitPrice: formatCurrencyInput(0),
   resalePrice: "",
+  minimumStock: "",
   initialQuantity: "0",
   active: true
 };
@@ -113,6 +115,7 @@ export function CatalogManager({
           costPrice: formatCurrencyInput(item.costPrice),
           unitPrice: formatCurrencyInput(item.unitPrice),
           resalePrice: item.resalePrice != null ? formatCurrencyInput(item.resalePrice) : "",
+          minimumStock: item.minimumStock != null ? String(item.minimumStock) : "",
           active: item.active
         }
       ])
@@ -215,6 +218,7 @@ export function CatalogManager({
       costPrice: parseCurrencyInput(draft.costPrice),
       unitPrice: parseCurrencyInput(draft.unitPrice),
       resalePrice: draft.resalePrice ? parseCurrencyInput(draft.resalePrice) : null,
+      minimumStock: draft.minimumStock !== "" ? Number(draft.minimumStock) : null,
       ...(id ? {} : { initialQuantity: Number(newPart.initialQuantity || "0") })
     };
 
@@ -244,6 +248,7 @@ export function CatalogManager({
               costPrice: formatCurrencyInput(data.costPrice),
               unitPrice: formatCurrencyInput(data.unitPrice),
               resalePrice: data.resalePrice != null ? formatCurrencyInput(data.resalePrice) : "",
+              minimumStock: data.minimumStock != null ? String(data.minimumStock) : "",
               active: data.active
             }
           }));
@@ -262,6 +267,7 @@ export function CatalogManager({
             costPrice: formatCurrencyInput(data.costPrice),
             unitPrice: formatCurrencyInput(data.unitPrice),
             resalePrice: data.resalePrice != null ? formatCurrencyInput(data.resalePrice) : "",
+            minimumStock: data.minimumStock != null ? String(data.minimumStock) : "",
             active: data.active
           }
         }));
@@ -689,6 +695,18 @@ export function CatalogManager({
                     />
                   </div>
                 </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="part-min-stock">Estoque mínimo <span className="text-slate-400 font-normal">(opcional)</span></Label>
+                    <Input
+                      id="part-min-stock"
+                      inputMode="decimal"
+                      placeholder="—"
+                      value={newPart.minimumStock}
+                      onChange={(event) => setNewPart((current) => ({ ...current, minimumStock: event.target.value }))}
+                    />
+                  </div>
+                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="part-description">Descrição</Label>
                   <Textarea id="part-description" value={newPart.description} onChange={(event) => setNewPart((current) => ({ ...current, description: event.target.value }))} />
@@ -821,6 +839,17 @@ export function CatalogManager({
                               }
                             />
                           </div>
+                          <div className="grid gap-4 md:grid-cols-3">
+                            <div className="grid gap-2">
+                              <label className="text-sm font-medium text-slate-700">Estoque mínimo <span className="font-normal text-slate-400">(opcional)</span></label>
+                              <Input
+                                inputMode="decimal"
+                                placeholder="—"
+                                value={draft.minimumStock}
+                                onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], minimumStock: event.target.value } }))}
+                              />
+                            </div>
+                          </div>
                           <Select
                             value={draft.unit}
                             onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unit: event.target.value } }))}
@@ -855,6 +884,7 @@ export function CatalogManager({
                             </p>
                             <p className="mt-1 text-sm text-slate-600">
                               custo {formatCurrency(item.costPrice)} · estoque {item.stockQuantity} {item.unit}
+                              {item.minimumStock != null ? <span className="ml-1 text-slate-400">· mín. {item.minimumStock} {item.unit}</span> : null}
                             </p>
                             {item.description ? <p className="mt-2 text-sm text-slate-600">{item.description}</p> : null}
                           </div>

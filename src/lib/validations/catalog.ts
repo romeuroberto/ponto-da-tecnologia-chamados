@@ -15,6 +15,7 @@ export const partCatalogItemSchema = z.object({
   costPrice: z.coerce.number().min(0, "Custo nao pode ser negativo"),
   unitPrice: z.coerce.number().min(0, "Valor nao pode ser negativo"),
   resalePrice: z.coerce.number().min(0, "Valor nao pode ser negativo").optional().nullable(),
+  minimumStock: z.coerce.number().min(0, "Estoque minimo nao pode ser negativo").optional().nullable(),
   initialQuantity: z.coerce.number().min(0, "Quantidade inicial nao pode ser negativa").default(0),
   active: z.boolean().default(true)
 });

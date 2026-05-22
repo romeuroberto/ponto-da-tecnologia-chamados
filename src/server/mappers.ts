@@ -6,12 +6,16 @@ import type {
   ClientBillingProfile,
   ClientContract,
   CompanyProfile,
+  Equipment,
   Expense,
   FiscalDocument,
   FiscalDocumentLink,
   OsContribution,
   PaymentInstruction,
   RecurringExpense,
+  RentalBilling,
+  RentalContract,
+  RentalContractItem,
   Sale,
   SaleItem,
   ServiceOrderPart,
@@ -241,6 +245,7 @@ interface SaleRecord {
   paymentDate: Date | null;
   paymentReference: string | null;
   internalNotes: string | null;
+  deliveryFee?: PrismaDecimalLike;
   totalAmount: PrismaDecimalLike;
   paidAt: Date | null;
   canceledAt: Date | null;
@@ -636,6 +641,7 @@ export function mapSale(record: SaleRecord): Sale {
     paymentDate: record.paymentDate?.toISOString() ?? undefined,
     paymentReference: record.paymentReference ?? undefined,
     internalNotes: record.internalNotes ?? undefined,
+    deliveryFee: record.deliveryFee?.toNumber() ?? 0,
     totalAmount: record.totalAmount.toNumber(),
     paidAt: record.paidAt?.toISOString() ?? undefined,
     canceledAt: record.canceledAt?.toISOString() ?? undefined,
@@ -990,5 +996,159 @@ export const ticketIncludeWithoutServiceOrderParts = {
         }
       }
     }
+  }
+} as const;
+
+// ── Rental module ─────────────────────────────────────────────────────────────
+
+interface EquipmentRecord {
+  id: string;
+  model: string;
+  serialNumber: string;
+  patrimonyCode: string | null;
+  status: Equipment["status"];
+  purchaseDate: Date | null;
+  purchaseCost: PrismaDecimalLike | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface RentalContractItemRecord {
+  id: string;
+  rentalContractId: string;
+  equipmentId: string;
+  equipment: { model: string; serialNumber: string };
+  monthlyPrice: PrismaDecimalLike;
+  installedAt: Date;
+  returnedAt: Date | null;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface RentalBillingRecord {
+  id: string;
+  rentalContractId: string;
+  clientId: string;
+  client: { name: string };
+  referenceMonth: number;
+  referenceYear: number;
+  amount: PrismaDecimalLike;
+  dueDate: Date | null;
+  financialStatus: RentalBilling["financialStatus"];
+  paymentMethod: string | null;
+  paymentDate: Date | null;
+  paymentReference: string | null;
+  paidAt: Date | null;
+  canceledAt: Date | null;
+  notes: string | null;
+  createdBy: { name: string };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface RentalContractRecord {
+  id: string;
+  contractNumber: string;
+  clientId: string;
+  client: { name: string };
+  status: RentalContract["status"];
+  startDate: Date;
+  endDate: Date | null;
+  noticeDays: number;
+  totalMonthlyValue: PrismaDecimalLike;
+  notes: string | null;
+  createdBy: { name: string };
+  createdAt: Date;
+  updatedAt: Date;
+  items: RentalContractItemRecord[];
+  billings: RentalBillingRecord[];
+}
+
+export function mapEquipment(r: EquipmentRecord): Equipment {
+  return {
+    id: r.id,
+    model: r.model,
+    serialNumber: r.serialNumber,
+    patrimonyCode: r.patrimonyCode ?? undefined,
+    status: r.status,
+    purchaseDate: r.purchaseDate?.toISOString(),
+    purchaseCost: r.purchaseCost?.toNumber(),
+    notes: r.notes ?? undefined,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString()
+  };
+}
+
+export function mapRentalContractItem(r: RentalContractItemRecord): RentalContractItem {
+  return {
+    id: r.id,
+    rentalContractId: r.rentalContractId,
+    equipmentId: r.equipmentId,
+    equipmentModel: r.equipment.model,
+    equipmentSerialNumber: r.equipment.serialNumber,
+    monthlyPrice: r.monthlyPrice.toNumber(),
+    installedAt: r.installedAt.toISOString(),
+    returnedAt: r.returnedAt?.toISOString(),
+    notes: r.notes ?? undefined,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString()
+  };
+}
+
+export function mapRentalBilling(r: RentalBillingRecord): RentalBilling {
+  return {
+    id: r.id,
+    rentalContractId: r.rentalContractId,
+    clientId: r.clientId,
+    clientName: r.client.name,
+    referenceMonth: r.referenceMonth,
+    referenceYear: r.referenceYear,
+    amount: r.amount.toNumber(),
+    dueDate: r.dueDate?.toISOString(),
+    financialStatus: r.financialStatus,
+    paymentMethod: r.paymentMethod ?? undefined,
+    paymentDate: r.paymentDate?.toISOString(),
+    paymentReference: r.paymentReference ?? undefined,
+    paidAt: r.paidAt?.toISOString(),
+    canceledAt: r.canceledAt?.toISOString(),
+    notes: r.notes ?? undefined,
+    createdByName: r.createdBy.name,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString()
+  };
+}
+
+export function mapRentalContract(r: RentalContractRecord): RentalContract {
+  return {
+    id: r.id,
+    contractNumber: r.contractNumber,
+    clientId: r.clientId,
+    clientName: r.client.name,
+    status: r.status,
+    startDate: r.startDate.toISOString(),
+    endDate: r.endDate?.toISOString(),
+    noticeDays: r.noticeDays,
+    totalMonthlyValue: r.totalMonthlyValue.toNumber(),
+    notes: r.notes ?? undefined,
+    createdByName: r.createdBy.name,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+    items: r.items.map(mapRentalContractItem),
+    billings: r.billings.map(mapRentalBilling)
+  };
+}
+
+export const rentalContractInclude = {
+  client: true,
+  createdBy: true,
+  items: {
+    include: { equipment: true },
+    orderBy: { installedAt: "asc" as const }
+  },
+  billings: {
+    include: { client: true, createdBy: true },
+    orderBy: [{ referenceYear: "desc" as const }, { referenceMonth: "desc" as const }]
   }
 } as const;

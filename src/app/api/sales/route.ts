@@ -8,6 +8,7 @@ import type { FinancialStatus } from "@/types";
 const createSaleSchema = z.object({
   clientId: z.string().min(1),
   internalNotes: z.string().optional(),
+  deliveryFee: z.number().min(0).optional(),
   items: z.array(z.object({
     partCatalogItemId: z.string().min(1),
     quantity: z.number().positive(),

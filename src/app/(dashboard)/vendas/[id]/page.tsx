@@ -58,6 +58,18 @@ export default async function VendaDetailPage({ params }: { params: Promise<{ id
                     <span className="text-right font-semibold tabular-nums text-slate-950">{formatCurrency(item.totalPrice)}</span>
                   </div>
                 ))}
+                {sale.deliveryFee > 0 && (
+                  <>
+                    <div className="flex items-center justify-between px-6 py-2.5 text-sm text-slate-500">
+                      <span>Subtotal</span>
+                      <span className="tabular-nums">{formatCurrency(sale.totalAmount - sale.deliveryFee)}</span>
+                    </div>
+                    <div className="flex items-center justify-between px-6 py-2.5 text-sm text-slate-500">
+                      <span>Taxa de entrega</span>
+                      <span className="tabular-nums">{formatCurrency(sale.deliveryFee)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
                   <span className="text-sm font-semibold text-slate-500 uppercase tracking-wide">Total</span>
                   <span className="text-xl font-bold text-slate-900 tabular-nums">{formatCurrency(sale.totalAmount)}</span>

@@ -84,8 +84,9 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
         unitPrice: item.unitPrice,
         totalPrice: item.totalPrice
       })),
-      subtotalAmount: sale.totalAmount,
+      subtotalAmount: sale.totalAmount - sale.deliveryFee,
       discountAmount: 0,
+      deliveryFee: sale.deliveryFee > 0 ? sale.deliveryFee : undefined,
       totalAmount: sale.totalAmount,
       paymentMethod: sale.paymentMethod,
       paymentDate: sale.paymentDate,

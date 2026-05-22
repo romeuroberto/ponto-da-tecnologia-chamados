@@ -6,6 +6,7 @@ export interface CreateSaleInput {
   number: string;
   clientId: string;
   internalNotes?: string;
+  deliveryFee?: number;
   createdById: string;
   items: Array<{
     partCatalogItemId: string;
@@ -56,9 +57,11 @@ export const saleRepository = {
   },
 
   async create(input: CreateSaleInput): Promise<Sale> {
-    const total = toMoney(
+    const itemsTotal = toMoney(
       input.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
     );
+    const deliveryFee = toMoney(input.deliveryFee ?? 0);
+    const total = toMoney(itemsTotal + deliveryFee);
 
     return prisma.$transaction(async (tx) => {
       const sale = await tx.sale.create({
@@ -66,6 +69,8 @@ export const saleRepository = {
           number: input.number,
           clientId: input.clientId,
           internalNotes: input.internalNotes ?? null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(deliveryFee > 0 ? { deliveryFee } as any : {}),
           totalAmount: total,
           createdById: input.createdById,
           items: {

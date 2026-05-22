@@ -42,8 +42,7 @@ const clientSeedData = [
       hourlyRate: 180,
       travelRate: 90,
       defaultDiscountPercent: 8,
-      hasActiveContract: true,
-      contractNotes: "Contrato mensal com franquia reduzida para visitas presenciais."
+      billingInstructions: "Contrato mensal com franquia reduzida para visitas presenciais."
     }
   },
   {
@@ -57,8 +56,7 @@ const clientSeedData = [
       hourlyRate: 210,
       travelRate: 120,
       defaultDiscountPercent: 0,
-      hasActiveContract: false,
-      contractNotes: "Atendimentos cobrados por hora com deslocamento separado."
+      billingInstructions: "Atendimentos cobrados por hora com deslocamento separado."
     }
   },
   {
@@ -71,8 +69,7 @@ const clientSeedData = [
       hourlyRate: 165,
       travelRate: 75,
       defaultDiscountPercent: 5,
-      hasActiveContract: true,
-      contractNotes: "Contrato com desconto padrao para ajustes pequenos."
+      billingInstructions: "Contrato com desconto padrao para ajustes pequenos."
     }
   },
   {
@@ -86,8 +83,7 @@ const clientSeedData = [
       hourlyRate: 240,
       travelRate: 140,
       defaultDiscountPercent: 0,
-      hasActiveContract: false,
-      contractNotes: "Cliente sensivel a incidentes criticos fora do horario."
+      billingInstructions: "Cliente sensivel a incidentes criticos fora do horario."
     }
   },
   {
@@ -100,8 +96,7 @@ const clientSeedData = [
       hourlyRate: 155,
       travelRate: 70,
       defaultDiscountPercent: 10,
-      hasActiveContract: true,
-      contractNotes: "Chamados academicos com maior volume em inicio de semestre."
+      billingInstructions: "Chamados academicos com maior volume em inicio de semestre."
     }
   },
   {
@@ -114,8 +109,7 @@ const clientSeedData = [
       hourlyRate: 175,
       travelRate: 95,
       defaultDiscountPercent: 0,
-      hasActiveContract: false,
-      contractNotes: "Atendimentos pontuais de hardware e impressao."
+      billingInstructions: "Atendimentos pontuais de hardware e impressao."
     }
   },
   {
@@ -129,8 +123,7 @@ const clientSeedData = [
       hourlyRate: 195,
       travelRate: 100,
       defaultDiscountPercent: 6,
-      hasActiveContract: true,
-      contractNotes: "Cobertura de plantao remoto durante madrugadas."
+      billingInstructions: "Cobertura de plantao remoto durante madrugadas."
     }
   },
   {
@@ -143,8 +136,7 @@ const clientSeedData = [
       hourlyRate: 0,
       travelRate: 0,
       defaultDiscountPercent: 100,
-      hasActiveContract: false,
-      contractNotes: "Itens em garantia para PDV e impressoras fiscais."
+      billingInstructions: "Itens em garantia para PDV e impressoras fiscais."
     }
   },
   {
@@ -157,8 +149,7 @@ const clientSeedData = [
       hourlyRate: 230,
       travelRate: 150,
       defaultDiscountPercent: 3,
-      hasActiveContract: false,
-      contractNotes: "Visitas in loco frequentes para canteiros."
+      billingInstructions: "Visitas in loco frequentes para canteiros."
     }
   },
   {
@@ -171,8 +162,7 @@ const clientSeedData = [
       hourlyRate: 0,
       travelRate: 0,
       defaultDiscountPercent: 100,
-      hasActiveContract: false,
-      contractNotes: "Primeiro mes de onboarding com suporte de cortesia."
+      billingInstructions: "Primeiro mes de onboarding com suporte de cortesia."
     }
   },
   {
@@ -185,8 +175,7 @@ const clientSeedData = [
       hourlyRate: 170,
       travelRate: 85,
       defaultDiscountPercent: 7,
-      hasActiveContract: true,
-      contractNotes: "Contrato cobre suporte remoto e pequenos reparos."
+      billingInstructions: "Contrato cobre suporte remoto e pequenos reparos."
     }
   },
   {
@@ -199,8 +188,7 @@ const clientSeedData = [
       hourlyRate: 220,
       travelRate: 100,
       defaultDiscountPercent: 4,
-      hasActiveContract: false,
-      contractNotes: "Cliente com demandas de acesso seguro e documentos."
+      billingInstructions: "Cliente com demandas de acesso seguro e documentos."
     }
   }
 ];
@@ -839,7 +827,7 @@ async function main() {
               subtotalAmount,
               discountAmount,
               totalAmount,
-              internalNotes: client.billingProfile?.contractNotes ?? "Resumo financeiro gerado pelo seed.",
+              internalNotes: client.billingProfile?.billingInstructions ?? "Resumo financeiro gerado pelo seed.",
               approvedAt:
                 financialStatus === "APROVADO" || financialStatus === "FATURADO" || financialStatus === "PAGO"
                   ? minutesAfter(billingUpdatedAt, 15)
