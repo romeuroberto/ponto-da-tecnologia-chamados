@@ -1004,7 +1004,7 @@ export const ticketIncludeWithoutServiceOrderParts = {
 interface EquipmentRecord {
   id: string;
   model: string;
-  serialNumber: string;
+  serialNumber: string | null;
   patrimonyCode: string | null;
   status: Equipment["status"];
   purchaseDate: Date | null;
@@ -1018,7 +1018,7 @@ interface RentalContractItemRecord {
   id: string;
   rentalContractId: string;
   equipmentId: string;
-  equipment: { model: string; serialNumber: string };
+  equipment: { model: string; serialNumber: string | null };
   monthlyPrice: PrismaDecimalLike;
   installedAt: Date;
   returnedAt: Date | null;
@@ -1070,7 +1070,7 @@ export function mapEquipment(r: EquipmentRecord): Equipment {
   return {
     id: r.id,
     model: r.model,
-    serialNumber: r.serialNumber,
+    serialNumber: r.serialNumber ?? undefined,
     patrimonyCode: r.patrimonyCode ?? undefined,
     status: r.status,
     purchaseDate: r.purchaseDate?.toISOString(),
@@ -1087,7 +1087,7 @@ export function mapRentalContractItem(r: RentalContractItemRecord): RentalContra
     rentalContractId: r.rentalContractId,
     equipmentId: r.equipmentId,
     equipmentModel: r.equipment.model,
-    equipmentSerialNumber: r.equipment.serialNumber,
+    equipmentSerialNumber: r.equipment.serialNumber ?? undefined,
     monthlyPrice: r.monthlyPrice.toNumber(),
     installedAt: r.installedAt.toISOString(),
     returnedAt: r.returnedAt?.toISOString(),

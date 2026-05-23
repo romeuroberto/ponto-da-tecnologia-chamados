@@ -3,11 +3,12 @@ import { z } from "zod";
 
 import { requireApiUser } from "@/server/auth/api-guard";
 import { rentalService } from "@/server/services/rental-service";
+import { generatePatrimonyCode } from "@/server/number-generator";
 import type { EquipmentStatus } from "@/types";
 
 const createSchema = z.object({
   model: z.string().min(1),
-  serialNumber: z.string().min(1),
+  serialNumber: z.string().optional(),
   patrimonyCode: z.string().optional(),
   purchaseDate: z.string().optional(),
   purchaseCost: z.number().min(0).optional(),
@@ -40,7 +41,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const equipment = await rentalService.createEquipment(parsed.data);
+    const patrimonyCode = parsed.data.patrimonyCode?.trim() || await generatePatrimonyCode();
+    const equipment = await rentalService.createEquipment({ ...parsed.data, patrimonyCode });
     return NextResponse.json({ success: true, data: equipment }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ success: false, message: err instanceof Error ? err.message : "Erro ao cadastrar equipamento." }, { status: 500 });

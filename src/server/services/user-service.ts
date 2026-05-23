@@ -60,5 +60,16 @@ export const userService = {
       role: "CLIENT",
       clientId
     });
+  },
+
+  async changePortalUserPassword(clientId: string, newPassword: string) {
+    if (!isDatabaseConfigured()) {
+      throw new Error("DATABASE_URL não configurada.");
+    }
+
+    const user = await userRepository.findByClientId(clientId);
+    if (!user) throw new Error("Usuário de portal não encontrado.");
+
+    return userRepository.updatePassword(user.id, await bcrypt.hash(newPassword, 10));
   }
 };

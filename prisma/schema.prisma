@@ -635,7 +635,7 @@ model FiscalDocument {
 model Equipment {
   id              String          @id @default(cuid())
   model           String
-  serialNumber    String          @unique
+  serialNumber    String?         @unique
   patrimonyCode   String?
   status          EquipmentStatus @default(DISPONIVEL)
   purchaseDate    DateTime?

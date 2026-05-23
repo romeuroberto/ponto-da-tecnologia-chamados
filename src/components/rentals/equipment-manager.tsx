@@ -31,6 +31,92 @@ interface FormState {
   notes: string;
 }
 
+function formatCurrency(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  const cents = parseInt(digits, 10);
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parseCurrencyToNumber(formatted: string): number | undefined {
+  if (!formatted) return undefined;
+  const digits = formatted.replace(/\D/g, "");
+  if (!digits) return undefined;
+  return parseInt(digits, 10) / 100;
+}
+
+interface EquipmentFormProps {
+  form: FormState;
+  saving: boolean;
+  error: string | null;
+  isNew: boolean;
+  onChange: (field: keyof FormState, value: string) => void;
+  onSave: () => void;
+  onCancel?: () => void;
+}
+
+function EquipmentForm({ form, saving, error, isNew, onChange, onSave, onCancel }: EquipmentFormProps) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-1.5">
+          <Label>Modelo *</Label>
+          <Input
+            placeholder="ZQ521"
+            value={form.model}
+            onChange={(e) => onChange("model", e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Número de série</Label>
+          <Input
+            placeholder="ZQ521-XXXX (opcional)"
+            value={form.serialNumber}
+            onChange={(e) => onChange("serialNumber", e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Código patrimonial</Label>
+          <Input
+            placeholder="Gerado automaticamente"
+            value={form.patrimonyCode}
+            onChange={(e) => onChange("patrimonyCode", e.target.value)}
+          />
+          {!form.patrimonyCode && (
+            <p className="text-xs text-slate-400">Deixe em branco para gerar automaticamente</p>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <Label>Custo de aquisição (R$)</Label>
+          <Input
+            placeholder="0,00"
+            value={form.purchaseCost}
+            onChange={(e) => onChange("purchaseCost", formatCurrency(e.target.value))}
+            inputMode="numeric"
+          />
+        </div>
+        <div className="space-y-1.5 sm:col-span-2">
+          <Label>Observações</Label>
+          <Input
+            placeholder="Notas internas"
+            value={form.notes}
+            onChange={(e) => onChange("notes", e.target.value)}
+          />
+        </div>
+      </div>
+      {error && <p className="text-sm text-rose-600">{error}</p>}
+      <div className="flex gap-2">
+        <Button onClick={onSave} disabled={saving} className={isNew ? "w-full sm:w-auto" : ""}>
+          {saving ? "Salvando..." : isNew ? "Cadastrar" : "Salvar"}
+        </Button>
+        {!isNew && onCancel && (
+          <Button variant="outline" onClick={onCancel}>Cancelar</Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const empty: FormState = { model: "", serialNumber: "", patrimonyCode: "", purchaseCost: "", notes: "" };
 
 interface Props {
@@ -53,18 +139,24 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
     const q = searchQ.toLowerCase();
     return (
       e.model.toLowerCase().includes(q) ||
-      e.serialNumber.toLowerCase().includes(q) ||
+      (e.serialNumber ?? "").toLowerCase().includes(q) ||
       (e.patrimonyCode ?? "").toLowerCase().includes(q)
     );
   });
+
+  function handleFormChange(field: keyof FormState, value: string) {
+    setForm((s) => ({ ...s, [field]: value }));
+  }
 
   function startEdit(eq: Equipment) {
     setEditId(eq.id);
     setForm({
       model: eq.model,
-      serialNumber: eq.serialNumber,
+      serialNumber: eq.serialNumber ?? "",
       patrimonyCode: eq.patrimonyCode ?? "",
-      purchaseCost: eq.purchaseCost != null ? String(eq.purchaseCost) : "",
+      purchaseCost: eq.purchaseCost != null
+        ? eq.purchaseCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : "",
       notes: eq.notes ?? ""
     });
     setError(null);
@@ -77,8 +169,8 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
   }
 
   async function handleSave(isNew: boolean) {
-    if (!form.model.trim() || !form.serialNumber.trim()) {
-      setError("Modelo e número de série são obrigatórios.");
+    if (!form.model.trim()) {
+      setError("Modelo é obrigatório.");
       return;
     }
     setSaving(true);
@@ -86,10 +178,10 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
     try {
       const payload = {
         model: form.model.trim(),
-        serialNumber: form.serialNumber.trim(),
-        patrimonyCode: form.patrimonyCode.trim() || null,
-        purchaseCost: form.purchaseCost !== "" ? Number(form.purchaseCost) : null,
-        notes: form.notes.trim() || null
+        serialNumber: form.serialNumber.trim() || undefined,
+        patrimonyCode: form.patrimonyCode.trim() || undefined,
+        purchaseCost: parseCurrencyToNumber(form.purchaseCost),
+        notes: form.notes.trim() || undefined
       };
 
       const url = isNew ? "/api/equipment" : `/api/equipment/${editId}`;
@@ -130,87 +222,48 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Add form */}
       {isAdmin && !editId && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Cadastrar equipamento</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label>Modelo *</Label>
-                <Input placeholder="ZQ521" value={form.model} onChange={(e) => setForm((s) => ({ ...s, model: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Número de série *</Label>
-                <Input placeholder="ZQ521-XXXX" value={form.serialNumber} onChange={(e) => setForm((s) => ({ ...s, serialNumber: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Código patrimonial</Label>
-                <Input placeholder="PAT-001" value={form.patrimonyCode} onChange={(e) => setForm((s) => ({ ...s, patrimonyCode: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Custo de aquisição (R$)</Label>
-                <Input type="number" min="0" step="0.01" placeholder="0,00" value={form.purchaseCost} onChange={(e) => setForm((s) => ({ ...s, purchaseCost: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Observações</Label>
-                <Input placeholder="Notas internas" value={form.notes} onChange={(e) => setForm((s) => ({ ...s, notes: e.target.value }))} />
-              </div>
-            </div>
-            {error && <p className="text-sm text-rose-600">{error}</p>}
-            <Button onClick={() => handleSave(true)} disabled={saving} className="w-full sm:w-auto">
-              {saving ? "Salvando..." : "Cadastrar"}
-            </Button>
+          <CardContent>
+            <EquipmentForm
+              form={form}
+              saving={saving}
+              error={error}
+              isNew={true}
+              onChange={handleFormChange}
+              onSave={() => handleSave(true)}
+            />
           </CardContent>
         </Card>
       )}
 
-      {/* Edit form */}
       {isAdmin && editId && (
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
             <CardTitle className="text-base text-blue-800">Editar equipamento</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label>Modelo *</Label>
-                <Input value={form.model} onChange={(e) => setForm((s) => ({ ...s, model: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Número de série *</Label>
-                <Input value={form.serialNumber} onChange={(e) => setForm((s) => ({ ...s, serialNumber: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Código patrimonial</Label>
-                <Input value={form.patrimonyCode} onChange={(e) => setForm((s) => ({ ...s, patrimonyCode: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Custo de aquisição (R$)</Label>
-                <Input type="number" min="0" step="0.01" value={form.purchaseCost} onChange={(e) => setForm((s) => ({ ...s, purchaseCost: e.target.value }))} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Observações</Label>
-                <Input value={form.notes} onChange={(e) => setForm((s) => ({ ...s, notes: e.target.value }))} />
-              </div>
-            </div>
-            {error && <p className="text-sm text-rose-600">{error}</p>}
-            <div className="flex gap-2">
-              <Button onClick={() => handleSave(false)} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
-              <Button variant="outline" onClick={cancelEdit}>Cancelar</Button>
-            </div>
+          <CardContent>
+            <EquipmentForm
+              form={form}
+              saving={saving}
+              error={error}
+              isNew={false}
+              onChange={handleFormChange}
+              onSave={() => handleSave(false)}
+              onCancel={cancelEdit}
+            />
           </CardContent>
         </Card>
       )}
 
-      {/* List */}
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-4">
           <CardTitle className="text-base">Equipamentos ({filtered.length})</CardTitle>
           <Input
-            placeholder="Buscar por modelo ou série..."
+            placeholder="Buscar por modelo, série ou patrimônio..."
             value={searchQ}
             onChange={(e) => setSearchQ(e.target.value)}
             className="max-w-xs"
@@ -232,7 +285,7 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
                 <div key={eq.id} className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] items-center gap-3 px-6 py-3.5 text-sm">
                   <div>
                     <p className="font-medium text-slate-900">{eq.model}</p>
-                    <p className="text-xs text-slate-400">{eq.serialNumber}</p>
+                    <p className="text-xs text-slate-400">{eq.serialNumber ?? "—"}</p>
                   </div>
                   <span className="text-slate-500">{eq.patrimonyCode ?? "—"}</span>
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-fit ${statusClass[eq.status]}`}>
@@ -251,10 +304,7 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
                   )}
                   {isAdmin ? (
                     <div className="flex items-center gap-2">
-                      <button
-                        className="text-xs text-slate-400 hover:text-slate-700"
-                        onClick={() => startEdit(eq)}
-                      >
+                      <button className="text-xs text-slate-400 hover:text-slate-700" onClick={() => startEdit(eq)}>
                         Editar
                       </button>
                       {deleteConfirm === eq.id ? (
@@ -263,10 +313,7 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
                           <button className="text-xs text-slate-400" onClick={() => { setDeleteConfirm(null); setDeleteError(null); }}>Cancelar</button>
                         </div>
                       ) : (
-                        <button
-                          className="text-xs text-rose-400 hover:text-rose-600"
-                          onClick={() => { setDeleteConfirm(eq.id); setDeleteError(null); }}
-                        >
+                        <button className="text-xs text-rose-400 hover:text-rose-600" onClick={() => { setDeleteConfirm(eq.id); setDeleteError(null); }}>
                           Excluir
                         </button>
                       )}

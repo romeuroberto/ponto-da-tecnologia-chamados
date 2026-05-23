@@ -4,7 +4,7 @@ import { mapEquipment } from "@/server/mappers";
 
 export interface UpsertEquipmentInput {
   model: string;
-  serialNumber: string;
+  serialNumber?: string | null;
   patrimonyCode?: string | null;
   purchaseDate?: string | null;
   purchaseCost?: number | null;

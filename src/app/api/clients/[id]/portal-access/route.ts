@@ -11,6 +11,10 @@ const createPortalAccessSchema = z.object({
   password: z.string().min(6)
 });
 
+const changePasswordSchema = z.object({
+  password: z.string().min(6)
+});
+
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireApiUser(["ADMIN", "ATTENDANT"]);
   if ("error" in guard) return guard.error;
@@ -35,6 +39,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const user = await userService.createClientAccess(clientId, parsed.data.name, parsed.data.email, parsed.data.password);
   return NextResponse.json(user, { status: 201 });
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireApiUser(["ADMIN", "ATTENDANT"]);
+  if ("error" in guard) return guard.error;
+
+  const { id: clientId } = await params;
+
+  const body = await req.json();
+  const parsed = changePasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Senha inválida. Mínimo 6 caracteres." }, { status: 400 });
+  }
+
+  try {
+    await userService.changePortalUserPassword(clientId, parsed.data.password);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Erro ao alterar senha." },
+      { status: 500 }
+    );
+  }
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {

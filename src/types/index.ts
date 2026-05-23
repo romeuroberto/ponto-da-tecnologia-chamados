@@ -472,7 +472,7 @@ export interface PaginationResult<T> {
 export interface Equipment {
   id: string;
   model: string;
-  serialNumber: string;
+  serialNumber?: string;
   patrimonyCode?: string;
   status: EquipmentStatus;
   purchaseDate?: string;
@@ -487,7 +487,7 @@ export interface RentalContractItem {
   rentalContractId: string;
   equipmentId: string;
   equipmentModel: string;
-  equipmentSerialNumber: string;
+  equipmentSerialNumber?: string;
   monthlyPrice: number;
   installedAt: string;
   returnedAt?: string;

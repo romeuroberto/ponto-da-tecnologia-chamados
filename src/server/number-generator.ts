@@ -33,3 +33,8 @@ export async function generateSaleNumber() {
   const total = await prisma.sale.count();
   return `VD-${year}-${String(total + 1).padStart(3, "0")}`;
 }
+
+export async function generatePatrimonyCode() {
+  const total = await prisma.equipment.count();
+  return `PAT-${String(total + 1).padStart(4, "0")}`;
+}
