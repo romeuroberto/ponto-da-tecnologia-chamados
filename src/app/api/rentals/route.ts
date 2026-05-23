@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireApiUser } from "@/server/auth/api-guard";
 import { rentalService } from "@/server/services/rental-service";
+import type { RentalContractStatus } from "@/types";
 
 const createSchema = z.object({
   contractNumber: z.string().min(1),
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
 
   const contracts = await rentalService.listContracts({
     clientId,
-    status: status as Parameters<typeof rentalService.listContracts>[0]["status"]
+    status: status as RentalContractStatus | undefined
   });
   return NextResponse.json({ success: true, data: contracts });
 }

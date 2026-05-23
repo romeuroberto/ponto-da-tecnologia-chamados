@@ -1151,4 +1151,4 @@ export const rentalContractInclude = {
     include: { client: true, createdBy: true },
     orderBy: [{ referenceYear: "desc" as const }, { referenceMonth: "desc" as const }]
   }
-} as const;
+};

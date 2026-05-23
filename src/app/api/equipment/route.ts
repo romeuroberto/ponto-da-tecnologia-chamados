@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireApiUser } from "@/server/auth/api-guard";
 import { rentalService } from "@/server/services/rental-service";
+import type { EquipmentStatus } from "@/types";
 
 const createSchema = z.object({
   model: z.string().min(1),
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
   const q = url.searchParams.get("q") ?? undefined;
 
   const equipment = await rentalService.listEquipment({
-    status: status as Parameters<typeof rentalService.listEquipment>[0]["status"],
+    status: status as EquipmentStatus | undefined,
     q
   });
   return NextResponse.json({ success: true, data: equipment });

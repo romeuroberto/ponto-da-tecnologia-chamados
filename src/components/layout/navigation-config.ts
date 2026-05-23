@@ -53,10 +53,10 @@ export const appNavigation: NavigationItem[] = [
     ]
   },
   {
-    href: "/locacoes",
+    href: "/locacoes" as Route,
     label: "Locações",
     children: [
-      { href: "/locacoes", label: "Contratos" },
+      { href: "/locacoes" as Route, label: "Contratos" },
       { href: "/locacoes/equipamentos" as Route, label: "Equipamentos" }
     ]
   },
@@ -87,7 +87,7 @@ export function filterNavigationByRole(items: NavigationItem[], role?: AppUser["
     if (item.href === "/empresa") return role === "ADMIN";
     if (item.href === "/catalogos") return canViewCatalogModule(role);
     if (item.href === "/vendas") return canViewSalesModule(role);
-    if (item.href === "/locacoes") return role === "ADMIN" || role === "ATTENDANT";
+    if (item.href === ("/locacoes" as Route)) return role === "ADMIN" || role === "ATTENDANT";
     return true;
   });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -83,7 +84,7 @@ export function RentalContractForm({ clients, availableEquipment }: Props) {
       const json = await res.json();
       if (!json.success) throw new Error(json.message ?? "Erro ao criar contrato.");
       setOpen(false);
-      router.push(`/locacoes/${json.data.id}`);
+      router.push(`/locacoes/${json.data.id}` as Route);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro ao criar contrato.");
     } finally {

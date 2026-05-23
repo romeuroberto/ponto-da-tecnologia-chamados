@@ -54,7 +54,7 @@ export function RentalStatusActions({ contract }: Props) {
             <div className="space-y-2">
               <p className="text-xs text-slate-600">Confirma o encerramento do contrato? Esta ação não pode ser desfeita.</p>
               <div className="flex gap-2">
-                <Button variant="destructive" size="sm" onClick={() => setStatus("ENCERRADO")} disabled={saving}>
+                <Button variant="outline" size="sm" className="border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => setStatus("ENCERRADO")} disabled={saving}>
                   {saving ? "..." : "Encerrar"}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => setConfirmClose(false)}>Cancelar</Button>

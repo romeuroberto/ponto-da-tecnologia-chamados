@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -73,7 +74,7 @@ export default async function LocacoesPage() {
           {contracts.length === 0 ? (
             <p className="px-6 py-10 text-center text-sm text-slate-400">
               Nenhum contrato de locação cadastrado.{" "}
-              <Link href="/locacoes/equipamentos" className="text-blue-600 hover:underline">
+              <Link href={"/locacoes/equipamentos" as Route} className="text-blue-600 hover:underline">
                 Comece cadastrando os equipamentos.
               </Link>
             </p>
@@ -107,7 +108,7 @@ export default async function LocacoesPage() {
                   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-fit ${statusClass[c.status]}`}>
                     {statusLabel[c.status]}
                   </span>
-                  <Link href={`/locacoes/${c.id}`} className="text-xs text-blue-600 hover:underline whitespace-nowrap">
+                  <Link href={`/locacoes/${c.id}` as Route} className="text-xs text-blue-600 hover:underline whitespace-nowrap">
                     Ver →
                   </Link>
                 </div>
@@ -119,7 +120,7 @@ export default async function LocacoesPage() {
 
       {/* Quick link to equipment */}
       <div className="flex justify-end">
-        <Link href="/locacoes/equipamentos" className="text-sm text-slate-500 hover:text-slate-800 hover:underline">
+        <Link href={"/locacoes/equipamentos" as Route} className="text-sm text-slate-500 hover:text-slate-800 hover:underline">
           Gerenciar equipamentos →
         </Link>
       </div>
