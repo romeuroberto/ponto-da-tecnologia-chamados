@@ -257,6 +257,55 @@ export const rentalRepository = {
     return r ? mapRentalBilling(r) : null;
   },
 
+  async updateItemPrice(
+    itemId: string,
+    newPrice: number,
+    updateBillings: boolean
+  ): Promise<RentalContract | null> {
+    return prisma.$transaction(async (tx) => {
+      const item = await tx.rentalContractItem.findUnique({ where: { id: itemId } });
+      if (!item) return null;
+
+      const oldPrice = item.monthlyPrice.toNumber();
+      const delta = toMoney(newPrice - oldPrice);
+
+      await tx.rentalContractItem.update({
+        where: { id: itemId },
+        data: { monthlyPrice: toMoney(newPrice) }
+      });
+
+      const contract = await tx.rentalContract.findUnique({
+        where: { id: item.rentalContractId },
+        include: { items: true }
+      });
+      if (!contract) return null;
+
+      const newTotal = toMoney(
+        contract.items
+          .filter((i) => i.returnedAt === null)
+          .reduce((s, i) => s + (i.id === itemId ? newPrice : i.monthlyPrice.toNumber()), 0)
+      );
+
+      await tx.rentalContract.update({
+        where: { id: item.rentalContractId },
+        data: { totalMonthlyValue: newTotal }
+      });
+
+      if (updateBillings && delta !== 0) {
+        await tx.rentalBilling.updateMany({
+          where: { rentalContractId: item.rentalContractId },
+          data: { amount: { increment: delta } }
+        });
+      }
+
+      const updated = await tx.rentalContract.findUnique({
+        where: { id: item.rentalContractId },
+        include: rentalContractInclude
+      });
+      return updated ? mapRentalContract(updated) : null;
+    });
+  },
+
   async deleteBilling(id: string): Promise<void> {
     const billing = await prisma.rentalBilling.findUnique({ where: { id } });
     if (!billing) throw new Error("Cobrança não encontrada.");

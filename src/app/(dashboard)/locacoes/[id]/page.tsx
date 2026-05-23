@@ -4,6 +4,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { GenerateBillingForm, PayBillingButton } from "@/components/rentals/rental-billing-actions";
 import { RentalItemDelete } from "@/components/rentals/rental-item-delete";
+import { RentalItemEditPrice } from "@/components/rentals/rental-item-edit-price";
 import { RentalItemReturn } from "@/components/rentals/rental-item-return";
 import { RentalStatusActions } from "@/components/rentals/rental-status-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,7 +97,10 @@ export default async function RentalContractDetailPage({ params }: { params: Pro
                         <p className="text-xs text-slate-400">{item.equipmentSerialNumber}</p>
                         {item.notes ? <p className="text-xs text-slate-400">{item.notes}</p> : null}
                       </div>
-                      <span className="font-semibold tabular-nums">{formatCurrency(item.monthlyPrice)}</span>
+                      <div>
+                        <span className="font-semibold tabular-nums">{formatCurrency(item.monthlyPrice)}</span>
+                        {isAdmin && <RentalItemEditPrice item={item} />}
+                      </div>
                       <span className="text-slate-500">{formatDate(item.installedAt)}</span>
                       {isAdmin ? (
                         <div className="flex items-center gap-3">

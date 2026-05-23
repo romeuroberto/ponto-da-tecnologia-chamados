@@ -63,6 +63,10 @@ export const rentalService = {
     return rentalRepository.deleteItem(itemId);
   },
 
+  async updateItemPrice(itemId: string, newPrice: number, updateBillings: boolean): Promise<RentalContract | null> {
+    return rentalRepository.updateItemPrice(itemId, newPrice, updateBillings);
+  },
+
   // ── Reserve loans ─────────────────────────────────────────────────────────
   async listActiveLoans(): Promise<EquipmentLoan[]> {
     return equipmentLoanRepository.listActive();
