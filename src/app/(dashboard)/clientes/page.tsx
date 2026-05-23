@@ -98,9 +98,14 @@ export default async function ClientsPage({
                       Contato principal: {client.contactName || "Não informado"}
                     </p>
                   </div>
-                  <Link href={`/clientes/${client.id}` as Route} className="text-sm font-semibold text-sky-700">
-                    {canEdit ? "Editar" : "Visualizar"}
-                  </Link>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <Link href={`/clientes/${client.id}/financeiro` as Route} className="text-sm font-semibold text-amber-600 hover:text-amber-800">
+                      Débitos
+                    </Link>
+                    <Link href={`/clientes/${client.id}` as Route} className="text-sm font-semibold text-sky-700">
+                      {canEdit ? "Editar" : "Visualizar"}
+                    </Link>
+                  </div>
                 </div>
                 <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700 sm:grid-cols-2">
                   <div>

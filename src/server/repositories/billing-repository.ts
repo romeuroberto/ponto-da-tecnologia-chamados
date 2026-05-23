@@ -244,17 +244,19 @@ export const billingRepository = {
     const now = new Date();
     const openStatuses = ["PENDENTE", "EM_ANALISE", "APROVADO", "FATURADO"];
 
-    const records = await prisma.ticketBilling.findMany({
-      include: {
-        ticket: { include: { client: true } }
-      },
-      orderBy: { updatedAt: "desc" }
-    });
+    const [records, sales] = await Promise.all([
+      prisma.ticketBilling.findMany({
+        include: { ticket: { include: { client: true } } },
+        orderBy: { updatedAt: "desc" }
+      }),
+      prisma.sale.findMany({
+        include: { client: true }
+      })
+    ]);
 
     const map = new Map<string, ClientBillingSummary>();
 
-    for (const r of records) {
-      const client = r.ticket.client;
+    function getOrCreate(client: { id: string; name: string }) {
       if (!map.has(client.id)) {
         map.set(client.id, {
           clientId: client.id,
@@ -266,8 +268,11 @@ export const billingRepository = {
           paidCount: 0
         });
       }
+      return map.get(client.id)!;
+    }
 
-      const entry = map.get(client.id)!;
+    for (const r of records) {
+      const entry = getOrCreate(r.ticket.client);
       const total = Number(r.totalAmount);
       const isOpen = openStatuses.includes(r.financialStatus);
       const isOverdue = r.financialStatus === "FATURADO" && r.invoiceDueDate != null && r.invoiceDueDate < now;
@@ -278,6 +283,22 @@ export const billingRepository = {
       }
       if (isOverdue) entry.overdueCount += 1;
       if (r.financialStatus === "PAGO") {
+        entry.paidAmount += total;
+        entry.paidCount += 1;
+      }
+    }
+
+    for (const sale of sales) {
+      if (sale.financialStatus === "CANCELADO") continue;
+      const entry = getOrCreate(sale.client);
+      const total = Number(sale.totalAmount);
+      const isOpen = openStatuses.includes(sale.financialStatus);
+
+      if (isOpen) {
+        entry.openAmount += total;
+        entry.openCount += 1;
+      }
+      if (sale.financialStatus === "PAGO") {
         entry.paidAmount += total;
         entry.paidCount += 1;
       }

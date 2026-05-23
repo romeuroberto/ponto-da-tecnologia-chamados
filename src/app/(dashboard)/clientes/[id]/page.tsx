@@ -47,7 +47,9 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
         description={`Contato principal: ${client.contactName}`}
         action={
           <Link href={`/clientes/${client.id}/financeiro` as Route}>
-            <Button variant="outline" size="sm">Extrato financeiro</Button>
+            <Button variant="outline" size="sm" className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400">
+              Ver débitos
+            </Button>
           </Link>
         }
       />
