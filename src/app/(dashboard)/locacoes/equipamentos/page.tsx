@@ -1,16 +1,26 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { EquipmentManager } from "@/components/rentals/equipment-manager";
+import { ReserveLoanPanel } from "@/components/rentals/reserve-loan-panel";
 import { requireRole } from "@/server/auth/session";
 import { rentalService } from "@/server/services/rental-service";
+import { clientService } from "@/server/services/client-service";
 
 export default async function EquipamentosPage() {
   const session = await requireRole(["ADMIN", "ATTENDANT"]);
-  const equipment = await rentalService.listEquipment();
   const isAdmin = session.role === "ADMIN";
 
-  const available = equipment.filter((e) => e.status === "DISPONIVEL").length;
-  const rented = equipment.filter((e) => e.status === "LOCADO").length;
+  const [equipment, activeLoans, clients] = await Promise.all([
+    rentalService.listEquipment(),
+    rentalService.listActiveLoans(),
+    clientService.listClients()
+  ]);
+
+  const available = equipment.filter((e) => e.status === "DISPONIVEL" && !e.isReserve).length;
+  const rented = equipment.filter((e) => e.status === "LOCADO" && !e.isReserve).length;
   const maintenance = equipment.filter((e) => e.status === "MANUTENCAO").length;
+  const reserves = equipment.filter((e) => e.isReserve).length;
+
+  const reserveEquipment = equipment.filter((e) => e.isReserve);
 
   return (
     <div className="space-y-6">
@@ -19,7 +29,7 @@ export default async function EquipamentosPage() {
         description="Patrimônio de impressoras e dispositivos para locação"
       />
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
         <div className="rounded-xl border bg-white p-4 shadow-sm">
           <p className="text-xs text-slate-500 uppercase tracking-wide font-semibold">Total</p>
           <p className="mt-1 text-2xl font-bold text-slate-900">{equipment.length}</p>
@@ -36,7 +46,19 @@ export default async function EquipamentosPage() {
           <p className="text-xs text-amber-700 uppercase tracking-wide font-semibold">Manutenção</p>
           <p className="mt-1 text-2xl font-bold text-amber-800">{maintenance}</p>
         </div>
+        <div className="rounded-xl border bg-violet-50 p-4 shadow-sm">
+          <p className="text-xs text-violet-700 uppercase tracking-wide font-semibold">Reservas</p>
+          <p className="mt-1 text-2xl font-bold text-violet-800">{reserves}</p>
+        </div>
       </div>
+
+      <ReserveLoanPanel
+        activeLoans={activeLoans}
+        reserveEquipment={reserveEquipment}
+        allEquipment={equipment}
+        clients={clients}
+        isAdmin={isAdmin}
+      />
 
       <EquipmentManager equipment={equipment} isAdmin={isAdmin} />
     </div>

@@ -50,7 +50,7 @@ export const equipmentRepository = {
     return mapEquipment(r);
   },
 
-  async update(id: string, input: Partial<UpsertEquipmentInput> & { status?: EquipmentStatus }): Promise<Equipment | null> {
+  async update(id: string, input: Partial<UpsertEquipmentInput> & { status?: EquipmentStatus; isReserve?: boolean }): Promise<Equipment | null> {
     const r = await prisma.equipment.update({
       where: { id },
       data: {
@@ -60,7 +60,8 @@ export const equipmentRepository = {
         ...(input.purchaseDate !== undefined ? { purchaseDate: input.purchaseDate ? new Date(input.purchaseDate) : null } : {}),
         ...(input.purchaseCost !== undefined ? { purchaseCost: input.purchaseCost ?? null } : {}),
         ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
-        ...(input.status !== undefined ? { status: input.status } : {})
+        ...(input.status !== undefined ? { status: input.status } : {}),
+        ...(input.isReserve !== undefined ? { isReserve: input.isReserve } : {})
       }
     });
     return r ? mapEquipment(r) : null;

@@ -199,6 +199,15 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
     }
   }
 
+  async function handleToggleReserve(id: string, current: boolean) {
+    await fetch(`/api/equipment/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isReserve: !current })
+    });
+    router.refresh();
+  }
+
   async function handleStatusChange(id: string, status: EquipmentStatus) {
     await fetch(`/api/equipment/${id}`, {
       method: "PATCH",
@@ -284,7 +293,14 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
               {filtered.map((eq) => (
                 <div key={eq.id} className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] items-center gap-3 px-6 py-3.5 text-sm">
                   <div>
-                    <p className="font-medium text-slate-900">{eq.model}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-slate-900">{eq.model}</p>
+                      {eq.isReserve && (
+                        <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                          Reserva
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-slate-400">{eq.serialNumber ?? "—"}</p>
                   </div>
                   <span className="text-slate-500">{eq.patrimonyCode ?? "—"}</span>
@@ -304,6 +320,13 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
                   )}
                   {isAdmin ? (
                     <div className="flex items-center gap-2">
+                      <button
+                        className={`text-xs font-medium ${eq.isReserve ? "text-violet-500 hover:text-violet-700" : "text-slate-400 hover:text-violet-600"}`}
+                        onClick={() => handleToggleReserve(eq.id, eq.isReserve)}
+                        title={eq.isReserve ? "Remover marcação de reserva" : "Marcar como reserva"}
+                      >
+                        {eq.isReserve ? "Reserva ✓" : "Marcar reserva"}
+                      </button>
                       <button className="text-xs text-slate-400 hover:text-slate-700" onClick={() => startEdit(eq)}>
                         Editar
                       </button>

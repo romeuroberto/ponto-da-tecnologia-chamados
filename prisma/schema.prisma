@@ -181,6 +181,7 @@ model User {
   recurringExpenses     RecurringExpense[] @relation("RecurringExpenseCreator")
   rentalContracts       RentalContract[]  @relation("RentalContractCreator")
   rentalBillings        RentalBilling[]   @relation("RentalBillingCreator")
+  equipmentLoans        EquipmentLoan[]   @relation("EquipmentLoanCreator")
 }
 
 model Client {
@@ -205,6 +206,7 @@ model Client {
   contractMonthlyBillings ContractMonthlyBilling[]
   rentalContracts        RentalContract[]
   rentalBillings         RentalBilling[]
+  equipmentLoans         EquipmentLoan[]
 }
 
 model CompanyProfile {
@@ -638,6 +640,7 @@ model Equipment {
   serialNumber    String?         @unique
   patrimonyCode   String?
   status          EquipmentStatus @default(DISPONIVEL)
+  isReserve       Boolean         @default(false)
   purchaseDate    DateTime?
   purchaseCost    Decimal?        @db.Decimal(12, 2)
   notes           String?
@@ -645,6 +648,26 @@ model Equipment {
   updatedAt       DateTime        @updatedAt
   rentalItems     RentalContractItem[]
   tickets         Ticket[]        @relation("TicketEquipment")
+  reserveLoans    EquipmentLoan[] @relation("ReserveEquipment")
+  mainLoans       EquipmentLoan[] @relation("MainEquipment")
+}
+
+model EquipmentLoan {
+  id                   String    @id @default(cuid())
+  reserveEquipmentId   String
+  mainEquipmentId      String?
+  clientId             String
+  loanedAt             DateTime  @default(now())
+  returnedAt           DateTime?
+  notes                String?
+  createdById          String
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  reserveEquipment     Equipment  @relation("ReserveEquipment", fields: [reserveEquipmentId], references: [id])
+  mainEquipment        Equipment? @relation("MainEquipment", fields: [mainEquipmentId], references: [id])
+  client               Client     @relation(fields: [clientId], references: [id])
+  createdBy            User       @relation("EquipmentLoanCreator", fields: [createdById], references: [id])
 }
 
 model RentalContract {

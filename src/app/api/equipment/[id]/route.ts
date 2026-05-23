@@ -11,7 +11,8 @@ const updateSchema = z.object({
   purchaseDate: z.string().nullable().optional(),
   purchaseCost: z.number().min(0).nullable().optional(),
   notes: z.string().nullable().optional(),
-  status: z.enum(["DISPONIVEL", "LOCADO", "MANUTENCAO", "BAIXADO"]).optional()
+  status: z.enum(["DISPONIVEL", "LOCADO", "MANUTENCAO", "BAIXADO"]).optional(),
+  isReserve: z.boolean().optional()
 });
 
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {

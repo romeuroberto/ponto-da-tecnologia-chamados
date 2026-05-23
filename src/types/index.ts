@@ -475,11 +475,29 @@ export interface Equipment {
   serialNumber?: string;
   patrimonyCode?: string;
   status: EquipmentStatus;
+  isReserve: boolean;
   purchaseDate?: string;
   purchaseCost?: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EquipmentLoan {
+  id: string;
+  reserveEquipmentId: string;
+  reserveEquipmentModel: string;
+  reserveEquipmentPatrimony?: string;
+  mainEquipmentId?: string;
+  mainEquipmentModel?: string;
+  mainEquipmentPatrimony?: string;
+  clientId: string;
+  clientName: string;
+  loanedAt: string;
+  returnedAt?: string;
+  daysOnLoan: number;
+  notes?: string;
+  createdAt: string;
 }
 
 export interface RentalContractItem {

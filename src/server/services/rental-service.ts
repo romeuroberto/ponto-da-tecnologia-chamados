@@ -1,4 +1,5 @@
 import { equipmentRepository, type UpsertEquipmentInput } from "@/server/repositories/equipment-repository";
+import { equipmentLoanRepository, type CreateLoanInput } from "@/server/repositories/equipment-loan-repository";
 import {
   rentalRepository,
   type AddRentalItemInput,
@@ -6,7 +7,7 @@ import {
   type CreateRentalContractInput,
   type PayRentalBillingInput
 } from "@/server/repositories/rental-repository";
-import type { Equipment, EquipmentStatus, RentalBilling, RentalContract, RentalContractStatus } from "@/types";
+import type { Equipment, EquipmentLoan, EquipmentStatus, RentalBilling, RentalContract, RentalContractStatus } from "@/types";
 
 export const rentalService = {
   // ── Equipment ──────────────────────────────────────────────────────────────
@@ -56,6 +57,23 @@ export const rentalService = {
 
   async returnItem(itemId: string, returnedAt: string): Promise<RentalContract | null> {
     return rentalRepository.returnItem(itemId, returnedAt);
+  },
+
+  // ── Reserve loans ─────────────────────────────────────────────────────────
+  async listActiveLoans(): Promise<EquipmentLoan[]> {
+    return equipmentLoanRepository.listActive();
+  },
+
+  async listLoansByEquipment(equipmentId: string): Promise<EquipmentLoan[]> {
+    return equipmentLoanRepository.listByEquipment(equipmentId);
+  },
+
+  async createLoan(input: CreateLoanInput): Promise<EquipmentLoan> {
+    return equipmentLoanRepository.create(input);
+  },
+
+  async registerLoanReturn(loanId: string, returnedAt: string): Promise<EquipmentLoan | null> {
+    return equipmentLoanRepository.registerReturn(loanId, returnedAt);
   },
 
   // ── Billings ───────────────────────────────────────────────────────────────

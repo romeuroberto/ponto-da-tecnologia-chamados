@@ -23,10 +23,12 @@
       "Bash(mkdir -p \"/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/api/rentals/[id]/status\")",
       "Bash(mkdir -p \"/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/api/rentals/[id]/items\")",
       "Bash(mkdir -p \"/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/api/rentals/items/[itemId]/return\")",
-      "Bash(mkdir -p \"/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/\\(dashboard\\)/locacoes\" *)"
+      "Bash(mkdir -p \"/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/\\(dashboard\\)/locacoes\" *)",
+      "Bash(mkdir -p src/app/api/equipment/\\\\[id\\\\]/loans src/app/api/equipment/loans/\\\\[loanId\\\\]/return)"
     ],
     "additionalDirectories": [
-      "/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/(dashboard)/locacoes"
+      "/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/(dashboard)/locacoes",
+      "/home/roberto/vscode-projects/ponto-da-tecnologia-chamados/src/app/api/equipment/[id]"
     ]
   }
 }

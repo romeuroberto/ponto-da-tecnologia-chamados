@@ -7,6 +7,7 @@ import type {
   ClientContract,
   CompanyProfile,
   Equipment,
+  EquipmentLoan,
   Expense,
   FiscalDocument,
   FiscalDocumentLink,
@@ -1007,11 +1008,26 @@ interface EquipmentRecord {
   serialNumber: string | null;
   patrimonyCode: string | null;
   status: Equipment["status"];
+  isReserve: boolean;
   purchaseDate: Date | null;
   purchaseCost: PrismaDecimalLike | null;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface EquipmentLoanRecord {
+  id: string;
+  reserveEquipmentId: string;
+  reserveEquipment: { model: string; patrimonyCode: string | null };
+  mainEquipmentId: string | null;
+  mainEquipment: { model: string; patrimonyCode: string | null } | null;
+  clientId: string;
+  client: { name: string };
+  loanedAt: Date;
+  returnedAt: Date | null;
+  notes: string | null;
+  createdAt: Date;
 }
 
 interface RentalContractItemRecord {
@@ -1073,11 +1089,34 @@ export function mapEquipment(r: EquipmentRecord): Equipment {
     serialNumber: r.serialNumber ?? undefined,
     patrimonyCode: r.patrimonyCode ?? undefined,
     status: r.status,
+    isReserve: r.isReserve,
     purchaseDate: r.purchaseDate?.toISOString(),
     purchaseCost: r.purchaseCost?.toNumber(),
     notes: r.notes ?? undefined,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString()
+  };
+}
+
+export function mapEquipmentLoan(r: EquipmentLoanRecord): EquipmentLoan {
+  const now = new Date();
+  const end = r.returnedAt ?? now;
+  const daysOnLoan = Math.floor((end.getTime() - r.loanedAt.getTime()) / 86_400_000);
+  return {
+    id: r.id,
+    reserveEquipmentId: r.reserveEquipmentId,
+    reserveEquipmentModel: r.reserveEquipment.model,
+    reserveEquipmentPatrimony: r.reserveEquipment.patrimonyCode ?? undefined,
+    mainEquipmentId: r.mainEquipmentId ?? undefined,
+    mainEquipmentModel: r.mainEquipment?.model,
+    mainEquipmentPatrimony: r.mainEquipment?.patrimonyCode ?? undefined,
+    clientId: r.clientId,
+    clientName: r.client.name,
+    loanedAt: r.loanedAt.toISOString(),
+    returnedAt: r.returnedAt?.toISOString(),
+    daysOnLoan,
+    notes: r.notes ?? undefined,
+    createdAt: r.createdAt.toISOString()
   };
 }
 
