@@ -59,6 +59,10 @@ export const rentalService = {
     return rentalRepository.returnItem(itemId, returnedAt);
   },
 
+  async deleteItem(itemId: string): Promise<void> {
+    return rentalRepository.deleteItem(itemId);
+  },
+
   // ── Reserve loans ─────────────────────────────────────────────────────────
   async listActiveLoans(): Promise<EquipmentLoan[]> {
     return equipmentLoanRepository.listActive();

@@ -3,10 +3,11 @@ import { z } from "zod";
 
 import { requireApiUser } from "@/server/auth/api-guard";
 import { rentalService } from "@/server/services/rental-service";
+import { generateContractNumber } from "@/server/number-generator";
 import type { RentalContractStatus } from "@/types";
 
 const createSchema = z.object({
-  contractNumber: z.string().min(1),
+  contractNumber: z.string().min(1).optional(),
   clientId: z.string().min(1),
   startDate: z.string().min(1),
   endDate: z.string().optional(),
@@ -46,7 +47,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const contract = await rentalService.createContract({ ...parsed.data, createdById: guard.user.id });
+    const contractNumber = parsed.data.contractNumber?.trim() || await generateContractNumber();
+    const contract = await rentalService.createContract({ ...parsed.data, contractNumber, createdById: guard.user.id });
     return NextResponse.json({ success: true, data: contract }, { status: 201 });
   } catch (err) {
     return NextResponse.json({ success: false, message: err instanceof Error ? err.message : "Erro ao criar contrato." }, { status: 500 });

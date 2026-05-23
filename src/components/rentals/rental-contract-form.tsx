@@ -30,7 +30,6 @@ export function RentalContractForm({ clients, availableEquipment }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [contractNumber, setContractNumber] = useState("");
   const [clientId, setClientId] = useState("");
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState("");
@@ -53,7 +52,6 @@ export function RentalContractForm({ clients, availableEquipment }: Props) {
   }
 
   async function handleSubmit() {
-    if (!contractNumber.trim()) { setError("Número do contrato é obrigatório."); return; }
     if (!clientId) { setError("Selecione um cliente."); return; }
     if (!startDate) { setError("Data de início é obrigatória."); return; }
     if (items.some((i) => !i.equipmentId || !i.monthlyPrice || !i.installedAt)) {
@@ -67,7 +65,6 @@ export function RentalContractForm({ clients, availableEquipment }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contractNumber: contractNumber.trim(),
           clientId,
           startDate,
           endDate: endDate || undefined,
@@ -106,10 +103,6 @@ export function RentalContractForm({ clients, availableEquipment }: Props) {
       <CardContent className="space-y-5">
         {/* Contract meta */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-1.5">
-            <Label>Nº do contrato *</Label>
-            <Input placeholder="LOC-2026-001" value={contractNumber} onChange={(e) => setContractNumber(e.target.value)} />
-          </div>
           <div className="space-y-1.5">
             <Label>Cliente *</Label>
             <select

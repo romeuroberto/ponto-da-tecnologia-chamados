@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { GenerateBillingForm, PayBillingButton } from "@/components/rentals/rental-billing-actions";
+import { RentalItemDelete } from "@/components/rentals/rental-item-delete";
 import { RentalItemReturn } from "@/components/rentals/rental-item-return";
 import { RentalStatusActions } from "@/components/rentals/rental-status-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,7 +98,12 @@ export default async function RentalContractDetailPage({ params }: { params: Pro
                       </div>
                       <span className="font-semibold tabular-nums">{formatCurrency(item.monthlyPrice)}</span>
                       <span className="text-slate-500">{formatDate(item.installedAt)}</span>
-                      {isAdmin ? <RentalItemReturn item={item} /> : <span />}
+                      {isAdmin ? (
+                        <div className="flex items-center gap-3">
+                          <RentalItemReturn item={item} />
+                          <RentalItemDelete itemId={item.id} />
+                        </div>
+                      ) : <span />}
                     </div>
                   ))}
                 </div>
@@ -162,7 +168,10 @@ export default async function RentalContractDetailPage({ params }: { params: Pro
                         <span className="font-medium">{item.equipmentModel}</span>
                         <span className="ml-2 text-xs text-slate-400">{item.equipmentSerialNumber}</span>
                       </div>
-                      <span className="text-xs">Devolvido em {formatDate(item.returnedAt!)}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs">Devolvido em {formatDate(item.returnedAt!)}</span>
+                        {isAdmin && <RentalItemDelete itemId={item.id} />}
+                      </div>
                     </div>
                   ))}
                 </div>

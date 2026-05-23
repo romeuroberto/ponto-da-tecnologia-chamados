@@ -111,7 +111,7 @@ export function PayBillingButton({ billing }: PayBillingProps) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("PIX");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [paymentReference, setPaymentReference] = useState("");
 
@@ -125,7 +125,7 @@ export function PayBillingButton({ billing }: PayBillingProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           financialStatus: "PAGO",
-          paymentMethod: paymentMethod.trim(),
+          paymentMethod,
           paymentDate,
           paymentReference: paymentReference.trim() || undefined
         })
@@ -159,12 +159,12 @@ export function PayBillingButton({ billing }: PayBillingProps) {
   if (!open) {
     return (
       <div className="flex items-center gap-2">
-        <button className="text-xs text-emerald-600 hover:underline font-medium" onClick={() => setOpen(true)}>
+        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setOpen(true)}>
           Registrar pagamento
-        </button>
-        <button className="text-xs text-rose-400 hover:text-rose-600" onClick={handleDelete}>
+        </Button>
+        <Button size="sm" variant="outline" className="border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-700" onClick={handleDelete}>
           Excluir
-        </button>
+        </Button>
       </div>
     );
   }
@@ -175,7 +175,19 @@ export function PayBillingButton({ billing }: PayBillingProps) {
       <div className="grid gap-2 sm:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs">Forma de pagamento *</Label>
-          <Input placeholder="PIX, Boleto..." value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} />
+          <select
+            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+          >
+            <option value="PIX">PIX</option>
+            <option value="Boleto">Boleto</option>
+            <option value="Cartão de crédito">Cartão de crédito</option>
+            <option value="Cartão de débito">Cartão de débito</option>
+            <option value="Transferência">Transferência</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cheque">Cheque</option>
+          </select>
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Data</Label>

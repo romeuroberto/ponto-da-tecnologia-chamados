@@ -186,6 +186,40 @@ export const rentalRepository = {
     });
   },
 
+  async deleteItem(itemId: string): Promise<void> {
+    return prisma.$transaction(async (tx) => {
+      const item = await tx.rentalContractItem.findUnique({ where: { id: itemId } });
+      if (!item) throw new Error("Item não encontrado.");
+
+      await tx.rentalContractItem.delete({ where: { id: itemId } });
+
+      // Restore equipment to DISPONIVEL only if it hadn't been returned yet
+      if (!item.returnedAt) {
+        await tx.equipment.update({
+          where: { id: item.equipmentId },
+          data: { status: "DISPONIVEL" }
+        });
+
+        // Recalculate contract total without this item
+        const contract = await tx.rentalContract.findUnique({
+          where: { id: item.rentalContractId },
+          include: { items: true }
+        });
+        if (contract) {
+          const newTotal = toMoney(
+            contract.items
+              .filter((i) => i.id !== itemId && i.returnedAt === null)
+              .reduce((s, i) => s + i.monthlyPrice.toNumber(), 0)
+          );
+          await tx.rentalContract.update({
+            where: { id: item.rentalContractId },
+            data: { totalMonthlyValue: newTotal }
+          });
+        }
+      }
+    });
+  },
+
   async createBilling(input: CreateRentalBillingInput): Promise<RentalBilling> {
     const r = await prisma.rentalBilling.create({
       data: {
