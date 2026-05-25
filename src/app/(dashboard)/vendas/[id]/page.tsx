@@ -146,7 +146,7 @@ export default async function VendaDetailPage({ params }: { params: Promise<{ id
           ) : null}
 
           {/* Actions */}
-          {isPending ? <SaleActions saleId={sale.id} /> : null}
+          {(isPending || isPaid) ? <SaleActions saleId={sale.id} financialStatus={sale.financialStatus} /> : null}
 
           {/* Receipt */}
           {(isPending || isPaid) ? (

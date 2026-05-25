@@ -5,7 +5,7 @@ import { requireApiUser } from "@/server/auth/api-guard";
 import { saleService } from "@/server/services/sale-service";
 
 const updateStatusSchema = z.object({
-  financialStatus: z.enum(["PAGO", "CANCELADO"]),
+  financialStatus: z.enum(["PENDENTE", "PAGO", "CANCELADO"]),
   paymentMethod: z.string().optional(),
   paymentDate: z.string().optional(),
   paymentReference: z.string().optional(),

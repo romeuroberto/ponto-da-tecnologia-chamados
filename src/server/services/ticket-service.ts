@@ -58,6 +58,17 @@ export const ticketService = {
       return null;
     }
 
+    if (input.status === "CLOSED") {
+      const pendingOrders = currentTicket.serviceOrders.filter(
+        (os) => os.status !== "COMPLETED" && os.status !== "CANCELED"
+      );
+      if (pendingOrders.length > 0) {
+        throw new Error(
+          `Não é possível finalizar o chamado. ${pendingOrders.length > 1 ? `${pendingOrders.length} ordens de serviço ainda não foram concluídas ou canceladas.` : "Uma ordem de serviço ainda não foi concluída ou cancelada."}`
+        );
+      }
+    }
+
     const shouldStartTechnicalExecutionAutomatically =
       currentTicket.status === "OPEN" &&
       input.status === "OPEN" &&

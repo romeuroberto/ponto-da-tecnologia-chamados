@@ -103,6 +103,10 @@ export function TicketFlowActions({
   const canAssign = canEditTicketAssignment(role);
   const groupedUsers = groupAssignableUsers(users, ticket.category);
 
+  const pendingServiceOrders = ticket.serviceOrders.filter(
+    (os) => os.status !== "COMPLETED" && os.status !== "CANCELED"
+  );
+
   function startAction(action: FlowAction) {
     setMessage(null);
     setClosingReason("");
@@ -246,6 +250,18 @@ export function TicketFlowActions({
             </div>
           ) : null}
 
+          {pendingServiceOrders.length > 0 && actions.some((a) => a.targetStatus === "CLOSED") ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <p className="font-semibold">Ordens de serviço pendentes</p>
+              <p className="mt-0.5">
+                {pendingServiceOrders.length > 1
+                  ? `${pendingServiceOrders.length} ordens de serviço ainda não foram concluídas ou canceladas.`
+                  : "Uma ordem de serviço ainda não foi concluída ou cancelada."}
+                {" "}Conclua ou cancele todas as OS antes de finalizar o chamado.
+              </p>
+            </div>
+          ) : null}
+
           {pendingAction ? (
             <div className="space-y-3 rounded-xl border border-sky-200 bg-sky-50 p-4">
               <p className="text-sm font-semibold text-sky-950">Confirmar: {pendingAction.label}</p>
@@ -283,7 +299,7 @@ export function TicketFlowActions({
                     key={action.targetStatus}
                     type="button"
                     variant={action.variant}
-                    disabled={isPending}
+                    disabled={isPending || (action.targetStatus === "CLOSED" && pendingServiceOrders.length > 0)}
                     onClick={() => startAction(action)}
                     className={action.targetStatus === "CANCELED" ? "border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800" : ""}
                   >

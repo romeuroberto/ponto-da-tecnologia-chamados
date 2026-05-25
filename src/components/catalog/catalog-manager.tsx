@@ -86,6 +86,8 @@ export function CatalogManager({
   const [newPart, setNewPart] = useState<PartFormState>(emptyPartForm);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editingPartId, setEditingPartId] = useState<string | null>(null);
+  const [confirmPartId, setConfirmPartId] = useState<string | null>(null);
+  const [deletePartError, setDeletePartError] = useState<string | null>(null);
   const [newServiceError, setNewServiceError] = useState<ApiError | null>(null);
   const [newPartError, setNewPartError] = useState<ApiError | null>(null);
   const [serviceEditErrors, setServiceEditErrors] = useState<Record<string, ApiError | null>>({});
@@ -128,6 +130,22 @@ export function CatalogManager({
 
   function sortParts(items: PartCatalogItem[]) {
     return [...items].sort((a, b) => Number(b.active) - Number(a.active) || a.name.localeCompare(b.name));
+  }
+
+  function deletePartItem(id: string) {
+    setDeletePartError(null);
+    startTransition(async () => {
+      const res = await fetch(`/api/stock/parts/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDeletePartError(data.message ?? "Não foi possível excluir o material.");
+        setConfirmPartId(null);
+        return;
+      }
+      setConfirmPartId(null);
+      setPartItems((current) => current.filter((item) => item.id !== id));
+      setMessage({ type: "success", text: "Material excluído com sucesso." });
+    });
   }
 
   async function postJson(url: string, method: "POST" | "PUT", body: object) {
@@ -785,6 +803,12 @@ export function CatalogManager({
                 <p className="py-4 text-center text-sm text-slate-400">Nenhum material encontrado.</p>
               ) : null}
 
+              {deletePartError ? (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                  <p className="text-sm text-rose-700">{deletePartError}</p>
+                </div>
+              ) : null}
+
               <div className="space-y-3">
                 {filteredParts.map((item) => {
                   const isEditing = editingPartId === item.id;
@@ -860,7 +884,9 @@ export function CatalogManager({
                           </Select>
                           <Textarea value={draft.description} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], description: event.target.value } }))} />
                           {fieldError ? <p className="text-xs text-rose-600">{fieldError.message}</p> : null}
-                          <p className="text-xs text-slate-500">Saldo atual: {item.stockQuantity} {item.unit}. Ajustes de estoque continuam sendo feitos no módulo de estoque.</p>
+                          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                            Saldo atual: <strong>{Number(item.stockQuantity)} {item.unit}</strong>. A quantidade só pode ser alterada por entradas e saídas no módulo de estoque.
+                          </div>
                           <label className="flex items-center gap-2 text-sm text-slate-700">
                             <input type="checkbox" checked={draft.active} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], active: event.target.checked } }))} />
                             Material ativo
@@ -883,14 +909,32 @@ export function CatalogManager({
                               {item.resalePrice != null ? <span className="ml-1 text-slate-400">· revenda {formatCurrency(item.resalePrice)}</span> : null}
                             </p>
                             <p className="mt-1 text-sm text-slate-600">
-                              custo {formatCurrency(item.costPrice)} · estoque {item.stockQuantity} {item.unit}
+                              custo {formatCurrency(item.costPrice)} · estoque {Number(item.stockQuantity)} {item.unit}
                               {item.minimumStock != null ? <span className="ml-1 text-slate-400">· mín. {item.minimumStock} {item.unit}</span> : null}
                             </p>
                             {item.description ? <p className="mt-2 text-sm text-slate-600">{item.description}</p> : null}
                           </div>
-                          <Button type="button" variant="outline" disabled={isPending} onClick={() => setEditingPartId(item.id)}>
-                            Editar
-                          </Button>
+                          <div className="flex shrink-0 items-center gap-2">
+                            {confirmPartId === item.id ? (
+                              <>
+                                <Button type="button" disabled={isPending} onClick={() => deletePartItem(item.id)} className="bg-rose-600 text-white hover:bg-rose-700">
+                                  Confirmar
+                                </Button>
+                                <Button type="button" variant="outline" disabled={isPending} onClick={() => setConfirmPartId(null)}>
+                                  Cancelar
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button type="button" variant="outline" disabled={isPending} onClick={() => setEditingPartId(item.id)}>
+                                  Editar
+                                </Button>
+                                <Button type="button" variant="outline" disabled={isPending} onClick={() => { setDeletePartError(null); setConfirmPartId(item.id); }} className="text-rose-600 hover:border-rose-300 hover:text-rose-700">
+                                  Excluir
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

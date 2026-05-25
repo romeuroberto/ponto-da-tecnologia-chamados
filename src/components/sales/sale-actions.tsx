@@ -8,17 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const PAYMENT_METHODS = ["Dinheiro", "Pix", "Cartão de débito", "Cartão de crédito", "Transferência", "Boleto"];
 
-export function SaleActions({ saleId }: { saleId: string }) {
+export function SaleActions({ saleId, financialStatus }: { saleId: string; financialStatus: string }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [action, setAction] = useState<"pay" | "cancel" | null>(null);
+  const [action, setAction] = useState<"pay" | "cancel" | "revert" | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0]);
   const [paymentReference, setPaymentReference] = useState("");
   const [cancellationReason, setCancellationReason] = useState("");
   const [error, setError] = useState("");
 
-  function handleSubmit(status: "PAGO" | "CANCELADO") {
+  function handleSubmit(status: "PENDENTE" | "PAGO" | "CANCELADO") {
     setError("");
     startTransition(async () => {
       const res = await fetch(`/api/sales/${saleId}`, {
@@ -45,11 +45,19 @@ export function SaleActions({ saleId }: { saleId: string }) {
       <CardContent className="space-y-3 p-6">
         {error && <p className="text-sm text-rose-600">{error}</p>}
 
-        {action === null && (
+        {action === null && financialStatus === "PENDENTE" && (
           <div className="flex flex-col gap-2">
             <Button onClick={() => setAction("pay")}>Confirmar pagamento</Button>
             <Button variant="outline" onClick={() => setAction("cancel")} className="border-rose-200 text-rose-700 hover:bg-rose-50">
               Cancelar venda
+            </Button>
+          </div>
+        )}
+
+        {action === null && financialStatus === "PAGO" && (
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" onClick={() => setAction("revert")} className="border-amber-200 text-amber-700 hover:bg-amber-50">
+              Desfazer pagamento
             </Button>
           </div>
         )}
@@ -92,6 +100,23 @@ export function SaleActions({ saleId }: { saleId: string }) {
                 {isPending ? "Salvando..." : "Confirmar"}
               </Button>
               <Button variant="outline" onClick={() => setAction(null)}>Cancelar</Button>
+            </div>
+          </div>
+        )}
+
+        {action === "revert" && (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold text-slate-700">Desfazer pagamento</p>
+            <p className="text-sm text-slate-600">A venda voltará para <strong>Pendente</strong> e os dados de pagamento registrados serão apagados.</p>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleSubmit("PENDENTE")}
+                disabled={isPending}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                {isPending ? "Revertendo..." : "Confirmar reversão"}
+              </Button>
+              <Button variant="outline" onClick={() => setAction(null)}>Voltar</Button>
             </div>
           </div>
         )}

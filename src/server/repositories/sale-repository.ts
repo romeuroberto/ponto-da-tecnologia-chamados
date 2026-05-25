@@ -112,6 +112,7 @@ export const saleRepository = {
     const now = new Date();
     const isPaid = input.financialStatus === "PAGO";
     const isCanceled = input.financialStatus === "CANCELADO";
+    const isRevertingPayment = input.financialStatus === "PENDENTE";
 
     return prisma.$transaction(async (tx) => {
       const current = await tx.sale.findUnique({
@@ -127,10 +128,10 @@ export const saleRepository = {
         where: { id },
         data: {
           financialStatus: input.financialStatus,
-          paymentMethod: input.paymentMethod ?? null,
-          paymentDate: input.paymentDate ? new Date(input.paymentDate) : null,
-          paymentReference: input.paymentReference ?? null,
-          cancellationReason: input.cancellationReason ?? null,
+          paymentMethod: isRevertingPayment ? null : (input.paymentMethod ?? null),
+          paymentDate: isRevertingPayment ? null : (input.paymentDate ? new Date(input.paymentDate) : null),
+          paymentReference: isRevertingPayment ? null : (input.paymentReference ?? null),
+          cancellationReason: isRevertingPayment ? null : (input.cancellationReason ?? null),
           paidAt: isPaid ? now : null,
           canceledAt: isCanceled ? now : null
         },

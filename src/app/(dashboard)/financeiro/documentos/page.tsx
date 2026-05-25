@@ -36,9 +36,9 @@ export default async function FiscalDocumentsPage({
   const [documents, ticketResult, sales] = await Promise.all([
     fiscalDocumentService.listByClient(selectedClientId || undefined),
     selectedClientId
-      ? ticketService.searchTickets({ client: selectedClientId, sort: "updated_desc", pageSize: 100 })
+      ? ticketService.searchTickets({ client: selectedClientId, status: "CLOSED", sort: "updated_desc", pageSize: 100 })
       : Promise.resolve({ items: [], total: 0, page: 1, pageSize: 100, totalPages: 0 }),
-    selectedClientId ? saleService.listSales({ clientId: selectedClientId }) : Promise.resolve([])
+    selectedClientId ? saleService.listSales({ clientId: selectedClientId, financialStatus: "FATURADO" }) : Promise.resolve([])
   ]);
   const clientMap = new Map(clients.map((client) => [client.id, client]));
 
