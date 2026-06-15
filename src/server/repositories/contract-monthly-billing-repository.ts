@@ -32,8 +32,20 @@ export const contractMonthlyBillingRepository = {
       const end = contract.endDate ? new Date(contract.endDate) : now;
       const endMonth = end < now ? end : now;
 
+      // Remove any PENDENTE billing incorrectly generated for the start month itself
+      await prisma.contractMonthlyBilling.deleteMany({
+        where: {
+          contractId: contract.id,
+          referenceYear: start.getFullYear(),
+          referenceMonth: start.getMonth() + 1,
+          financialStatus: "PENDENTE"
+        }
+      });
+
+      // First billing is for the month after the contract start date
       let year = start.getFullYear();
-      let month = start.getMonth() + 1;
+      let month = start.getMonth() + 2;
+      if (month > 12) { month = 1; year++; }
 
       while (year < endMonth.getFullYear() || (year === endMonth.getFullYear() && month <= endMonth.getMonth() + 1)) {
         await prisma.contractMonthlyBilling.upsert({

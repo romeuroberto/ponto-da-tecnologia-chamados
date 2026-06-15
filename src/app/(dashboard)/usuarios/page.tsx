@@ -85,9 +85,11 @@ export default async function UsersPage({
                     <h3 className="font-semibold text-slate-950">{user.name}</h3>
                     <p className="break-words text-sm text-slate-600">{user.email}</p>
                   </div>
-                  <Link href={`/usuarios/${user.id}` as Route} className="text-sm font-semibold text-sky-700">
-                    Editar
-                  </Link>
+                  {user.role !== "CLIENT" && (
+                    <Link href={`/usuarios/${user.id}` as Route} className="text-sm font-semibold text-sky-700">
+                      Editar
+                    </Link>
+                  )}
                 </div>
                 <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-700 sm:grid-cols-2">
                   <div>

@@ -82,13 +82,13 @@ export default async function DashboardPage() {
       <PageHeader title="Dashboard" description="Visão resumida da operação técnica e das principais filas de atenção." />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
-        <SummaryCard title="Abertos" value={summary.open} tone="blue" />
-        <SummaryCard title="Em atendimento" value={summary.inProgress} tone="orange" />
-        <SummaryCard title="Aguardando cliente" value={summary.waitingCustomer} tone="yellow" />
-        <SummaryCard title="Concluídos técnicos" value={summary.closed} tone="slate" />
-        <SummaryCard title="Críticos" value={criticalCount} tone="red" />
-        <SummaryCard title="Sem responsável" value={unassignedCount} tone="violet" />
-        <SummaryCard title="Concluídos hoje" value={resolvedTodayCount} tone="green" />
+        <SummaryCard title="Abertos" value={summary.open} tone="blue" href="/chamados?status=OPEN&sort=updated_desc" />
+        <SummaryCard title="Em atendimento" value={summary.inProgress} tone="orange" href="/chamados?status=IN_PROGRESS&sort=updated_desc" />
+        <SummaryCard title="Aguardando cliente" value={summary.waitingCustomer} tone="yellow" href="/chamados?status=WAITING_CUSTOMER&sort=updated_desc" />
+        <SummaryCard title="Concluídos técnicos" value={summary.closed} tone="slate" href="/chamados?status=CLOSED&sort=updated_desc" />
+        <SummaryCard title="Críticos" value={criticalCount} tone="red" href="/chamados?priority=CRITICAL&sort=priority_desc" />
+        <SummaryCard title="Sem responsável" value={unassignedCount} tone="violet" href="/chamados?unassigned=true&sort=updated_desc" />
+        <SummaryCard title="Concluídos hoje" value={resolvedTodayCount} tone="green" href="/chamados?status=CLOSED&sort=updated_desc" />
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">

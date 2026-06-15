@@ -31,11 +31,12 @@ const s = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 10
   },
-  headerLeft: { flexDirection: "row", alignItems: "flex-start", flex: 1 },
-  logo: { width: 52, height: 34, objectFit: "contain", marginRight: 10, marginTop: 1 },
+  headerLeft: { flexDirection: "row", alignItems: "flex-start", flex: 1, paddingRight: 16 },
+  logo: { width: 48, height: 32, objectFit: "contain", marginRight: 8, marginTop: 1, flexShrink: 0 },
+  companyTextBlock: { flex: 1, minWidth: 0 },
   companyName: { fontSize: 11, fontFamily: "Helvetica-Bold", color: C.black, marginBottom: 2 },
   companyMeta: { fontSize: 7, color: C.light, lineHeight: 1.5 },
-  headerRight: { alignItems: "flex-end" },
+  headerRight: { alignItems: "flex-end", flexShrink: 0, minWidth: 110 },
   docTitle: { fontSize: 20, fontFamily: "Helvetica-Bold", color: C.black, letterSpacing: 2 },
   docNumber: { fontSize: 7.5, color: C.mid, marginTop: 3, textAlign: "right" },
   docDate: { fontSize: 7.5, color: C.mid, marginTop: 1, textAlign: "right" },
@@ -54,7 +55,7 @@ const s = StyleSheet.create({
     marginBottom: 4
   },
   sectionRow: { flexDirection: "row", gap: 12, marginBottom: 10 },
-  sectionBlock: { flex: 1 },
+  sectionBlock: { flex: 1, minWidth: 0 },
 
   // ── Recebemos de ─────────────────────────────────────────────────
   clientName: { fontSize: 10, fontFamily: "Helvetica-Bold", color: C.black, marginBottom: 2 },
@@ -191,13 +192,6 @@ export interface ReceiptData {
 
 export function ReceiptDocument({ data }: { data: ReceiptData }) {
   const hasTypes = data.items.some((i) => i.typeLabel);
-  const addressParts = [
-    data.company.addressLine1,
-    data.company.city && data.company.state
-      ? `${data.company.city} / ${data.company.state}`
-      : (data.company.city ?? data.company.state),
-    data.company.postalCode ? `CEP ${data.company.postalCode}` : undefined
-  ].filter(Boolean);
 
   const clientMeta = [
     data.client.document ? `CPF/CNPJ: ${data.client.document}` : null,
@@ -213,15 +207,24 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
         <View style={s.header}>
           <View style={s.headerLeft}>
             {data.logoDataUri ? <Image src={data.logoDataUri} style={s.logo} /> : null}
-            <View>
+            <View style={s.companyTextBlock}>
               <Text style={s.companyName}>{data.company.tradeName ?? data.company.legalName}</Text>
               <Text style={s.companyMeta}>CNPJ {data.company.document}</Text>
-              {addressParts.length > 0 ? <Text style={s.companyMeta}>{addressParts.join("  ·  ")}</Text> : null}
-              {data.company.phone || data.company.financialEmail ? (
+              {data.company.addressLine1 ? (
+                <Text style={s.companyMeta}>{data.company.addressLine1}</Text>
+              ) : null}
+              {(data.company.city || data.company.state || data.company.postalCode) ? (
                 <Text style={s.companyMeta}>
-                  {[data.company.phone, data.company.financialEmail].filter(Boolean).join("   ·   ")}
+                  {[
+                    data.company.city && data.company.state
+                      ? `${data.company.city} / ${data.company.state}`
+                      : (data.company.city ?? data.company.state),
+                    data.company.postalCode ? `CEP ${data.company.postalCode}` : undefined
+                  ].filter(Boolean).join("  ·  ")}
                 </Text>
               ) : null}
+              {data.company.phone ? <Text style={s.companyMeta}>{data.company.phone}</Text> : null}
+              {data.company.financialEmail ? <Text style={s.companyMeta}>{data.company.financialEmail}</Text> : null}
             </View>
           </View>
           <View style={s.headerRight}>

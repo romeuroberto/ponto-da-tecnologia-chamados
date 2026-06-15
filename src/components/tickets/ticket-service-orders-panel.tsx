@@ -283,20 +283,42 @@ export function TicketServiceOrdersPanel({
                   <Input id={`quantity-${index}`} inputMode="decimal" value={part.quantity} onChange={(event) => setParts(updatePartDraft(parts, index, { quantity: event.target.value }))} placeholder="1" />
                 </div>
                 <div className="grid content-start gap-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor={`unit-price-${index}`}>Valor de referência</Label>
-                    {selectedPart?.resalePrice != null ? (
-                      <button type="button" className="text-xs text-sky-600 hover:underline" onClick={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(selectedPart.resalePrice!) }))}>
-                        Revenda
-                      </button>
-                    ) : null}
-                  </div>
+                  <Label htmlFor={`unit-price-${index}`}>Valor de referência</Label>
                   <Input
                     id={`unit-price-${index}`}
                     value={part.unitPrice}
                     onChange={(event) => setParts(updatePartDraft(parts, index, { unitPrice: event.target.value }))}
                     onBlur={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(parseCurrencyInput(parts[index]?.unitPrice ?? "0")) }))}
                   />
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {selectedPart ? (() => {
+                      const currentVal = parseCurrencyInput(part.unitPrice);
+                      const normalActive = Math.abs(currentVal - selectedPart.unitPrice) < 0.001;
+                      const resaleActive = selectedPart.resalePrice != null && Math.abs(currentVal - selectedPart.resalePrice) < 0.001;
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(selectedPart.unitPrice) }))}
+                            className={`rounded px-2 py-0.5 font-medium transition-colors ${normalActive ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:text-slate-800 hover:underline"}`}
+                          >
+                            Normal: {formatCurrency(selectedPart.unitPrice)}
+                          </button>
+                          {selectedPart.resalePrice != null ? (
+                            <button
+                              type="button"
+                              onClick={() => setParts(updatePartDraft(parts, index, { unitPrice: formatCurrencyInput(selectedPart.resalePrice!) }))}
+                              className={`rounded px-2 py-0.5 font-medium transition-colors ${resaleActive ? "bg-amber-100 text-amber-800" : "text-amber-600 hover:text-amber-800 hover:underline"}`}
+                            >
+                              Revenda: {formatCurrency(selectedPart.resalePrice)}
+                            </button>
+                          ) : isReseller ? (
+                            <span className="text-amber-600">Preço de revenda não cadastrado.</span>
+                          ) : null}
+                        </>
+                      );
+                    })() : null}
+                  </div>
                 </div>
               </div>
 
@@ -530,6 +552,33 @@ export function TicketServiceOrdersPanel({
                             {isReseller && <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Revenda</span>}
                           </Label>
                           <Input id={`servicePrice-${serviceOrder.id}`} value={editFields.servicePrice} onChange={(event) => setEditFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setEditFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
+                          {selectedEditCatalogItem ? (() => {
+                            const currentVal = parseCurrencyInput(editFields.servicePrice);
+                            const normalActive = Math.abs(currentVal - selectedEditCatalogItem.defaultPrice) < 0.001;
+                            const resaleActive = selectedEditCatalogItem.resalePrice != null && Math.abs(currentVal - selectedEditCatalogItem.resalePrice) < 0.001;
+                            return (
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditFields((c) => ({ ...c, servicePrice: formatCurrencyInput(selectedEditCatalogItem.defaultPrice) }))}
+                                  className={`rounded px-2 py-0.5 font-medium transition-colors ${normalActive ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:text-slate-800 hover:underline"}`}
+                                >
+                                  Normal: {formatCurrency(selectedEditCatalogItem.defaultPrice)}
+                                </button>
+                                {selectedEditCatalogItem.resalePrice != null ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditFields((c) => ({ ...c, servicePrice: formatCurrencyInput(selectedEditCatalogItem.resalePrice!) }))}
+                                    className={`rounded px-2 py-0.5 font-medium transition-colors ${resaleActive ? "bg-amber-100 text-amber-800" : "text-amber-600 hover:text-amber-800 hover:underline"}`}
+                                  >
+                                    Revenda: {formatCurrency(selectedEditCatalogItem.resalePrice)}
+                                  </button>
+                                ) : isReseller ? (
+                                  <span className="text-amber-600">Preço de revenda não cadastrado.</span>
+                                ) : null}
+                              </div>
+                            );
+                          })() : null}
                         </div>
                         <div className="grid content-start gap-2">
                           <Label htmlFor={`technician-${serviceOrder.id}`}>Técnico</Label>
@@ -647,6 +696,33 @@ export function TicketServiceOrdersPanel({
                     {isReseller && <span className="ml-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Revenda</span>}
                   </Label>
                   <Input id="new-service-price" value={createFields.servicePrice} onChange={(event) => setCreateFields((current) => ({ ...current, servicePrice: event.target.value }))} onBlur={() => setCreateFields((current) => ({ ...current, servicePrice: current.servicePrice ? formatCurrencyInput(parseCurrencyInput(current.servicePrice)) : "" }))} placeholder="R$ 0,00" />
+                  {selectedCreateCatalogItem ? (() => {
+                    const currentVal = parseCurrencyInput(createFields.servicePrice);
+                    const normalActive = Math.abs(currentVal - selectedCreateCatalogItem.defaultPrice) < 0.001;
+                    const resaleActive = selectedCreateCatalogItem.resalePrice != null && Math.abs(currentVal - selectedCreateCatalogItem.resalePrice) < 0.001;
+                    return (
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setCreateFields((c) => ({ ...c, servicePrice: formatCurrencyInput(selectedCreateCatalogItem.defaultPrice) }))}
+                          className={`rounded px-2 py-0.5 font-medium transition-colors ${normalActive ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:text-slate-800 hover:underline"}`}
+                        >
+                          Normal: {formatCurrency(selectedCreateCatalogItem.defaultPrice)}
+                        </button>
+                        {selectedCreateCatalogItem.resalePrice != null ? (
+                          <button
+                            type="button"
+                            onClick={() => setCreateFields((c) => ({ ...c, servicePrice: formatCurrencyInput(selectedCreateCatalogItem.resalePrice!) }))}
+                            className={`rounded px-2 py-0.5 font-medium transition-colors ${resaleActive ? "bg-amber-100 text-amber-800" : "text-amber-600 hover:text-amber-800 hover:underline"}`}
+                          >
+                            Revenda: {formatCurrency(selectedCreateCatalogItem.resalePrice)}
+                          </button>
+                        ) : isReseller ? (
+                          <span className="text-amber-600">Preço de revenda não cadastrado.</span>
+                        ) : null}
+                      </div>
+                    );
+                  })() : null}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="new-scheduled">Agendada para</Label>

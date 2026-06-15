@@ -6,7 +6,9 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { Select } from "@/components/ui/select";
 import { canCreateClient, canEditClient } from "@/server/auth/permissions";
 import { getParam } from "@/server/search-params";
 import { clientService } from "@/server/services/client-service";
@@ -44,33 +46,27 @@ export default async function ClientsPage({
           ) : null
         }
       />
-      <form action="/clientes" className="flex flex-wrap gap-3">
-        <input
+      <form action="/clientes" className="flex flex-wrap items-center gap-3">
+        <Input
           name="q"
           defaultValue={q}
           placeholder="Buscar por cliente, contato ou e-mail..."
-          className="h-9 flex-1 min-w-48 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+          className="min-w-48 flex-1"
         />
-        <select
-          name="sort"
-          defaultValue={sort}
-          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-500"
-        >
+        <Select name="sort" defaultValue={sort} className="w-auto">
           <option value="name_asc">Nome A-Z</option>
           <option value="name_desc">Nome Z-A</option>
           <option value="tickets_desc">Mais chamados</option>
           <option value="tickets_asc">Menos chamados</option>
-        </select>
+        </Select>
         <input type="hidden" name="page" value="1" />
-        <button type="submit" className="h-9 rounded-lg bg-sky-600 px-4 text-sm font-semibold text-white hover:bg-sky-700">
-          Buscar
-        </button>
+        <Button type="submit">Buscar</Button>
         {hasActiveFilters ? (
-          <Link href="/clientes" className="flex h-9 items-center rounded-lg border border-slate-200 px-4 text-sm text-slate-600 hover:bg-slate-50">
-            Limpar
+          <Link href="/clientes">
+            <Button variant="outline" type="button">Limpar</Button>
           </Link>
         ) : null}
-        <span className="flex h-9 items-center text-sm text-slate-400">
+        <span className="text-sm text-slate-400">
           {result.total} encontrado{result.total !== 1 ? "s" : ""}
         </span>
       </form>

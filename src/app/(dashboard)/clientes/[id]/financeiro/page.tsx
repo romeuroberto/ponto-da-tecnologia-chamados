@@ -37,9 +37,17 @@ const statusColor: Record<string, string> = {
   CANCELADO: "bg-rose-100 text-rose-700"
 };
 
-export default async function ClientFinanceiroPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ClientFinanceiroPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ ver?: string }>;
+}) {
   await requireRole(["ADMIN", "ATTENDANT"]);
   const { id } = await params;
+  const { ver } = await searchParams;
+  const showAll = ver === "tudo";
 
   const client = await clientService.getClient(id);
   if (!client) notFound();
@@ -63,7 +71,6 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
   const openSales = sales.filter((s) => !["PAGO", "CANCELADO"].includes(s.financialStatus));
   const paidSales = sales.filter((s) => s.financialStatus === "PAGO");
 
-  // Apenas meses vencidos ou do mês atual — exclui mensalidades futuras
   const dueMonthly = openMonthly.filter(
     (b) => b.referenceYear < currentYear || (b.referenceYear === currentYear && b.referenceMonth <= currentMonth)
   );
@@ -76,6 +83,12 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
     paidTicketBillings.reduce((s, b) => s + b.totalAmount, 0) +
     paidMonthly.reduce((s, b) => s + b.amount, 0) +
     paidSales.reduce((s, b) => s + b.totalAmount, 0);
+
+  const visibleMonthly = showAll ? monthlyBillings : openMonthly;
+  const visibleSales = showAll ? sales : openSales;
+  const visibleTicketBillings = showAll ? ticketBillings : openTicketBillings;
+
+  const baseUrl = `/clientes/${id}/financeiro` as Route;
 
   return (
     <div className="space-y-6">
@@ -119,16 +132,33 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
         </div>
       </section>
 
+      {/* Barra de filtros */}
+      <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+        <span className="text-sm font-medium text-slate-500 mr-1">Exibir:</span>
+        <Link
+          href={baseUrl}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${!showAll ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+        >
+          Somente pendentes
+        </Link>
+        <Link
+          href={`${baseUrl}?ver=tudo` as Route}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${showAll ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+        >
+          Ver tudo (incluindo pagos)
+        </Link>
+      </div>
+
       {/* Mensalidades de contrato */}
-      {monthlyBillings.length > 0 && (
+      {visibleMonthly.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Mensalidades de contrato</h2>
-          <MonthlyBillingList clientId={id} initialBillings={monthlyBillings} />
+          <MonthlyBillingList clientId={id} initialBillings={visibleMonthly} />
         </section>
       )}
 
       {/* Vendas */}
-      {sales.length > 0 && (
+      {visibleSales.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Vendas</h2>
           <div className="space-y-2">
@@ -139,7 +169,7 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
               <span>Valor</span>
               <span>Pagamento</span>
             </div>
-            {sales.map((sale) => (
+            {visibleSales.map((sale) => (
               <Link
                 key={sale.id}
                 href={`/vendas/${sale.id}` as Route}
@@ -185,7 +215,7 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
       {/* Cobranças de chamados */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Cobranças de chamados</h2>
-        {ticketBillings.length > 0 ? (
+        {visibleTicketBillings.length > 0 ? (
           <div className="space-y-2">
             <div className="hidden grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-4 text-xs font-semibold uppercase tracking-wide text-slate-400 lg:grid">
               <span>Chamado</span>
@@ -194,7 +224,7 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
               <span>Valor</span>
               <span>Atualizado</span>
             </div>
-            {ticketBillings.map((billing) => (
+            {visibleTicketBillings.map((billing) => (
               <Link
                 key={billing.id}
                 href={`/chamados/${billing.ticketId}` as Route}
@@ -232,7 +262,10 @@ export default async function ClientFinanceiroPage({ params }: { params: Promise
             ))}
           </div>
         ) : (
-          <EmptyState title="Nenhuma cobrança de chamado" description="Este cliente não tem cobranças registradas." />
+          <EmptyState
+            title={showAll ? "Nenhuma cobrança de chamado" : "Nenhuma cobrança pendente de chamado"}
+            description={showAll ? "Este cliente não tem cobranças registradas." : "Todas as cobranças estão pagas."}
+          />
         )}
       </section>
     </div>

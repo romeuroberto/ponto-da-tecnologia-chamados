@@ -1,13 +1,18 @@
+import type { Route } from "next";
+import Link from "next/link";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function SummaryCard({
   title,
   value,
-  tone
+  tone,
+  href
 }: {
   title: string;
   value: number;
   tone: "blue" | "orange" | "yellow" | "slate" | "red" | "violet" | "green";
+  href?: Route;
 }) {
   const tones = {
     blue: "bg-sky-50 text-sky-700",
@@ -19,8 +24,8 @@ export function SummaryCard({
     green: "bg-emerald-50 text-emerald-700"
   };
 
-  return (
-    <Card>
+  const content = (
+    <Card className={href ? "transition-shadow hover:shadow-md" : ""}>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
       </CardHeader>
@@ -29,4 +34,10 @@ export function SummaryCard({
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return <Link href={href} className="block">{content}</Link>;
+  }
+
+  return content;
 }

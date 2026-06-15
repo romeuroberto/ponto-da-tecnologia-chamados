@@ -249,25 +249,6 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
         </Card>
       )}
 
-      {isAdmin && editId && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-base text-blue-800">Editar equipamento</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EquipmentForm
-              form={form}
-              saving={saving}
-              error={error}
-              isNew={false}
-              onChange={handleFormChange}
-              onSave={() => handleSave(false)}
-              onCancel={cancelEdit}
-            />
-          </CardContent>
-        </Card>
-      )}
-
       <Card>
         <CardHeader className="flex-row items-center justify-between gap-4">
           <CardTitle className="text-base">Equipamentos ({filtered.length})</CardTitle>
@@ -291,57 +272,74 @@ export function EquipmentManager({ equipment, isAdmin }: Props) {
                 <span></span>
               </div>
               {filtered.map((eq) => (
-                <div key={eq.id} className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] items-center gap-3 px-6 py-3.5 text-sm">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-slate-900">{eq.model}</p>
-                      {eq.isReserve && (
-                        <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
-                          Reserva
-                        </span>
-                      )}
+                <div key={eq.id}>
+                  {editId === eq.id ? (
+                    <div className="bg-blue-50 px-6 py-4">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-blue-700">Editando: {eq.model} — {eq.patrimonyCode ?? eq.serialNumber ?? eq.id}</p>
+                      <EquipmentForm
+                        form={form}
+                        saving={saving}
+                        error={error}
+                        isNew={false}
+                        onChange={handleFormChange}
+                        onSave={() => handleSave(false)}
+                        onCancel={cancelEdit}
+                      />
                     </div>
-                    <p className="text-xs text-slate-400">{eq.serialNumber ?? "—"}</p>
-                  </div>
-                  <span className="text-slate-500">{eq.patrimonyCode ?? "—"}</span>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-fit ${statusClass[eq.status]}`}>
-                    {statusLabel[eq.status]}
-                  </span>
-                  {isAdmin && eq.status === "LOCADO" ? (
-                    <Button size="sm" variant="outline" onClick={() => handleStatusChange(eq.id, "MANUTENCAO")} className="text-xs">
-                      → Manutenção
-                    </Button>
-                  ) : isAdmin && eq.status === "MANUTENCAO" ? (
-                    <Button size="sm" variant="outline" onClick={() => handleStatusChange(eq.id, "DISPONIVEL")} className="text-xs">
-                      → Disponível
-                    </Button>
                   ) : (
-                    <span />
-                  )}
-                  {isAdmin ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        className={`text-xs font-medium ${eq.isReserve ? "text-violet-500 hover:text-violet-700" : "text-slate-400 hover:text-violet-600"}`}
-                        onClick={() => handleToggleReserve(eq.id, eq.isReserve)}
-                        title={eq.isReserve ? "Remover marcação de reserva" : "Marcar como reserva"}
-                      >
-                        {eq.isReserve ? "Reserva ✓" : "Marcar reserva"}
-                      </button>
-                      <button className="text-xs text-slate-400 hover:text-slate-700" onClick={() => startEdit(eq)}>
-                        Editar
-                      </button>
-                      {deleteConfirm === eq.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <button className="text-xs text-rose-600 font-medium" onClick={() => handleDelete(eq.id)}>Confirmar</button>
-                          <button className="text-xs text-slate-400" onClick={() => { setDeleteConfirm(null); setDeleteError(null); }}>Cancelar</button>
+                    <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] items-center gap-3 px-6 py-3.5 text-sm">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-slate-900">{eq.model}</p>
+                          {eq.isReserve && (
+                            <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                              Reserva
+                            </span>
+                          )}
                         </div>
+                        <p className="text-xs text-slate-400">{eq.serialNumber ?? "—"}</p>
+                      </div>
+                      <span className="text-slate-500">{eq.patrimonyCode ?? "—"}</span>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium w-fit ${statusClass[eq.status]}`}>
+                        {statusLabel[eq.status]}
+                      </span>
+                      {isAdmin && eq.status === "LOCADO" ? (
+                        <Button size="sm" variant="outline" onClick={() => handleStatusChange(eq.id, "MANUTENCAO")} className="text-xs">
+                          → Manutenção
+                        </Button>
+                      ) : isAdmin && eq.status === "MANUTENCAO" ? (
+                        <Button size="sm" variant="outline" onClick={() => handleStatusChange(eq.id, "DISPONIVEL")} className="text-xs">
+                          → Disponível
+                        </Button>
                       ) : (
-                        <button className="text-xs text-rose-400 hover:text-rose-600" onClick={() => { setDeleteConfirm(eq.id); setDeleteError(null); }}>
-                          Excluir
-                        </button>
+                        <span />
                       )}
+                      {isAdmin ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            className={`text-xs font-medium ${eq.isReserve ? "text-violet-500 hover:text-violet-700" : "text-slate-400 hover:text-violet-600"}`}
+                            onClick={() => handleToggleReserve(eq.id, eq.isReserve)}
+                            title={eq.isReserve ? "Remover marcação de reserva" : "Marcar como reserva"}
+                          >
+                            {eq.isReserve ? "Reserva ✓" : "Marcar reserva"}
+                          </button>
+                          <button className="text-xs text-slate-400 hover:text-slate-700" onClick={() => startEdit(eq)}>
+                            Editar
+                          </button>
+                          {deleteConfirm === eq.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <button className="text-xs text-rose-600 font-medium" onClick={() => handleDelete(eq.id)}>Confirmar</button>
+                              <button className="text-xs text-slate-400" onClick={() => { setDeleteConfirm(null); setDeleteError(null); }}>Cancelar</button>
+                            </div>
+                          ) : (
+                            <button className="text-xs text-rose-400 hover:text-rose-600" onClick={() => { setDeleteConfirm(eq.id); setDeleteError(null); }}>
+                              Excluir
+                            </button>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
+                  )}
                 </div>
               ))}
             </div>

@@ -25,22 +25,27 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [clientId, setClientId] = useState("");
-
-  function handleClientChange(newClientId: string) {
-    setClientId(newClientId);
-    if (!selectedPartId) return;
-    const part = parts.find((p) => p.id === selectedPartId);
-    if (!part) return;
-    const client = clients.find((c) => c.id === newClientId);
-    const autoPrice = client?.isReseller && part.resalePrice != null ? part.resalePrice : part.unitPrice;
-    setUnitPrice(String(autoPrice));
-  }
   const [internalNotes, setInternalNotes] = useState("");
   const [deliveryFee, setDeliveryFee] = useState("");
   const [items, setItems] = useState<SaleLineItem[]>([]);
   const [selectedPartId, setSelectedPartId] = useState("");
   const [qty, setQty] = useState("1");
   const [unitPrice, setUnitPrice] = useState("");
+
+  const selectedClient = clients.find((c) => c.id === clientId);
+
+  function resolvePrice(part: PartCatalogItem, forClientId: string): number {
+    const client = clients.find((c) => c.id === forClientId);
+    return client?.isReseller && part.resalePrice != null ? part.resalePrice : part.unitPrice;
+  }
+
+  function handleClientChange(newClientId: string) {
+    setClientId(newClientId);
+    if (!selectedPartId) return;
+    const part = parts.find((p) => p.id === selectedPartId);
+    if (!part) return;
+    setUnitPrice(String(resolvePrice(part, newClientId)));
+  }
 
   const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   const deliveryFeeValue = parseFloat(deliveryFee) || 0;
@@ -68,9 +73,7 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
     setSelectedPartId(partId);
     const part = parts.find((p) => p.id === partId);
     if (!part) return;
-    const client = clients.find((c) => c.id === clientId);
-    const autoPrice = client?.isReseller && part.resalePrice != null ? part.resalePrice : part.unitPrice;
-    setUnitPrice(String(autoPrice));
+    setUnitPrice(String(resolvePrice(part, clientId)));
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -104,6 +107,11 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
           <div className="grid gap-2">
             <Label>Cliente</Label>
             <ClientCombobox clients={clients} value={clientId} onChange={handleClientChange} disabled={isPending} />
+            {selectedClient?.isReseller && (
+              <p className="text-xs font-medium text-amber-700">
+                Cliente revenda — preço de revenda será aplicado automaticamente.
+              </p>
+            )}
           </div>
           <div className="grid gap-2">
             <Label>Taxa de entrega (R$)</Label>
@@ -163,19 +171,33 @@ export function SaleForm({ clients, parts }: { clients: Client[]; parts: PartCat
                 placeholder="0,00"
                 className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
               />
-              <div className="flex h-4 gap-3 text-xs text-slate-500">
+              <div className="flex min-h-4 flex-wrap gap-2 text-xs">
                 {(() => {
                   const selected = parts.find((p) => p.id === selectedPartId);
                   if (!selected) return null;
+                  const isReseller = selectedClient?.isReseller ?? false;
+                  const currentPrice = parseFloat(unitPrice);
+                  const normalActive = !isNaN(currentPrice) && Math.abs(currentPrice - selected.unitPrice) < 0.001;
+                  const resaleActive = selected.resalePrice != null && !isNaN(currentPrice) && Math.abs(currentPrice - selected.resalePrice) < 0.001;
                   return (
                     <>
-                      <button type="button" className="hover:text-slate-800 hover:underline" onClick={() => setUnitPrice(String(selected.unitPrice))}>
+                      <button
+                        type="button"
+                        onClick={() => setUnitPrice(String(selected.unitPrice))}
+                        className={`rounded px-2 py-0.5 font-medium transition-colors ${normalActive ? "bg-slate-200 text-slate-900" : "text-slate-500 hover:text-slate-800 hover:underline"}`}
+                      >
                         Normal: {formatCurrency(selected.unitPrice)}
                       </button>
                       {selected.resalePrice != null ? (
-                        <button type="button" className="text-sky-600 hover:text-sky-800 hover:underline" onClick={() => setUnitPrice(String(selected.resalePrice))}>
+                        <button
+                          type="button"
+                          onClick={() => setUnitPrice(String(selected.resalePrice))}
+                          className={`rounded px-2 py-0.5 font-medium transition-colors ${resaleActive ? "bg-amber-100 text-amber-800" : "text-amber-600 hover:text-amber-800 hover:underline"}`}
+                        >
                           Revenda: {formatCurrency(selected.resalePrice)}
                         </button>
+                      ) : isReseller ? (
+                        <span className="text-amber-600">Preço de revenda não cadastrado.</span>
                       ) : null}
                     </>
                   );

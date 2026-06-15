@@ -820,52 +820,65 @@ export function CatalogManager({
                       {isEditing ? (
                         <div className="space-y-4">
                           <div className="grid gap-4 md:grid-cols-2">
-                            <Input value={draft.name} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], name: event.target.value } }))} />
-                            <div className="flex h-10 items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
-                              {item.code ?? "Código indisponível"}
+                            <div className="grid gap-2">
+                              <Label>Nome</Label>
+                              <Input value={draft.name} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], name: event.target.value } }))} />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label>Código</Label>
+                              <div className="flex h-10 items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
+                                {item.code ?? "Código indisponível"}
+                              </div>
                             </div>
                           </div>
                           <div className="grid gap-4 md:grid-cols-3">
-                            <Input
-                              placeholder="Custo padrão"
-                              value={draft.costPrice}
-                              onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], costPrice: event.target.value } }))}
-                              onBlur={() =>
-                                setPartDrafts((current) => ({
-                                  ...current,
-                                  [item.id]: { ...current[item.id], costPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].costPrice)) }
-                                }))
-                              }
-                            />
-                            <Input
-                              placeholder="Valor de venda"
-                              value={draft.unitPrice}
-                              onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unitPrice: event.target.value } }))}
-                              onBlur={() =>
-                                setPartDrafts((current) => ({
-                                  ...current,
-                                  [item.id]: { ...current[item.id], unitPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].unitPrice)) }
-                                }))
-                              }
-                            />
-                            <Input
-                              placeholder="Preço revenda (opcional)"
-                              value={draft.resalePrice}
-                              onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], resalePrice: event.target.value } }))}
-                              onBlur={() =>
-                                setPartDrafts((current) => ({
-                                  ...current,
-                                  [item.id]: {
-                                    ...current[item.id],
-                                    resalePrice: current[item.id].resalePrice ? formatCurrencyInput(parseCurrencyInput(current[item.id].resalePrice)) : ""
-                                  }
-                                }))
-                              }
-                            />
+                            <div className="grid gap-2">
+                              <Label>Custo padrão</Label>
+                              <Input
+                                value={draft.costPrice}
+                                onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], costPrice: event.target.value } }))}
+                                onBlur={() =>
+                                  setPartDrafts((current) => ({
+                                    ...current,
+                                    [item.id]: { ...current[item.id], costPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].costPrice)) }
+                                  }))
+                                }
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label>Valor de venda</Label>
+                              <Input
+                                value={draft.unitPrice}
+                                onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unitPrice: event.target.value } }))}
+                                onBlur={() =>
+                                  setPartDrafts((current) => ({
+                                    ...current,
+                                    [item.id]: { ...current[item.id], unitPrice: formatCurrencyInput(parseCurrencyInput(current[item.id].unitPrice)) }
+                                  }))
+                                }
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label>Preço revenda <span className="font-normal text-slate-400">(opcional)</span></Label>
+                              <Input
+                                placeholder="—"
+                                value={draft.resalePrice}
+                                onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], resalePrice: event.target.value } }))}
+                                onBlur={() =>
+                                  setPartDrafts((current) => ({
+                                    ...current,
+                                    [item.id]: {
+                                      ...current[item.id],
+                                      resalePrice: current[item.id].resalePrice ? formatCurrencyInput(parseCurrencyInput(current[item.id].resalePrice)) : ""
+                                    }
+                                  }))
+                                }
+                              />
+                            </div>
                           </div>
                           <div className="grid gap-4 md:grid-cols-3">
                             <div className="grid gap-2">
-                              <label className="text-sm font-medium text-slate-700">Estoque mínimo <span className="font-normal text-slate-400">(opcional)</span></label>
+                              <Label>Estoque mínimo <span className="font-normal text-slate-400">(opcional)</span></Label>
                               <Input
                                 inputMode="decimal"
                                 placeholder="—"
@@ -873,16 +886,22 @@ export function CatalogManager({
                                 onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], minimumStock: event.target.value } }))}
                               />
                             </div>
+                            <div className="grid gap-2">
+                              <Label>Unidade</Label>
+                              <Select
+                                value={draft.unit}
+                                onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unit: event.target.value } }))}
+                              >
+                                {UNIT_OPTIONS.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                              </Select>
+                            </div>
                           </div>
-                          <Select
-                            value={draft.unit}
-                            onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], unit: event.target.value } }))}
-                          >
-                            {UNIT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                          </Select>
-                          <Textarea value={draft.description} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], description: event.target.value } }))} />
+                          <div className="grid gap-2">
+                            <Label>Descrição</Label>
+                            <Textarea value={draft.description} onChange={(event) => setPartDrafts((current) => ({ ...current, [item.id]: { ...current[item.id], description: event.target.value } }))} />
+                          </div>
                           {fieldError ? <p className="text-xs text-rose-600">{fieldError.message}</p> : null}
                           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
                             Saldo atual: <strong>{Number(item.stockQuantity)} {item.unit}</strong>. A quantidade só pode ser alterada por entradas e saídas no módulo de estoque.

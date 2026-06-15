@@ -31,6 +31,7 @@ export default async function TicketsPage({
   const to = getParam(params.to) ?? "";
   const sort = getParam(params.sort) ?? "updated_desc";
   const page = getParam(params.page) ?? "1";
+  const unassigned = getParam(params.unassigned) === "true";
 
   const [result, clients] = await Promise.all([
     ticketService.searchTickets({
@@ -41,6 +42,7 @@ export default async function TicketsPage({
       from: from || undefined,
       to: to || undefined,
       sort: (sort || undefined) as Parameters<typeof ticketService.searchTickets>[0]["sort"],
+      unassigned: unassigned || undefined,
       page
     }),
     clientService.listClients()
