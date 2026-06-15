@@ -42,12 +42,12 @@ const expenseCategoryLabels: Record<ExpenseCategory, string> = {
   ENERGIA: "Energia",
   INTERNET: "Internet",
   TRANSPORTE: "Transporte",
-  COMBUSTIVEL: "Combustivel",
-  ALIMENTACAO: "Alimentacao",
-  PECAS_INSUMOS: "Pecas e insumos",
+  COMBUSTIVEL: "Combustível",
+  ALIMENTACAO: "Alimentação",
+  PECAS_INSUMOS: "Peças e insumos",
   FERRAMENTAS_EQUIPAMENTOS: "Ferramentas e equipamentos",
   IMPOSTOS_TAXAS: "Impostos e taxas",
-  SERVICOS_TERCEIROS: "Servicos de terceiros",
+  SERVICOS_TERCEIROS: "Serviços de terceiros",
   OUTROS: "Outros"
 };
 
@@ -662,7 +662,7 @@ export const reportService = {
       sla: getSlaInfo(ticket).state,
       solicitante: ticket.requesterName,
       emailSolicitante: ticket.requesterEmail ?? "",
-      responsavel: ticket.assigneeName ?? "Não atribuído",
+      responsável: ticket.assigneeName ?? "Não atribuído",
       abertoPor: ticket.openedByName,
       criadoEm: formatDateTime(ticket.createdAt),
       atualizadoEm: formatDateTime(ticket.updatedAt),

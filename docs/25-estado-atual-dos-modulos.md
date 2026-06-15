@@ -1,7 +1,7 @@
 # Estado Atual dos Módulos
 
 Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
-Última atualização: 2026-05-22 (sessão 2)
+Última atualização: 2026-06-15 (revisão de maturidade financeira)
 
 ---
 
@@ -33,8 +33,8 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 | Cadastro e edição | ✅ | |
 | Listagem com busca e paginação | ✅ | |
 | Perfil de cobrança por cliente | ✅ | Tipo de cobrança, taxa horária |
-| Extrato financeiro do cliente | ✅ | `/financeiro/clientes` |
-| Portal do cliente (acesso externo) | ✅ | Login com role CLIENT |
+| Extrato financeiro do cliente | ✅ | Consolidado com chamados, vendas, mensalidades e locações; pagamento rápido e lote |
+| Portal do cliente (acesso externo) | ✅ | Login com role CLIENT, financeiro, documentos, vendas e abertura de chamados |
 | Inativação | ✅ | |
 
 ---
@@ -55,7 +55,7 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 | Fechamento com motivo | ✅ | |
 | SLA de peças aguardando | ✅ | Cronômetro de `WAITING_PARTS` |
 | Notificações por e-mail | ❌ | Backlog |
-| Abertura pelo cliente externo | 🔧 | Portal existe, abertura via portal pendente |
+| Abertura pelo cliente externo | ✅ | Portal web e portal app possuem abertura de chamado |
 
 ---
 
@@ -105,9 +105,10 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 |---|---|---|
 | Criação de venda (materiais) | ✅ | |
 | Listagem com filtros | ✅ | |
-| Atualização de status financeiro | ✅ | PENDING, PAID, CANCELED |
+| Atualização de status financeiro | ✅ | PENDENTE, PAGO, CANCELADO; pagamento rápido pelo extrato |
 | Recibo de venda (impressão) | ✅ | |
 | Baixa automática no estoque | ✅ | Movimentação `SALE_EXIT` |
+| Vínculo com documento fiscal | ✅ | Manual e via baixa em lote |
 
 ---
 
@@ -118,11 +119,11 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 | Cobranças de chamados | ✅ | Faturamento vinculado à OS |
 | Despesas operacionais | ✅ | Cadastro manual, categorias |
 | Despesas fixas recorrentes | ✅ | Geração automática mensal |
-| Documentos fiscais (NF) | ✅ | Upload de XML/PDF |
+| Documentos fiscais (NF) | ✅ | Upload de PDF e vínculo com chamados, vendas, mensalidades e locações |
 | Instruções de pagamento (PIX, boleto) | ✅ | Upload de QR Code |
-| Dashboard financeiro | ✅ | Cards de receita, despesas, saldo |
-| Extrato por cliente | ✅ | |
-| Relatórios avançados | ❌ | Backlog |
+| Dashboard financeiro | ✅ | Recebíveis consolidados, despesas, caixa, status e CSV |
+| Extrato por cliente | ✅ | Ações rápidas, pagamento em lote e vínculo fiscal |
+| Relatórios avançados | ✅ | Relatórios operacional/financeiro com exportação CSV |
 
 ---
 
@@ -157,7 +158,7 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 | Vínculo chamado ↔ equipamento | ✅ | Campo `equipmentId` no Ticket (schema pronto) |
 | Geração automática de cobranças | ❌ | Backlog — por ora é manual |
 | Recibo PDF de cobrança | ❌ | Backlog |
-| Dashboard com receita de locações | ❌ | Backlog — integrar no financeiro |
+| Dashboard com receita de locações | ✅ | Integrado ao dashboard financeiro, relatórios e extrato do cliente |
 
 ---
 
@@ -178,8 +179,8 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 |---|---|---|
 | Cards de resumo (chamados, financeiro) | ✅ | |
 | Chamados recentes | ✅ | |
-| Indicadores financeiros | ✅ | |
-| Gráficos / relatórios avançados | ❌ | Backlog |
+| Indicadores financeiros | ✅ | Recebíveis consolidados por status, tipo e cliente |
+| Gráficos / relatórios avançados | ✅ | Dashboard financeiro e relatórios CSV |
 
 ---
 
@@ -208,11 +209,9 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 
 1. Notificações por e-mail (abertura/atualização de chamado)
 2. Abertura de chamado pelo portal do cliente
-3. Relatórios gerenciais (PDF exportável)
+3. Relatórios gerenciais em PDF
 4. Exportação CSV do estoque
 5. Renovação automática de contratos
-6. Gráficos no dashboard
-7. Geração automática de cobranças de locação (cron mensal)
-8. Recibo PDF de cobrança de locação
-9. Receita de locações no dashboard financeiro
-10. Vínculo UI de chamado → equipamento locado (campo `equipmentId` existe no schema, falta UI no formulário de chamados)
+6. Geração automática de cobranças de locação (cron mensal)
+7. Recibo PDF de cobrança de locação
+8. Vínculo UI de chamado → equipamento locado (campo `equipmentId` existe no schema, falta UI no formulário de chamados)

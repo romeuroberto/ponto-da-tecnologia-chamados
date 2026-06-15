@@ -53,7 +53,7 @@ export default async function ReportsPage({
     <div className="space-y-8">
       <PageHeader
         title="Relatórios"
-        description="Camada operacional e financeira para acompanhar volume, conclusão tecnica, SLA e cobrança."
+        description="Camada operacional e financeira para acompanhar volume, conclusão técnica, SLA e cobrança."
         action={
           <div className="flex flex-wrap gap-2">
             <a href={operationalExportHref} className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
@@ -122,14 +122,14 @@ export default async function ReportsPage({
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
           title="Aberturas no período"
-          description="Quantidade diária de chamados abertos nos ultimos 7 dias."
+          description="Quantidade diária de chamados abertos nos últimos 7 dias."
           total={report.trend.reduce((sum, item) => sum + item.opened, 0)}
           data={report.trend.map((item) => ({ label: item.label, value: item.opened }))}
           tone="blue"
         />
         <TrendChart
           title="Conclusões técnicas no período"
-          description="Quantidade diária de chamados concluídos tecnicamente nos ultimos 7 dias."
+          description="Quantidade diária de chamados concluídos tecnicamente nos últimos 7 dias."
           total={report.trend.reduce((sum, item) => sum + item.resolved, 0)}
           data={report.trend.map((item) => ({ label: item.label, value: item.resolved }))}
           tone="green"
@@ -172,7 +172,7 @@ export default async function ReportsPage({
       <section className="grid gap-6 xl:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Tempo médio de conclusão tecnica</CardTitle>
+            <CardTitle>Tempo médio de conclusão técnica</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-semibold text-slate-950">

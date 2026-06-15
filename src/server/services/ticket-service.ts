@@ -18,7 +18,7 @@ export const ticketService = {
   },
   async createTicket(input: TicketInput, openedById: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de gravar chamados reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de gravar chamados reais.");
     }
 
     const openedBy = await userRepository.findById(openedById);
@@ -43,7 +43,7 @@ export const ticketService = {
     authorId: string
   ) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar chamados reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de atualizar chamados reais.");
     }
 
     const author = await userRepository.findById(authorId);
@@ -85,7 +85,7 @@ export const ticketService = {
   },
   async checkIn(id: string, authorId: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada.");
+      throw new Error("DATABASE_URL não configurada.");
     }
 
     const author = await userRepository.findById(authorId);
@@ -105,7 +105,7 @@ export const ticketService = {
 
   async checkOut(id: string, authorId: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada.");
+      throw new Error("DATABASE_URL não configurada.");
     }
 
     const author = await userRepository.findById(authorId);
@@ -125,7 +125,7 @@ export const ticketService = {
 
   async addComment(id: string, message: string, authorId: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de comentar em chamados reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de comentar em chamados reais.");
     }
 
     const author = await userRepository.findById(authorId);
@@ -142,7 +142,7 @@ export const ticketService = {
     authorId: string
   ) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de enviar anexos reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de enviar anexos reais.");
     }
 
     const author = await userRepository.findById(authorId);
@@ -159,7 +159,7 @@ export const ticketService = {
   },
   async claimTicket(id: string, technicianId: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de operar chamados reais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de operar chamados reais.");
     }
 
     const technician = await userRepository.findById(technicianId);

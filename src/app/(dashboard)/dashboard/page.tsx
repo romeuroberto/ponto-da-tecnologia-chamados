@@ -49,7 +49,7 @@ export default async function DashboardPage() {
       : null,
     {
       title: "Fila aberta",
-      description: "Chamados sem conclusão tecnica",
+      description: "Chamados sem conclusão técnica",
       href: "/chamados?status=OPEN&sort=updated_desc" as Route,
       variant: "outline" as const
     },
@@ -215,14 +215,14 @@ export default async function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
           title="Tendência de abertura"
-          description="Quantidade diaria de chamados abertos."
+          description="Quantidade diária de chamados abertos."
           total={openedLast7Days}
           data={trend.map((item) => ({ label: item.label, value: item.opened }))}
           tone="blue"
         />
         <TrendChart
-          title="Tendência de conclusão tecnica"
-          description="Quantidade diaria de chamados concluidos tecnicamente."
+          title="Tendência de conclusão técnica"
+          description="Quantidade diária de chamados concluídos tecnicamente."
           total={resolvedLast7Days}
           data={trend.map((item) => ({ label: item.label, value: item.resolved }))}
           tone="green"
@@ -265,7 +265,7 @@ export default async function DashboardPage() {
                 </Link>
               ))
             ) : (
-              <EmptyState title="Nenhum chamado sem responsavel" description="Todos os chamados atuais ja possuem responsavel definido." />
+              <EmptyState title="Nenhum chamado sem responsável" description="Todos os chamados atuais já possuem responsável definido." />
             )}
           </CardContent>
         </Card>
@@ -285,7 +285,7 @@ export default async function DashboardPage() {
                 </Link>
               ))
             ) : (
-              <EmptyState title="Sem pendências com cliente" description="Não ha chamados aguardando retorno do cliente agora." />
+              <EmptyState title="Sem pendências com cliente" description="Não há chamados aguardando retorno do cliente agora." />
             )}
           </CardContent>
         </Card>
@@ -294,7 +294,7 @@ export default async function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Atualizacoes recentes</CardTitle>
+            <CardTitle>Atualizações recentes</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentTickets.length > 0 ? (
@@ -306,13 +306,13 @@ export default async function DashboardPage() {
                 </Link>
               ))
             ) : (
-              <EmptyState title="Sem atualizacoes recentes" description="Quando os chamados forem movimentados, eles aparecerão aqui." />
+              <EmptyState title="Sem atualizações recentes" description="Quando os chamados forem movimentados, eles aparecerão aqui." />
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Carga por responsavel</CardTitle>
+            <CardTitle>Carga por responsável</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {workload.length > 0 ? (

@@ -31,8 +31,8 @@ const contractStatusClass: Record<RentalContractStatus, string> = {
 
 const billingStatusLabel: Record<FinancialStatus, string> = {
   PENDENTE: "Pendente",
-  EM_ANALISE: "Em análise",
-  APROVADO: "Aprovado",
+  EM_ANALISE: "Pendente de cobrança",
+  APROVADO: "Pendente de cobrança",
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
@@ -40,8 +40,8 @@ const billingStatusLabel: Record<FinancialStatus, string> = {
 
 const billingStatusClass: Record<FinancialStatus, string> = {
   PENDENTE: "bg-amber-100 text-amber-800",
-  EM_ANALISE: "bg-blue-100 text-blue-700",
-  APROVADO: "bg-indigo-100 text-indigo-700",
+  EM_ANALISE: "bg-amber-100 text-amber-800",
+  APROVADO: "bg-amber-100 text-amber-800",
   FATURADO: "bg-purple-100 text-purple-700",
   PAGO: "bg-emerald-100 text-emerald-800",
   CANCELADO: "bg-slate-100 text-slate-500"

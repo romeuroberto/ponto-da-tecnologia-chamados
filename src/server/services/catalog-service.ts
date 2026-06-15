@@ -14,7 +14,7 @@ export const catalogService = {
 
   async createServiceItem(input: ServiceCatalogItemInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de cadastrar servicos.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de cadastrar serviços.");
     }
 
     return catalogRepository.createServiceItem({
@@ -28,7 +28,7 @@ export const catalogService = {
 
   async updateServiceItem(id: string, input: ServiceCatalogItemInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar servicos.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de atualizar serviços.");
     }
 
     return catalogRepository.updateServiceItem(id, {
@@ -42,7 +42,7 @@ export const catalogService = {
 
   async createPartItem(input: PartCatalogItemInput & { createdById: string }) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de cadastrar materiais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de cadastrar materiais.");
     }
 
     const item = await catalogRepository.createPartItem({
@@ -76,7 +76,7 @@ export const catalogService = {
 
   async updatePartItem(id: string, input: PartCatalogItemUpdateInput) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de atualizar materiais.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de atualizar materiais.");
     }
 
     return catalogRepository.updatePartItem(id, {

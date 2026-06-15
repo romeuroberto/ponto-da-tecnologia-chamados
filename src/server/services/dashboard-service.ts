@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db/prisma";
-import { dashboardSummary, tickets } from "@/lib/mock-data";
 import { getSlaInfo } from "@/lib/sla";
 import { isDatabaseConfigured } from "@/server/db-support";
 import { mapTicket, ticketInclude } from "@/server/mappers";
@@ -57,53 +56,33 @@ function buildTrend(records: Array<{ createdAt: string | Date; updatedAt: string
 export const dashboardService = {
   async getSummary(currentUserId?: string) {
     if (!isDatabaseConfigured()) {
-      const myAssignedTickets = currentUserId
-        ? [...tickets]
-            .filter((ticket) => ticket.assigneeId === currentUserId)
-            .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))
-        : [];
-      const criticalTickets = tickets.filter((ticket) => ticket.priority === "CRITICAL").slice(0, 5);
-      const unassignedTickets = tickets.filter((ticket) => !ticket.assigneeId).slice(0, 5);
-      const waitingCustomerTickets = tickets.filter((ticket) => ticket.status === "WAITING_CUSTOMER").slice(0, 5);
-      const trend = buildTrend(tickets);
-      const slaAlerts = [...tickets]
-        .map((ticket) => ({ ticket, sla: getSlaInfo(ticket) }))
-        .filter((item) => item.sla.state === "breached" || item.sla.state === "warning")
-        .sort((left, right) => left.sla.remainingMs - right.sla.remainingMs);
-      const slaBreachedTickets = slaAlerts.filter((item) => item.sla.state === "breached").map((item) => item.ticket).slice(0, 5);
-      const slaWarningTickets = slaAlerts.filter((item) => item.sla.state === "warning").map((item) => item.ticket).slice(0, 5);
-      const workload = Array.from(
-        tickets.reduce(
-          (map, ticket) => {
-            const key = ticket.assigneeName ?? "Não atribuído";
-            map.set(key, (map.get(key) ?? 0) + 1);
-            return map;
-          },
-          new Map<string, number>()
-        ),
-        ([name, total]) => ({ name, total })
-      ).sort((left, right) => right.total - left.total);
+      const trend = buildTrend([]);
 
       return {
-        summary: dashboardSummary,
-        myAssignedTickets,
-        myAssignedCount: myAssignedTickets.length,
-        myActiveAssignedCount: myAssignedTickets.filter((ticket) => ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "WAITING_PARTS"].includes(ticket.status)).length,
-        recentTickets: [...tickets].sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).slice(0, 5),
-        criticalCount: criticalTickets.length,
-        unassignedCount: unassignedTickets.length,
-        resolvedTodayCount: tickets.filter((ticket) => ticket.status === "CLOSED").length,
-        criticalTickets,
-        unassignedTickets,
-        waitingCustomerTickets,
-        workload,
+        summary: {
+          open: 0,
+          inProgress: 0,
+          waitingCustomer: 0,
+          closed: 0
+        },
+        myAssignedTickets: [],
+        myAssignedCount: 0,
+        myActiveAssignedCount: 0,
+        recentTickets: [],
+        criticalCount: 0,
+        unassignedCount: 0,
+        resolvedTodayCount: 0,
+        criticalTickets: [],
+        unassignedTickets: [],
+        waitingCustomerTickets: [],
+        workload: [],
         trend,
-        openedLast7Days: trend.reduce((total, item) => total + item.opened, 0),
-        resolvedLast7Days: trend.reduce((total, item) => total + item.resolved, 0),
-        slaBreachedCount: slaAlerts.filter((item) => item.sla.state === "breached").length,
-        slaWarningCount: slaAlerts.filter((item) => item.sla.state === "warning").length,
-        slaBreachedTickets,
-        slaWarningTickets
+        openedLast7Days: 0,
+        resolvedLast7Days: 0,
+        slaBreachedCount: 0,
+        slaWarningCount: 0,
+        slaBreachedTickets: [],
+        slaWarningTickets: []
       };
     }
 

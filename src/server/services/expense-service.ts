@@ -103,7 +103,7 @@ export const expenseService = {
     createdById: string;
   }) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de lancar despesas.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de lançar despesas.");
     }
 
     await Promise.all([ensureActiveUser(input.createdById), ensureTicketExists(input.ticketId)]);
@@ -125,7 +125,7 @@ export const expenseService = {
     authorId: string
   ) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de editar despesas.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de editar despesas.");
     }
 
     await Promise.all([ensureActiveUser(authorId), ensureTicketExists(input.ticketId)]);
@@ -140,7 +140,7 @@ export const expenseService = {
 
   async payExpense(id: string, input: { paidAt: string; paymentMethod?: string }, authorId: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de pagar despesas.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de pagar despesas.");
     }
 
     await ensureActiveUser(authorId);
@@ -155,7 +155,7 @@ export const expenseService = {
 
   async cancelExpense(id: string, input: { cancellationReason: string }, authorId: string) {
     if (!isDatabaseConfigured()) {
-      throw new Error("DATABASE_URL nao configurada. Configure o banco antes de cancelar despesas.");
+      throw new Error("DATABASE_URL não configurada. Configure o banco antes de cancelar despesas.");
     }
 
     await ensureActiveUser(authorId);

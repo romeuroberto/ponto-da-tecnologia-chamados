@@ -165,6 +165,8 @@ Achados:
 
 ### Etapa 1 - Padronizar navegação e retorno de contexto
 
+Status: executada em 2026-06-15.
+
 Escopo:
 
 - criar padrão para cabeçalho de detalhe com botão voltar;
@@ -177,6 +179,8 @@ Prioridade: alta.
 
 ### Etapa 2 - Ações rápidas no extrato financeiro do cliente
 
+Status: executada em 2026-06-15.
+
 Escopo:
 
 - adicionar "Confirmar pagamento" direto para vendas pendentes;
@@ -188,6 +192,8 @@ Escopo:
 Prioridade: alta.
 
 ### Etapa 3 - Pagamento em lote e baixa por nota/documento
+
+Status: executada em 2026-06-15.
 
 Escopo:
 
@@ -203,6 +209,8 @@ Prioridade: alta.
 
 ### Etapa 4 - Consolidar modelo operacional de cobranças
 
+Status: executada parcialmente em 2026-06-15 com abstração de recebíveis na UI/relatórios, mantendo schemas separados.
+
 Escopo:
 
 - revisar se `FinancialStatus` deve continuar compartilhado entre todos os módulos;
@@ -214,6 +222,8 @@ Escopo:
 Prioridade: média/alta.
 
 ### Etapa 5 - Simplificar UX do chamado e financeiro
+
+Status: executada parcialmente em 2026-06-15 com labels legados ocultados na UX principal.
 
 Escopo:
 
@@ -227,6 +237,8 @@ Prioridade: média.
 
 ### Etapa 6 - Portal do cliente e consistência externa
 
+Status: executada em 2026-06-15.
+
 Escopo:
 
 - validar portal web e portal app para chamados, vendas, documentos e financeiro;
@@ -237,6 +249,8 @@ Escopo:
 Prioridade: média.
 
 ### Etapa 7 - Relatórios, dashboard e auditoria
+
+Status: executada parcialmente em 2026-06-15 com dashboard e CSV financeiro consolidados; auditoria detalhada de lote segue como melhoria contínua.
 
 Escopo:
 
@@ -249,6 +263,8 @@ Escopo:
 Prioridade: média.
 
 ### Etapa 8 - Revisão técnica e limpeza
+
+Status: em execução contínua desde 2026-06-15.
 
 Escopo:
 
