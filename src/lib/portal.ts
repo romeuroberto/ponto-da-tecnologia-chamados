@@ -27,8 +27,8 @@ export const portalPriorityLabel: Record<TicketPriority, string> = {
 
 export const financialStatusLabel: Record<FinancialStatus, string> = {
   PENDENTE: "Pendente",
-  EM_ANALISE: "Em análise",
-  APROVADO: "Aprovado",
+  EM_ANALISE: "Pendente de cobrança",
+  APROVADO: "Pendente de cobrança",
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
@@ -36,8 +36,8 @@ export const financialStatusLabel: Record<FinancialStatus, string> = {
 
 export const financialStatusClass: Record<FinancialStatus, string> = {
   PENDENTE: "bg-amber-100 text-amber-900 border-amber-200",
-  EM_ANALISE: "bg-blue-100 text-blue-800 border-blue-200",
-  APROVADO: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  EM_ANALISE: "bg-amber-100 text-amber-900 border-amber-200",
+  APROVADO: "bg-amber-100 text-amber-900 border-amber-200",
   FATURADO: "bg-violet-100 text-violet-800 border-violet-200",
   PAGO: "bg-green-100 text-green-900 border-green-200",
   CANCELADO: "bg-rose-100 text-rose-800 border-rose-200"

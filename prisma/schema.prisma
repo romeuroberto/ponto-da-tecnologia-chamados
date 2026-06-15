@@ -465,6 +465,7 @@ model ContractMonthlyBilling {
   updatedAt       DateTime        @updatedAt
   contract        ClientContract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
   client          Client          @relation(fields: [clientId], references: [id])
+  fiscalDocumentLinks FiscalDocumentLink[]
 
   @@unique([contractId, referenceYear, referenceMonth])
 }
@@ -724,6 +725,7 @@ model RentalBilling {
   rentalContract   RentalContract  @relation(fields: [rentalContractId], references: [id], onDelete: Cascade)
   client           Client          @relation(fields: [clientId], references: [id])
   createdBy        User            @relation("RentalBillingCreator", fields: [createdById], references: [id])
+  fiscalDocumentLinks FiscalDocumentLink[]
 
   @@unique([rentalContractId, referenceYear, referenceMonth])
 }
@@ -733,13 +735,19 @@ model FiscalDocumentLink {
   fiscalDocumentId String
   ticketId         String?
   saleId           String?
+  monthlyBillingId String?
+  rentalBillingId  String?
   label            String?
   createdAt        DateTime       @default(now())
   fiscalDocument   FiscalDocument @relation(fields: [fiscalDocumentId], references: [id], onDelete: Cascade)
   ticket           Ticket?        @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   sale             Sale?          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  monthlyBilling   ContractMonthlyBilling? @relation(fields: [monthlyBillingId], references: [id], onDelete: Cascade)
+  rentalBilling    RentalBilling?          @relation(fields: [rentalBillingId], references: [id], onDelete: Cascade)
 
   @@index([fiscalDocumentId])
   @@index([ticketId])
   @@index([saleId])
+  @@index([monthlyBillingId])
+  @@index([rentalBillingId])
 }

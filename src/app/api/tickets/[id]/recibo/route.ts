@@ -136,7 +136,9 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
         fileName,
         filePath: `/recibos/chamados/${id}/${fileName}`,
         ticketIds: [id],
-        saleIds: []
+        saleIds: [],
+        monthlyBillingIds: [],
+        rentalBillingIds: []
       });
     } catch {
       // Don't block PDF delivery if DB record fails

@@ -50,7 +50,16 @@ export function PortalDocumentList({ documents }: { documents: FiscalDocument[] 
                 key={link.id}
                 className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600"
               >
-                {link.label ?? (link.ticketId ? "Chamado vinculado" : link.saleId ? "Venda vinculada" : "Documento relacionado")}
+                {link.label ??
+                  (link.ticketId
+                    ? "Chamado vinculado"
+                    : link.saleId
+                      ? "Venda vinculada"
+                      : link.monthlyBillingId
+                        ? "Mensalidade vinculada"
+                        : link.rentalBillingId
+                          ? "Locação vinculada"
+                          : "Documento relacionado")}
               </span>
             ))}
           </div>

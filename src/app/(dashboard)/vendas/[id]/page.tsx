@@ -1,9 +1,12 @@
+import type { Route } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { SaleActions } from "@/components/sales/sale-actions";
 import { SaleReceiptButton } from "@/components/sales/sale-receipt-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSafeReturnPath } from "@/lib/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
 import { saleService } from "@/server/services/sale-service";
@@ -14,9 +17,16 @@ const statusConfig: Record<string, { label: string; badgeCls: string; headerCls:
   CANCELADO: { label: "Cancelado", badgeCls: "bg-rose-100 text-rose-700",               headerCls: "border-rose-200 bg-rose-50" }
 };
 
-export default async function VendaDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function VendaDetailPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireRole(["ADMIN", "ATTENDANT"]);
   const { id } = await params;
+  const query = await searchParams;
   const sale = await saleService.getSale(id);
   if (!sale) notFound();
 
@@ -24,10 +34,20 @@ export default async function VendaDetailPage({ params }: { params: Promise<{ id
   const isPending = sale.financialStatus === "PENDENTE";
   const isPaid = sale.financialStatus === "PAGO";
   const isCanceled = sale.financialStatus === "CANCELADO";
+  const returnTo = getSafeReturnPath(query.returnTo, "/vendas");
+  const returnLabel = returnTo.includes("/financeiro") ? "← Voltar ao extrato" : "← Voltar para vendas";
 
   return (
     <div className="space-y-6">
-      <PageHeader title={`Venda ${sale.number}`} description={`Cliente: ${sale.clientName}`} />
+      <PageHeader
+        title={`Venda ${sale.number}`}
+        description={`Cliente: ${sale.clientName}`}
+        action={
+          <Link href={returnTo as Route} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+            {returnLabel}
+          </Link>
+        }
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_0.65fr]">
 

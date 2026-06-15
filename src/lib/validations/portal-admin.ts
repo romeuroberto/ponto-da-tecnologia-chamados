@@ -45,5 +45,7 @@ export const fiscalDocumentSchema = z.object({
   filePath: z.string().min(1),
   notes: z.string().optional(),
   ticketIds: z.array(z.string()).default([]),
-  saleIds: z.array(z.string()).default([])
+  saleIds: z.array(z.string()).default([]),
+  monthlyBillingIds: z.array(z.string()).default([]),
+  rentalBillingIds: z.array(z.string()).default([])
 });

@@ -13,8 +13,6 @@ import type { FinancialStatus } from "@/types";
 const STATUS_OPTIONS: Array<{ value: FinancialStatus | ""; label: string }> = [
   { value: "", label: "Todos os status" },
   { value: "PENDENTE", label: "Pendente" },
-  { value: "EM_ANALISE", label: "Em análise" },
-  { value: "APROVADO", label: "Aprovado" },
   { value: "FATURADO", label: "Faturado" },
   { value: "PAGO", label: "Pago" },
   { value: "CANCELADO", label: "Cancelado" }
@@ -22,8 +20,8 @@ const STATUS_OPTIONS: Array<{ value: FinancialStatus | ""; label: string }> = [
 
 const statusBadge: Record<FinancialStatus, { label: string; className: string }> = {
   PENDENTE:   { label: "Pendente",    className: "bg-slate-100 text-slate-700" },
-  EM_ANALISE: { label: "Em análise",  className: "bg-blue-100 text-blue-700" },
-  APROVADO:   { label: "Aprovado",    className: "bg-emerald-100 text-emerald-700" },
+  EM_ANALISE: { label: "Pendente de cobrança", className: "bg-amber-100 text-amber-800" },
+  APROVADO:   { label: "Pendente de cobrança", className: "bg-amber-100 text-amber-800" },
   FATURADO:   { label: "Faturado",    className: "bg-violet-100 text-violet-700" },
   PAGO:       { label: "Pago",        className: "bg-green-100 text-green-800 font-semibold" },
   CANCELADO:  { label: "Cancelado",   className: "bg-rose-100 text-rose-700" }

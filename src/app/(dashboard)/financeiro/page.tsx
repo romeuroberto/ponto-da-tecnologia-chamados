@@ -87,7 +87,7 @@ export default async function FinancialDashboardPage({
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Ticket médio</p>
+            <p className="text-sm text-slate-600">Média por recebível</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.averageTicketValue)}</p>
           </CardContent>
         </Card>
@@ -97,14 +97,14 @@ export default async function FinancialDashboardPage({
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Chamados com financeiro</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.totalTicketsWithBilling}</p>
+            <p className="text-sm text-slate-600">Recebíveis no período</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.totalReceivables}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-slate-600">Aprovados a faturar</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.approvedCount}</p>
+            <p className="text-sm text-slate-600">Pendentes de cobrança</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.pendingCount}</p>
           </CardContent>
         </Card>
         <Card>
@@ -184,14 +184,14 @@ export default async function FinancialDashboardPage({
       <section className="grid gap-6 xl:grid-cols-2">
         <TrendChart
           title="Faturamentos recentes"
-          description="Quantidade de chamados faturados nos últimos 7 dias."
+          description="Quantidade de recebíveis criados ou faturados nos últimos 7 dias."
           total={dashboard.trend.reduce((sum, item) => sum + item.invoiced, 0)}
           data={dashboard.trend.map((item) => ({ label: item.label, value: item.invoiced }))}
           tone="blue"
         />
         <TrendChart
           title="Recebimentos recentes"
-          description="Quantidade de chamados pagos nos últimos 7 dias."
+          description="Quantidade de recebíveis pagos nos últimos 7 dias."
           total={dashboard.trend.reduce((sum, item) => sum + item.paid, 0)}
           data={dashboard.trend.map((item) => ({ label: item.label, value: item.paid }))}
           tone="green"
@@ -256,7 +256,7 @@ export default async function FinancialDashboardPage({
                     <span className="font-medium text-slate-900">{item.clientName}</span>
                     <span className="text-sm font-semibold text-slate-950">{formatCurrency(item.total)}</span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{item.count} chamado(s) pendente(s)</p>
+                  <p className="mt-1 text-sm text-slate-600">{item.count} lançamento(s) pendente(s)</p>
                 </div>
               ))
             ) : (

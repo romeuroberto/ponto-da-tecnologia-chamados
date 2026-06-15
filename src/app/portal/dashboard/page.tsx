@@ -101,7 +101,7 @@ export default async function PortalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <CardTitle>Movimentações financeiras</CardTitle>
-                <p className="mt-1 text-sm text-slate-500">Chamados e vendas com situação financeira recente.</p>
+                <p className="mt-1 text-sm text-slate-500">Cobranças, vendas, mensalidades e locações com situação financeira recente.</p>
               </div>
               <Link href={"/portal/financeiro" as Route} className="shrink-0 text-sm font-semibold text-sky-700 hover:text-sky-800">
                 Ver tudo
@@ -111,24 +111,37 @@ export default async function PortalDashboardPage() {
           <CardContent className="space-y-3">
             {dashboard.financialRecords.slice(0, 5).map((record) => (
               <div key={`${record.kind}-${record.id}`} className="rounded-2xl border border-slate-200 p-3">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                      {record.kind === "ticket" ? "Chamado" : "Venda"} · {record.number}
-                    </p>
-                    <p className="mt-0.5 truncate font-medium text-slate-950">{record.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {formatDate(record.createdAt)}
-                      {record.documentCount > 0 ? ` · ${record.documentCount} doc.` : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${financialStatusClass[record.status]}`}>
-                      {financialStatusLabel[record.status]}
-                    </span>
-                    <p className="text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
-                  </div>
-                </div>
+                {(() => {
+                  const typeLabel =
+                    record.kind === "ticket"
+                      ? "Chamado"
+                      : record.kind === "sale"
+                        ? "Venda"
+                        : record.kind === "monthly-billing"
+                          ? "Mensalidade"
+                          : "Locação";
+
+                  return (
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          {typeLabel} · {record.number}
+                        </p>
+                        <p className="mt-0.5 truncate font-medium text-slate-950">{record.title}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {formatDate(record.createdAt)}
+                          {record.documentCount > 0 ? ` · ${record.documentCount} doc.` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${financialStatusClass[record.status]}`}>
+                          {financialStatusLabel[record.status]}
+                        </span>
+                        <p className="text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
             {dashboard.financialRecords.length === 0 ? (

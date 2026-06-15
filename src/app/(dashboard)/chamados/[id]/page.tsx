@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/tickets/status-badge";
 import { TicketServiceOrdersPanel } from "@/components/tickets/ticket-service-orders-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSafeReturnPath, isSafeReturnPath, withReturnTo } from "@/lib/navigation";
 import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { canViewFinancialModule } from "@/server/auth/permissions";
@@ -26,17 +27,24 @@ import { userService } from "@/server/services/user-service";
 
 const financialStatusLabels: Record<string, { label: string; className: string }> = {
   PENDENTE: { label: "Pendente", className: "bg-slate-100 text-slate-700" },
-  EM_ANALISE: { label: "Em revisao interna", className: "bg-blue-100 text-blue-700" },
-  APROVADO: { label: "Pronto para faturar", className: "bg-emerald-100 text-emerald-700" },
+  EM_ANALISE: { label: "Pendente de cobrança", className: "bg-amber-100 text-amber-800" },
+  APROVADO: { label: "Pendente de cobrança", className: "bg-amber-100 text-amber-800" },
   FATURADO: { label: "Faturado", className: "bg-violet-100 text-violet-700" },
   PAGO: { label: "Pago", className: "bg-green-100 text-green-800" },
   CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
 };
 
 
-export default async function TicketDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TicketDetailsPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const currentUser = await requireUser();
   const { id } = await params;
+  const query = await searchParams;
   const [ticket, users, serviceCatalogItems, partCatalogItems] = await Promise.all([
     ticketService.getTicket(id),
     userService.listAssignableUsers(),
@@ -65,10 +73,22 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
   const activeExpenseAmount = relatedExpenses
     .filter((expense) => expense.status !== "CANCELADA")
     .reduce((sum, expense) => sum + expense.amount, 0);
+  const returnTo = getSafeReturnPath(query.returnTo, "/chamados");
+  const returnLabel = returnTo.includes("/financeiro") ? "← Voltar ao extrato" : "← Voltar para chamados";
+  const ticketFinancialHref = (
+    isSafeReturnPath(query.returnTo)
+      ? withReturnTo(`/chamados/${ticket.id}/financeiro`, returnTo)
+      : `/chamados/${ticket.id}/financeiro`
+  ) as Route;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
+        <div>
+          <Link href={returnTo as Route} className="inline-flex rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+            {returnLabel}
+          </Link>
+        </div>
         {currentUser.role === "ADMIN" || currentUser.role === "ATTENDANT" ? (
           <TicketTitleEditor ticketId={ticket.id} title={ticket.title} />
         ) : (
@@ -90,7 +110,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
             <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <span className="font-semibold">Financeiro pendente.</span>{" "}
               Este chamado já foi concluído tecnicamente, mas o ciclo financeiro ainda não foi avançado.{" "}
-              <a href={`/chamados/${ticket.id}/financeiro`} className="font-semibold underline">
+              <a href={ticketFinancialHref} className="font-semibold underline">
                 Acessar financeiro →
               </a>
             </div>
@@ -194,7 +214,7 @@ export default async function TicketDetailsPage({ params }: { params: Promise<{ 
                       </Link>
                     </div>
                   </div>
-                  <Link href={`/chamados/${id}/financeiro` as Route} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
+                  <Link href={ticketFinancialHref} className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
                     {ticket.billing ? "Gerenciar financeiro" : "Iniciar financeiro"}
                   </Link>
                 </CardContent>

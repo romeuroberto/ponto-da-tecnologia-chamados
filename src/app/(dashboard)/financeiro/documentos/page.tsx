@@ -11,6 +11,8 @@ import { fiscalDocumentTypeLabel } from "@/lib/portal";
 import { fiscalDocumentSchema } from "@/lib/validations/portal-admin";
 import { formatCurrency, formatDate, parseCurrencyInput } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
+import { contractMonthlyBillingRepository } from "@/server/repositories/contract-monthly-billing-repository";
+import { rentalRepository } from "@/server/repositories/rental-repository";
 import { clientService } from "@/server/services/client-service";
 import { fiscalDocumentService } from "@/server/services/fiscal-document-service";
 import { saleService } from "@/server/services/sale-service";
@@ -33,12 +35,14 @@ export default async function FiscalDocumentsPage({
   const selectedClientId = typeof params.clientId === "string" ? params.clientId : "";
 
   const clients = await clientService.listClients();
-  const [documents, ticketResult, sales] = await Promise.all([
+  const [documents, ticketResult, sales, monthlyBillings, rentalBillings] = await Promise.all([
     fiscalDocumentService.listByClient(selectedClientId || undefined),
     selectedClientId
       ? ticketService.searchTickets({ client: selectedClientId, status: "CLOSED", sort: "updated_desc", pageSize: 100 })
       : Promise.resolve({ items: [], total: 0, page: 1, pageSize: 100, totalPages: 0 }),
-    selectedClientId ? saleService.listSales({ clientId: selectedClientId, financialStatus: "FATURADO" }) : Promise.resolve([])
+    selectedClientId ? saleService.listSales({ clientId: selectedClientId, financialStatus: "FATURADO" }) : Promise.resolve([]),
+    selectedClientId ? contractMonthlyBillingRepository.listByClient(selectedClientId) : Promise.resolve([]),
+    selectedClientId ? rentalRepository.listBillingsByClient(selectedClientId) : Promise.resolve([])
   ]);
   const clientMap = new Map(clients.map((client) => [client.id, client]));
 
@@ -48,6 +52,8 @@ export default async function FiscalDocumentsPage({
 
     const ticketIds = formData.getAll("ticketIds").map(String);
     const saleIds = formData.getAll("saleIds").map(String);
+    const monthlyBillingIds = formData.getAll("monthlyBillingIds").map(String);
+    const rentalBillingIds = formData.getAll("rentalBillingIds").map(String);
     const totalAmountRaw = formData.get("totalAmount")?.toString() ?? "";
 
     const parsed = fiscalDocumentSchema.safeParse({
@@ -61,11 +67,18 @@ export default async function FiscalDocumentsPage({
       filePath: formData.get("filePath")?.toString() ?? "",
       notes: formData.get("notes")?.toString() ?? "",
       ticketIds,
-      saleIds
+      saleIds,
+      monthlyBillingIds,
+      rentalBillingIds
     });
 
-    if (!parsed.success || parsed.data.ticketIds.length + parsed.data.saleIds.length === 0) {
-      redirect(`/financeiro/documentos?clientId=${encodeURIComponent(formData.get("clientId")?.toString() ?? "")}&status=error&message=Selecione%20o%20cliente%2C%20os%20dados%20do%20documento%20e%20ao%20menos%20um%20chamado%20ou%20venda.`);
+    const selectedLinks =
+      parsed.success
+        ? parsed.data.ticketIds.length + parsed.data.saleIds.length + parsed.data.monthlyBillingIds.length + parsed.data.rentalBillingIds.length
+        : 0;
+
+    if (!parsed.success || selectedLinks === 0) {
+      redirect(`/financeiro/documentos?clientId=${encodeURIComponent(formData.get("clientId")?.toString() ?? "")}&status=error&message=Selecione%20o%20cliente%2C%20os%20dados%20do%20documento%20e%20ao%20menos%20um%20v%C3%ADnculo%20financeiro.`);
     }
 
     await fiscalDocumentService.create(parsed.data);
@@ -97,7 +110,7 @@ export default async function FiscalDocumentsPage({
     <div className="space-y-6">
       <PageHeader
         title="Documentos fiscais"
-        description="Lance notas e recibos, vinculando um ou vários chamados e vendas para operacionalizar o portal do cliente."
+        description="Lance notas e recibos, vinculando chamados, vendas, mensalidades e locações para operacionalizar o portal do cliente."
       />
 
       {getMessage(status, message)}
@@ -122,6 +135,8 @@ export default async function FiscalDocumentsPage({
               clientName={clientMap.get(selectedClientId)?.name ?? "Cliente não encontrado"}
               tickets={ticketResult.items}
               sales={sales}
+              monthlyBillings={monthlyBillings}
+              rentalBillings={rentalBillings}
               createDocument={createDocument}
             />
           </CardContent>

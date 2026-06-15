@@ -52,7 +52,45 @@ export default async function PortalAppFinancialPage() {
               const href =
                 record.kind === "ticket"
                   ? (`/portal-app/chamados/${record.id}` as Route)
-                  : (`/portal-app/vendas/${record.id}` as Route);
+                  : record.kind === "sale"
+                    ? (`/portal-app/vendas/${record.id}` as Route)
+                    : null;
+              const typeLabel =
+                record.kind === "ticket"
+                  ? "Chamado"
+                  : record.kind === "sale"
+                    ? "Venda"
+                    : record.kind === "monthly-billing"
+                      ? "Mensalidade"
+                      : "Locação";
+              const content = (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      {typeLabel} · {record.number}
+                    </p>
+                    <p className="mt-1 truncate font-semibold text-slate-950">{record.title}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {record.dueDate ? `Vencimento em ${formatDate(record.dueDate)} · ` : ""}
+                      {formatDate(record.createdAt)}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${financialStatusClass[record.status]}`}>
+                      {financialStatusLabel[record.status]}
+                    </span>
+                    <p className="mt-2 text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
+                  </div>
+                </div>
+              );
+
+              if (!href) {
+                return (
+                  <div key={`${record.kind}-${record.id}`} className="rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4">
+                    {content}
+                  </div>
+                );
+              }
 
               return (
                 <Link
@@ -60,24 +98,7 @@ export default async function PortalAppFinancialPage() {
                   href={href}
                   className="block rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4 transition hover:border-sky-200 hover:bg-sky-50/50"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                        {record.kind === "ticket" ? "Chamado" : "Venda"} · {record.number}
-                      </p>
-                      <p className="mt-1 truncate font-semibold text-slate-950">{record.title}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {record.dueDate ? `Vencimento em ${formatDate(record.dueDate)} · ` : ""}
-                        {formatDate(record.createdAt)}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${financialStatusClass[record.status]}`}>
-                        {financialStatusLabel[record.status]}
-                      </span>
-                      <p className="mt-2 text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
-                    </div>
-                  </div>
+                  {content}
                 </Link>
               );
             })

@@ -1,7 +1,11 @@
 import type { BillingListItem } from "@/server/repositories/billing-repository";
 import { billingRepository } from "@/server/repositories/billing-repository";
+import type { MonthlyBillingItem } from "@/server/repositories/contract-monthly-billing-repository";
+import { contractMonthlyBillingRepository } from "@/server/repositories/contract-monthly-billing-repository";
 import { fiscalDocumentRepository } from "@/server/repositories/fiscal-document-repository";
 import { paymentInstructionRepository } from "@/server/repositories/payment-instruction-repository";
+import type { RentalBillingListItem } from "@/server/repositories/rental-repository";
+import { rentalRepository } from "@/server/repositories/rental-repository";
 import { clientService } from "@/server/services/client-service";
 import { saleService } from "@/server/services/sale-service";
 import { ticketService } from "@/server/services/ticket-service";
@@ -9,7 +13,7 @@ import type { FiscalDocument, FinancialStatus, Sale, Ticket } from "@/types";
 
 export interface PortalFinancialRecord {
   id: string;
-  kind: "ticket" | "sale";
+  kind: "ticket" | "sale" | "monthly-billing" | "rental-billing";
   number: string;
   title: string;
   status: FinancialStatus;
@@ -20,6 +24,8 @@ export interface PortalFinancialRecord {
   paymentMethod?: string;
   documentCount: number;
 }
+
+const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 function isPendingStatus(status: FinancialStatus) {
   return status !== "PAGO" && status !== "CANCELADO";
@@ -70,9 +76,44 @@ function mapSaleRecord(sale: Sale, documents: FiscalDocument[]): PortalFinancial
   };
 }
 
+function mapMonthlyBillingRecord(record: MonthlyBillingItem, documents: FiscalDocument[]): PortalFinancialRecord {
+  return {
+    id: record.id,
+    kind: "monthly-billing",
+    number: `${String(record.referenceMonth).padStart(2, "0")}/${record.referenceYear}`,
+    title: `Mensalidade do contrato ${record.contractNumber}`,
+    status: record.financialStatus as FinancialStatus,
+    totalAmount: record.amount,
+    createdAt: record.createdAt,
+    paidAt: record.paidAt ?? undefined,
+    paymentMethod: record.paymentMethod ?? undefined,
+    documentCount: countLinkedDocuments(documents, (document) =>
+      document.links.some((link) => link.monthlyBillingId === record.id)
+    )
+  };
+}
+
+function mapRentalBillingRecord(record: RentalBillingListItem, documents: FiscalDocument[]): PortalFinancialRecord {
+  return {
+    id: record.id,
+    kind: "rental-billing",
+    number: `${String(record.referenceMonth).padStart(2, "0")}/${record.referenceYear}`,
+    title: `Locação ${monthNames[record.referenceMonth - 1]}/${record.referenceYear} · contrato ${record.contractNumber}`,
+    status: record.financialStatus,
+    totalAmount: record.amount,
+    createdAt: record.updatedAt,
+    dueDate: record.dueDate,
+    paidAt: record.paidAt,
+    paymentMethod: record.paymentMethod,
+    documentCount: countLinkedDocuments(documents, (document) =>
+      document.links.some((link) => link.rentalBillingId === record.id)
+    )
+  };
+}
+
 export const portalService = {
   async getDashboard(clientId: string) {
-    const [client, ticketResult, sales, billings, documents, paymentInstructions] = await Promise.all([
+    const [client, ticketResult, sales, billings, monthlyBillings, rentalBillings, documents, paymentInstructions] = await Promise.all([
       clientService.getClient(clientId),
       ticketService.searchTickets({
         client: clientId,
@@ -81,13 +122,17 @@ export const portalService = {
       }),
       saleService.listSales({ clientId }),
       billingRepository.listByClient(clientId),
+      contractMonthlyBillingRepository.listByClient(clientId),
+      rentalRepository.listBillingsByClient(clientId),
       fiscalDocumentRepository.listByClient(clientId),
       paymentInstructionRepository.listActiveForClient(clientId)
     ]);
 
     const financialRecords = [
       ...billings.map((billing) => mapBillingRecord(billing, documents)),
-      ...sales.map((sale) => mapSaleRecord(sale, documents))
+      ...sales.map((sale) => mapSaleRecord(sale, documents)),
+      ...monthlyBillings.map((billing) => mapMonthlyBillingRecord(billing, documents)),
+      ...rentalBillings.map((billing) => mapRentalBillingRecord(billing, documents))
     ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
     const openTickets = ticketResult.items.filter((ticket) => !["CLOSED", "CANCELED"].includes(ticket.status)).length;
@@ -136,16 +181,20 @@ export const portalService = {
   },
 
   async listFinancialRecords(clientId: string) {
-    const [sales, billings, documents, paymentInstructions] = await Promise.all([
+    const [sales, billings, monthlyBillings, rentalBillings, documents, paymentInstructions] = await Promise.all([
       saleService.listSales({ clientId }),
       billingRepository.listByClient(clientId),
+      contractMonthlyBillingRepository.listByClient(clientId),
+      rentalRepository.listBillingsByClient(clientId),
       fiscalDocumentRepository.listByClient(clientId),
       paymentInstructionRepository.listActiveForClient(clientId)
     ]);
 
     const records = [
       ...billings.map((billing) => mapBillingRecord(billing, documents)),
-      ...sales.map((sale) => mapSaleRecord(sale, documents))
+      ...sales.map((sale) => mapSaleRecord(sale, documents)),
+      ...monthlyBillings.map((billing) => mapMonthlyBillingRecord(billing, documents)),
+      ...rentalBillings.map((billing) => mapRentalBillingRecord(billing, documents))
     ].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
 
     return {

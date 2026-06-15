@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
@@ -8,6 +9,7 @@ import { RentalItemEditPrice } from "@/components/rentals/rental-item-edit-price
 import { RentalItemReturn } from "@/components/rentals/rental-item-return";
 import { RentalStatusActions } from "@/components/rentals/rental-status-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSafeReturnPath } from "@/lib/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
 import { rentalService } from "@/server/services/rental-service";
@@ -47,10 +49,17 @@ const billingStatusClass: Record<FinancialStatus, string> = {
 
 const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-export default async function RentalContractDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function RentalContractDetailPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const session = await requireRole(["ADMIN", "ATTENDANT"]);
   const isAdmin = session.role === "ADMIN";
   const { id } = await params;
+  const query = await searchParams;
 
   const contract = await rentalService.getContract(id);
   if (!contract) notFound();
@@ -61,12 +70,19 @@ export default async function RentalContractDetailPage({ params }: { params: Pro
   const paidBillings = contract.billings.filter((b) => b.financialStatus === "PAGO");
   const totalBilled = contract.billings.filter((b) => b.financialStatus !== "CANCELADO").reduce((s, b) => s + b.amount, 0);
   const totalReceived = paidBillings.reduce((s, b) => s + b.amount, 0);
+  const returnTo = getSafeReturnPath(query.returnTo, "/locacoes");
+  const returnLabel = returnTo.includes("/financeiro") ? "← Voltar ao extrato" : "← Voltar para locações";
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={contract.contractNumber}
         description={`Cliente: ${contract.clientName}`}
+        action={
+          <Link href={returnTo as Route} className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">
+            {returnLabel}
+          </Link>
+        }
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_0.65fr]">

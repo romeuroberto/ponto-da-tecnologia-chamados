@@ -105,9 +105,9 @@ function getFlowActions(status: FinancialStatus, billingType: BillingType): Flow
         },
         {
           targetStatus: "PENDENTE",
-          label: "Reabrir revisão",
+          label: "Revisar valores",
           variant: "outline",
-          description: "Permite revisar lançamentos e valores antes de faturar.",
+          description: "Volta o financeiro para edição antes de registrar a cobrança.",
           tone: "secondary"
         },
         {
@@ -192,14 +192,15 @@ function emptyTransition(action: FlowAction): PendingTransition {
 
 const statusBadge: Record<FinancialStatus, { label: string; className: string }> = {
   PENDENTE: { label: "Pendente", className: "bg-slate-100 text-slate-700" },
-  EM_ANALISE: { label: "Em revisão interna", className: "bg-blue-100 text-blue-700" },
-  APROVADO: { label: "Pronto para faturar", className: "bg-emerald-100 text-emerald-700" },
+  EM_ANALISE: { label: "Pendente de cobrança", className: "bg-amber-100 text-amber-800" },
+  APROVADO: { label: "Pendente de cobrança", className: "bg-amber-100 text-amber-800" },
   FATURADO: { label: "Faturado", className: "bg-violet-100 text-violet-700" },
   PAGO: { label: "Pago", className: "bg-green-100 text-green-800 font-semibold" },
   CANCELADO: { label: "Cancelado", className: "bg-rose-100 text-rose-700" }
 };
 
 const TERMINAL_TECHNICAL_STATUSES = ["CLOSED", "CANCELED"] as const;
+const LEGACY_REVIEW_STATUSES: FinancialStatus[] = ["EM_ANALISE", "APROVADO"];
 
 export function TicketBillingPanel({
   ticketId,
@@ -562,6 +563,12 @@ export function TicketBillingPanel({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {LEGACY_REVIEW_STATUSES.includes(currentStatus) ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Este financeiro usa um status interno antigo. No fluxo atual, ele aparece como pendente de cobrança.
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center">
               <p className="text-xs text-emerald-600">OSs concluídas</p>

@@ -43,6 +43,23 @@ export interface PayRentalBillingInput {
   paymentReference?: string;
 }
 
+export interface RentalBillingListItem {
+  id: string;
+  rentalContractId: string;
+  contractNumber: string;
+  clientId: string;
+  referenceMonth: number;
+  referenceYear: number;
+  amount: number;
+  dueDate?: string;
+  financialStatus: FinancialStatus;
+  paymentMethod?: string;
+  paymentDate?: string;
+  paymentReference?: string;
+  paidAt?: string;
+  updatedAt: string;
+}
+
 function toMoney(v: number) {
   return Number(v.toFixed(2));
 }
@@ -235,6 +252,33 @@ export const rentalRepository = {
       include: { client: true, createdBy: true }
     });
     return mapRentalBilling(r);
+  },
+
+  async listBillingsByClient(clientId: string): Promise<RentalBillingListItem[]> {
+    const records = await prisma.rentalBilling.findMany({
+      where: { clientId },
+      include: {
+        rentalContract: { select: { contractNumber: true } }
+      },
+      orderBy: [{ referenceYear: "desc" }, { referenceMonth: "desc" }]
+    });
+
+    return records.map((r) => ({
+      id: r.id,
+      rentalContractId: r.rentalContractId,
+      contractNumber: r.rentalContract.contractNumber,
+      clientId: r.clientId,
+      referenceMonth: r.referenceMonth,
+      referenceYear: r.referenceYear,
+      amount: r.amount.toNumber(),
+      dueDate: r.dueDate?.toISOString(),
+      financialStatus: r.financialStatus,
+      paymentMethod: r.paymentMethod ?? undefined,
+      paymentDate: r.paymentDate?.toISOString(),
+      paymentReference: r.paymentReference ?? undefined,
+      paidAt: r.paidAt?.toISOString(),
+      updatedAt: r.updatedAt.toISOString()
+    }));
   },
 
   async updateBillingStatus(id: string, input: PayRentalBillingInput): Promise<RentalBilling | null> {

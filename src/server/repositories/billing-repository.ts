@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db/prisma";
-import type { BillingEntryType, BillingType, FinancialStatus, OsContribution, TicketBilling } from "@/types";
+import type { BillingEntryType, BillingType, FinancialStatus, OsContribution, TicketBilling, TicketStatus } from "@/types";
 import { isDatabaseConfigured, normalizeOptionalString } from "@/server/db-support";
 import { mapTicketBilling, ticketBillingInclude } from "@/server/mappers";
 import { contractRepository } from "@/server/repositories/contract-repository";
@@ -189,10 +189,13 @@ export interface BillingListItem {
   ticketId: string;
   ticketNumber: string;
   ticketTitle: string;
+  ticketStatus: TicketStatus;
   clientName: string;
   billingType: BillingType;
   financialStatus: FinancialStatus;
+  discountAmount: number;
   totalAmount: number;
+  internalNotes?: string;
   entryCount: number;
   invoiceDueDate?: string;
   updatedAt: string;
@@ -228,10 +231,13 @@ export const billingRepository = {
       ticketId: r.ticketId,
       ticketNumber: r.ticket.number,
       ticketTitle: r.ticket.title,
+      ticketStatus: r.ticket.status,
       clientName: r.ticket.client.name,
       billingType: r.billingType,
       financialStatus: r.financialStatus,
+      discountAmount: Number(r.discountAmount),
       totalAmount: Number(r.totalAmount),
+      internalNotes: r.internalNotes ?? undefined,
       entryCount: r._count.entries,
       invoiceDueDate: r.invoiceDueDate?.toISOString(),
       updatedAt: r.updatedAt.toISOString()
@@ -244,12 +250,18 @@ export const billingRepository = {
     const now = new Date();
     const openStatuses = ["PENDENTE", "EM_ANALISE", "APROVADO", "FATURADO"];
 
-    const [records, sales] = await Promise.all([
+    const [records, sales, monthlyBillings, rentalBillings] = await Promise.all([
       prisma.ticketBilling.findMany({
         include: { ticket: { include: { client: true } } },
         orderBy: { updatedAt: "desc" }
       }),
       prisma.sale.findMany({
+        include: { client: true }
+      }),
+      prisma.contractMonthlyBilling.findMany({
+        include: { client: true }
+      }),
+      prisma.rentalBilling.findMany({
         include: { client: true }
       })
     ]);
@@ -304,6 +316,40 @@ export const billingRepository = {
       }
     }
 
+    for (const billing of monthlyBillings) {
+      if (billing.financialStatus === "CANCELADO") continue;
+      const entry = getOrCreate(billing.client);
+      const total = Number(billing.amount);
+      const isOpen = openStatuses.includes(billing.financialStatus);
+
+      if (isOpen) {
+        entry.openAmount += total;
+        entry.openCount += 1;
+      }
+      if (billing.financialStatus === "PAGO") {
+        entry.paidAmount += total;
+        entry.paidCount += 1;
+      }
+    }
+
+    for (const billing of rentalBillings) {
+      if (billing.financialStatus === "CANCELADO") continue;
+      const entry = getOrCreate(billing.client);
+      const total = Number(billing.amount);
+      const isOpen = openStatuses.includes(billing.financialStatus);
+      const isOverdue = billing.financialStatus === "FATURADO" && billing.dueDate != null && billing.dueDate < now;
+
+      if (isOpen) {
+        entry.openAmount += total;
+        entry.openCount += 1;
+      }
+      if (isOverdue) entry.overdueCount += 1;
+      if (billing.financialStatus === "PAGO") {
+        entry.paidAmount += total;
+        entry.paidCount += 1;
+      }
+    }
+
     return Array.from(map.values());
   },
 
@@ -331,10 +377,13 @@ export const billingRepository = {
       ticketId: r.ticketId,
       ticketNumber: r.ticket.number,
       ticketTitle: r.ticket.title,
+      ticketStatus: r.ticket.status,
       clientName: r.ticket.client.name,
       billingType: r.billingType,
       financialStatus: r.financialStatus,
+      discountAmount: Number(r.discountAmount),
       totalAmount: Number(r.totalAmount),
+      internalNotes: r.internalNotes ?? undefined,
       entryCount: r._count.entries,
       invoiceDueDate: r.invoiceDueDate?.toISOString(),
       updatedAt: r.updatedAt.toISOString()

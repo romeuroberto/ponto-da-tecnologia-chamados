@@ -42,7 +42,7 @@ export default async function PortalFinancialPage() {
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Lançamentos</CardTitle>
-          <p className="mt-1 text-sm text-slate-500">Chamados e vendas com situação financeira disponível.</p>
+          <p className="mt-1 text-sm text-slate-500">Cobranças, vendas, mensalidades e locações com situação financeira disponível.</p>
         </CardHeader>
         <CardContent className="space-y-3">
           {records.length > 0 ? (
@@ -50,7 +50,46 @@ export default async function PortalFinancialPage() {
               const href =
                 record.kind === "ticket"
                   ? (`/portal/chamados/${record.id}` as Route)
-                  : (`/portal/vendas/${record.id}` as Route);
+                  : record.kind === "sale"
+                    ? (`/portal/vendas/${record.id}` as Route)
+                    : null;
+              const typeLabel =
+                record.kind === "ticket"
+                  ? "Chamado"
+                  : record.kind === "sale"
+                    ? "Venda"
+                    : record.kind === "monthly-billing"
+                      ? "Mensalidade"
+                      : "Locação";
+              const content = (
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                      {typeLabel} · {record.number}
+                    </p>
+                    <p className="mt-0.5 truncate font-medium text-slate-950">{record.title}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {record.dueDate ? `Vencimento em ${formatDate(record.dueDate)} · ` : ""}
+                      {formatDate(record.createdAt)}
+                      {record.documentCount > 0 ? ` · ${record.documentCount} doc.` : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${financialStatusClass[record.status]}`}>
+                      {financialStatusLabel[record.status]}
+                    </span>
+                    <p className="text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
+                  </div>
+                </div>
+              );
+
+              if (!href) {
+                return (
+                  <div key={`${record.kind}-${record.id}`} className="rounded-2xl border border-slate-200 p-3">
+                    {content}
+                  </div>
+                );
+              }
 
               return (
                 <Link
@@ -58,25 +97,7 @@ export default async function PortalFinancialPage() {
                   href={href}
                   className="block rounded-2xl border border-slate-200 p-3 transition-colors hover:border-sky-200 hover:bg-sky-50/40"
                 >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                        {record.kind === "ticket" ? "Chamado" : "Venda"} · {record.number}
-                      </p>
-                      <p className="mt-0.5 truncate font-medium text-slate-950">{record.title}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {record.dueDate ? `Vencimento em ${formatDate(record.dueDate)} · ` : ""}
-                        {formatDate(record.createdAt)}
-                        {record.documentCount > 0 ? ` · ${record.documentCount} doc.` : ""}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 sm:flex-col sm:items-end">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${financialStatusClass[record.status]}`}>
-                        {financialStatusLabel[record.status]}
-                      </span>
-                      <p className="text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
-                    </div>
-                  </div>
+                  {content}
                 </Link>
               );
             })

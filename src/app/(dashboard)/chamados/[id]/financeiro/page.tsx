@@ -7,15 +7,23 @@ import { PageHeader } from "@/components/layout/page-header";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
 import { buttonVariants } from "@/components/ui/button";
+import { getSafeReturnPath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
 import { catalogService } from "@/server/services/catalog-service";
 import { clientService } from "@/server/services/client-service";
 import { ticketService } from "@/server/services/ticket-service";
 
-export default async function TicketFinancialPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TicketFinancialPage({
+  params,
+  searchParams
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const currentUser = await requireRole(["ADMIN", "ATTENDANT"]);
   const { id } = await params;
+  const query = await searchParams;
   const ticket = await ticketService.getTicket(id);
 
   if (!ticket) {
@@ -26,6 +34,8 @@ export default async function TicketFinancialPage({ params }: { params: Promise<
     clientService.getClient(ticket.clientId),
     catalogService.listPartItems()
   ]);
+  const returnTo = getSafeReturnPath(query.returnTo, `/chamados/${id}`);
+  const returnLabel = returnTo.includes("/financeiro") ? "← Voltar ao extrato" : "← Voltar ao chamado";
 
   return (
     <div className="space-y-6">
@@ -37,10 +47,10 @@ export default async function TicketFinancialPage({ params }: { params: Promise<
             <PriorityBadge priority={ticket.priority} />
             <StatusBadge status={ticket.status} />
             <Link
-              href={`/chamados/${id}` as Route}
+              href={returnTo as Route}
               className={cn(buttonVariants({ variant: "outline" }))}
             >
-              ← Voltar ao chamado
+              {returnLabel}
             </Link>
           </div>
         }

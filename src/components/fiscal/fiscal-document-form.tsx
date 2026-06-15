@@ -10,11 +10,32 @@ import { portalTicketStatusLabel, financialStatusLabel } from "@/lib/portal";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Ticket, Sale } from "@/types";
 
+type MonthlyBillingOption = {
+  id: string;
+  contractNumber: string;
+  referenceMonth: number;
+  referenceYear: number;
+  amount: number;
+  financialStatus: string;
+};
+
+type RentalBillingOption = {
+  id: string;
+  contractNumber: string;
+  referenceMonth: number;
+  referenceYear: number;
+  amount: number;
+  financialStatus: string;
+  dueDate?: string;
+};
+
 interface FiscalDocumentFormProps {
   clientId: string;
   clientName: string;
   tickets: Ticket[];
   sales: Sale[];
+  monthlyBillings: MonthlyBillingOption[];
+  rentalBillings: RentalBillingOption[];
   createDocument: (formData: FormData) => Promise<void>;
 }
 
@@ -23,6 +44,8 @@ export function FiscalDocumentForm({
   clientName,
   tickets,
   sales,
+  monthlyBillings,
+  rentalBillings,
   createDocument
 }: FiscalDocumentFormProps) {
   const [type, setType] = useState("NFSE");
@@ -153,6 +176,57 @@ export function FiscalDocumentForm({
                 ))
               ) : (
                 <p className="text-sm text-slate-500">Nenhuma venda encontrada para este cliente.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 p-4">
+            <h3 className="font-semibold text-slate-950">Mensalidades para agrupar</h3>
+            <p className="mt-1 text-sm text-slate-500">Selecione cobranças recorrentes de contrato cobertas pelo documento.</p>
+            <div className="mt-4 max-h-72 space-y-2 overflow-auto pr-2">
+              {monthlyBillings.length > 0 ? (
+                monthlyBillings.map((billing) => (
+                  <label key={billing.id} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+                    <input type="checkbox" name="monthlyBillingIds" value={billing.id} className="mt-1" />
+                    <span>
+                      <span className="font-semibold text-slate-950">
+                        {String(billing.referenceMonth).padStart(2, "0")}/{billing.referenceYear}
+                      </span>
+                      <span className="block text-slate-600">Contrato {billing.contractNumber}</span>
+                      <span className="block text-xs text-slate-400">
+                        Status: {financialStatusLabel[billing.financialStatus as keyof typeof financialStatusLabel]} · {formatCurrency(billing.amount)}
+                      </span>
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">Nenhuma mensalidade encontrada para este cliente.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 p-4">
+            <h3 className="font-semibold text-slate-950">Locações para agrupar</h3>
+            <p className="mt-1 text-sm text-slate-500">Inclua cobranças de equipamentos locados na mesma nota ou recibo.</p>
+            <div className="mt-4 max-h-72 space-y-2 overflow-auto pr-2">
+              {rentalBillings.length > 0 ? (
+                rentalBillings.map((billing) => (
+                  <label key={billing.id} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+                    <input type="checkbox" name="rentalBillingIds" value={billing.id} className="mt-1" />
+                    <span>
+                      <span className="font-semibold text-slate-950">
+                        {String(billing.referenceMonth).padStart(2, "0")}/{billing.referenceYear}
+                      </span>
+                      <span className="block text-slate-600">Contrato {billing.contractNumber}</span>
+                      <span className="block text-xs text-slate-400">
+                        Status: {financialStatusLabel[billing.financialStatus as keyof typeof financialStatusLabel]} · {formatCurrency(billing.amount)}
+                        {billing.dueDate ? ` · Vence em ${formatDate(billing.dueDate)}` : ""}
+                      </span>
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-sm text-slate-500">Nenhuma cobrança de locação encontrada para este cliente.</p>
               )}
             </div>
           </div>

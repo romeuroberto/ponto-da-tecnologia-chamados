@@ -307,6 +307,8 @@ export interface FiscalDocumentLink {
   id: string;
   ticketId?: string;
   saleId?: string;
+  monthlyBillingId?: string;
+  rentalBillingId?: string;
   label?: string;
   createdAt: string;
 }

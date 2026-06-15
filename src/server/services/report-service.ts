@@ -1,8 +1,9 @@
 import { getSlaInfo } from "@/lib/sla";
+import { prisma } from "@/lib/db/prisma";
 import { expenseService } from "@/server/services/expense-service";
 import { saleService } from "@/server/services/sale-service";
 import { ticketService } from "@/server/services/ticket-service";
-import type { BillingType, ExpenseCategory, FinancialStatus, Ticket, TicketPriority, TicketStatus } from "@/types";
+import type { ExpenseCategory, FinancialStatus, Sale, Ticket, TicketPriority, TicketStatus } from "@/types";
 
 const statusLabels: Record<TicketStatus, string> = {
   OPEN: "Aberto",
@@ -20,17 +21,17 @@ const priorityLabels: Record<TicketPriority, string> = {
   CRITICAL: "Crítica"
 };
 
-const billingTypeLabels: Record<BillingType, string> = {
-  AVULSO: "Avulso",
-  CONTRATO: "Contrato",
-  GARANTIA: "Garantia",
-  CORTESIA: "Cortesia"
-};
+const receivableTypeLabels = {
+  ticket: "Chamados",
+  sale: "Vendas",
+  monthly: "Mensalidades",
+  rental: "Locações"
+} as const;
 
 const financialStatusLabels: Record<FinancialStatus, string> = {
   PENDENTE: "Pendente",
-  EM_ANALISE: "Em análise",
-  APROVADO: "Aprovado",
+  EM_ANALISE: "Pendente de cobrança",
+  APROVADO: "Pendente de cobrança",
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
@@ -148,7 +149,123 @@ function buildTrend(tickets: Ticket[]) {
   }));
 }
 
-function buildFinancialTrend(tickets: Ticket[]) {
+type ReceivableType = keyof typeof receivableTypeLabels;
+
+interface FinancialReceivable {
+  id: string;
+  type: ReceivableType;
+  number: string;
+  title: string;
+  clientId: string;
+  clientName: string;
+  status: FinancialStatus;
+  subtotalAmount: number;
+  discountAmount: number;
+  totalAmount: number;
+  createdAt: string;
+  invoicedAt?: string;
+  paidAt?: string;
+}
+
+function isInRange(dateValue: string | undefined, from?: string, to?: string) {
+  if (!dateValue) return false;
+  const { fromDate, toDate } = buildRange(from, to);
+  const date = new Date(dateValue);
+  if (fromDate && date < fromDate) return false;
+  if (toDate && date > toDate) return false;
+  return true;
+}
+
+function filterByCreatedAt<T extends { createdAt: string }>(items: T[], from?: string, to?: string) {
+  return items.filter((item) => isInRange(item.createdAt, from, to));
+}
+
+function buildTicketReceivables(tickets: Ticket[]): FinancialReceivable[] {
+  return tickets
+    .filter((ticket) => ticket.billing)
+    .map((ticket) => ({
+      id: ticket.billing!.id,
+      type: "ticket",
+      number: ticket.number,
+      title: ticket.title,
+      clientId: ticket.clientId,
+      clientName: ticket.clientName,
+      status: ticket.billing!.financialStatus,
+      subtotalAmount: ticket.billing!.subtotalAmount,
+      discountAmount: ticket.billing!.discountAmount,
+      totalAmount: ticket.billing!.totalAmount,
+      createdAt: ticket.createdAt,
+      invoicedAt: ticket.billing!.invoicedAt,
+      paidAt: ticket.billing!.paidAt
+    }));
+}
+
+function buildSaleReceivables(sales: Sale[]): FinancialReceivable[] {
+  return sales.map((sale) => ({
+    id: sale.id,
+    type: "sale",
+    number: sale.number,
+    title: `${sale.items.length} item(s)`,
+    clientId: sale.clientId,
+    clientName: sale.clientName,
+    status: sale.financialStatus,
+    subtotalAmount: sale.totalAmount,
+    discountAmount: 0,
+    totalAmount: sale.totalAmount,
+    createdAt: sale.createdAt,
+    paidAt: sale.paidAt
+  }));
+}
+
+async function listRecurringReceivables(): Promise<FinancialReceivable[]> {
+  const [monthlyBillings, rentalBillings] = await Promise.all([
+    prisma.contractMonthlyBilling.findMany({
+      include: {
+        client: { select: { name: true } },
+        contract: { select: { contractNumber: true } }
+      }
+    }),
+    prisma.rentalBilling.findMany({
+      include: {
+        client: { select: { name: true } },
+        rentalContract: { select: { contractNumber: true } }
+      }
+    })
+  ]);
+
+  return [
+    ...monthlyBillings.map((billing) => ({
+      id: billing.id,
+      type: "monthly" as const,
+      number: `${String(billing.referenceMonth).padStart(2, "0")}/${billing.referenceYear}`,
+      title: `Contrato ${billing.contract.contractNumber}`,
+      clientId: billing.clientId,
+      clientName: billing.client.name,
+      status: billing.financialStatus,
+      subtotalAmount: billing.amount.toNumber(),
+      discountAmount: 0,
+      totalAmount: billing.amount.toNumber(),
+      createdAt: billing.createdAt.toISOString(),
+      paidAt: billing.paidAt?.toISOString()
+    })),
+    ...rentalBillings.map((billing) => ({
+      id: billing.id,
+      type: "rental" as const,
+      number: `${String(billing.referenceMonth).padStart(2, "0")}/${billing.referenceYear}`,
+      title: `Contrato ${billing.rentalContract.contractNumber}`,
+      clientId: billing.clientId,
+      clientName: billing.client.name,
+      status: billing.financialStatus,
+      subtotalAmount: billing.amount.toNumber(),
+      discountAmount: 0,
+      totalAmount: billing.amount.toNumber(),
+      createdAt: billing.createdAt.toISOString(),
+      paidAt: billing.paidAt?.toISOString()
+    }))
+  ];
+}
+
+function buildReceivableTrend(receivables: FinancialReceivable[]) {
   const formatter = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit"
@@ -165,19 +282,17 @@ function buildFinancialTrend(tickets: Ticket[]) {
     });
   }
 
-  const invoicedMap = new Map(days.map((day) => [day.key, 0]));
+  const createdMap = new Map(days.map((day) => [day.key, 0]));
   const paidMap = new Map(days.map((day) => [day.key, 0]));
 
-  tickets.forEach((ticket) => {
-    if (ticket.billing?.invoicedAt) {
-      const invoicedKey = formatDayKey(new Date(ticket.billing.invoicedAt));
-      if (invoicedMap.has(invoicedKey)) {
-        invoicedMap.set(invoicedKey, (invoicedMap.get(invoicedKey) ?? 0) + 1);
-      }
+  receivables.forEach((receivable) => {
+    const createdKey = formatDayKey(new Date(receivable.invoicedAt ?? receivable.createdAt));
+    if (createdMap.has(createdKey)) {
+      createdMap.set(createdKey, (createdMap.get(createdKey) ?? 0) + 1);
     }
 
-    if (ticket.billing?.paidAt) {
-      const paidKey = formatDayKey(new Date(ticket.billing.paidAt));
+    if (receivable.paidAt) {
+      const paidKey = formatDayKey(new Date(receivable.paidAt));
       if (paidMap.has(paidKey)) {
         paidMap.set(paidKey, (paidMap.get(paidKey) ?? 0) + 1);
       }
@@ -186,7 +301,7 @@ function buildFinancialTrend(tickets: Ticket[]) {
 
   return days.map((day) => ({
     label: day.label,
-    invoiced: invoicedMap.get(day.key) ?? 0,
+    invoiced: createdMap.get(day.key) ?? 0,
     paid: paidMap.get(day.key) ?? 0
   }));
 }
@@ -281,23 +396,32 @@ export const reportService = {
       ([, value]) => value
     ).sort((left, right) => right.total - left.total || left.assigneeName.localeCompare(right.assigneeName));
 
+    const [allSales, recurringReceivables] = await Promise.all([
+      saleService.listSales(),
+      listRecurringReceivables()
+    ]);
     const trend = buildTrend(tickets);
     const billedTickets = tickets.filter((ticket) => ticket.billing);
-    const financialSubtotal = billedTickets.reduce((sum, ticket) => sum + (ticket.billing?.subtotalAmount ?? 0), 0);
-    const financialDiscount = billedTickets.reduce((sum, ticket) => sum + (ticket.billing?.discountAmount ?? 0), 0);
-    const financialTotal = billedTickets.reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0);
-    const pendingFinancialTotal = billedTickets
-      .filter((ticket) => ticket.billing && ticket.billing.financialStatus !== "PAGO" && ticket.billing.financialStatus !== "CANCELADO")
-      .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0);
+    const receivables = [
+      ...buildTicketReceivables(tickets),
+      ...filterByCreatedAt(buildSaleReceivables(allSales), filters.from, filters.to),
+      ...filterByCreatedAt(recurringReceivables, filters.from, filters.to)
+    ];
+    const financialSubtotal = receivables.reduce((sum, receivable) => sum + receivable.subtotalAmount, 0);
+    const financialDiscount = receivables.reduce((sum, receivable) => sum + receivable.discountAmount, 0);
+    const financialTotal = receivables.reduce((sum, receivable) => sum + receivable.totalAmount, 0);
+    const pendingFinancialTotal = receivables
+      .filter((receivable) => receivable.status !== "PAGO" && receivable.status !== "CANCELADO")
+      .reduce((sum, receivable) => sum + receivable.totalAmount, 0);
 
-    const byBillingType = (Object.keys(billingTypeLabels) as BillingType[]).map((type) => ({
+    const byBillingType = (Object.keys(receivableTypeLabels) as ReceivableType[]).map((type) => ({
       type,
-      label: billingTypeLabels[type],
-      total: billedTickets.filter((ticket) => ticket.billing?.billingType === type).length,
+      label: receivableTypeLabels[type],
+      total: receivables.filter((receivable) => receivable.type === type).length,
       amount: Number(
-        billedTickets
-          .filter((ticket) => ticket.billing?.billingType === type)
-          .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0)
+        receivables
+          .filter((receivable) => receivable.type === type)
+          .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
           .toFixed(2)
       )
     }));
@@ -305,31 +429,31 @@ export const reportService = {
     const byFinancialStatus = (Object.keys(financialStatusLabels) as FinancialStatus[]).map((status) => ({
       status,
       label: financialStatusLabels[status],
-      total: billedTickets.filter((ticket) => ticket.billing?.financialStatus === status).length,
+      total: receivables.filter((receivable) => receivable.status === status).length,
       amount: Number(
-        billedTickets
-          .filter((ticket) => ticket.billing?.financialStatus === status)
-          .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0)
+        receivables
+          .filter((receivable) => receivable.status === status)
+          .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
           .toFixed(2)
       )
     }));
 
     const pendingByClient = Array.from(
-      billedTickets.reduce((map, ticket) => {
-        if (!ticket.billing || ticket.billing.financialStatus === "PAGO" || ticket.billing.financialStatus === "CANCELADO") {
+      receivables.reduce((map, receivable) => {
+        if (receivable.status === "PAGO" || receivable.status === "CANCELADO") {
           return map;
         }
 
-        const current = map.get(ticket.clientId) ?? {
-          clientId: ticket.clientId,
-          clientName: ticket.clientName,
+        const current = map.get(receivable.clientId) ?? {
+          clientId: receivable.clientId,
+          clientName: receivable.clientName,
           total: 0,
           count: 0
         };
 
-        current.total += ticket.billing.totalAmount;
+        current.total += receivable.totalAmount;
         current.count += 1;
-        map.set(ticket.clientId, current);
+        map.set(receivable.clientId, current);
         return map;
       }, new Map<string, { clientId: string; clientName: string; total: number; count: number }>()),
       ([, value]) => value
@@ -353,6 +477,7 @@ export const reportService = {
       trend,
       financial: {
         totalTicketsWithBilling: billedTickets.length,
+        totalReceivables: receivables.length,
         subtotal: Number(financialSubtotal.toFixed(2)),
         discount: Number(financialDiscount.toFixed(2)),
         total: Number(financialTotal.toFixed(2)),
@@ -364,15 +489,26 @@ export const reportService = {
     };
   },
   async getFinancialDashboard(filters: { from?: string; to?: string }) {
-    const [report, allTickets, filteredExpenses, allSales, allExpenses] = await Promise.all([
+    const [report, allTickets, filteredExpenses, allSales, allExpenses, recurringReceivables] = await Promise.all([
       reportService.getOperationalReport(filters),
       ticketService.listTickets(),
       expenseService.listExpenses({ from: filters.from, to: filters.to }),
       saleService.listSales(),
-      expenseService.listExpenses()
+      expenseService.listExpenses(),
+      listRecurringReceivables()
     ]);
     const tickets = filterTicketsByRange(allTickets, filters.from, filters.to);
     const billedTickets = tickets.filter((ticket) => ticket.billing);
+    const periodReceivables = [
+      ...buildTicketReceivables(tickets),
+      ...filterByCreatedAt(buildSaleReceivables(allSales), filters.from, filters.to),
+      ...filterByCreatedAt(recurringReceivables, filters.from, filters.to)
+    ];
+    const cashReceivables = [
+      ...buildTicketReceivables(allTickets),
+      ...buildSaleReceivables(allSales),
+      ...recurringReceivables
+    ];
     const recentActivity = billedTickets
       .flatMap((ticket) =>
         (ticket.billing?.history ?? []).map((item) => ({
@@ -397,47 +533,33 @@ export const reportService = {
       (report.financial.byFinancialStatus.find((item) => item.status === "EM_ANALISE")?.total ?? 0) +
       approvedCount;
     const paidTotal = Number(
-      billedTickets
-        .filter((ticket) => ticket.billing?.financialStatus === "PAGO")
-        .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0)
+      periodReceivables
+        .filter((receivable) => receivable.status === "PAGO")
+        .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
         .toFixed(2)
     );
     const invoicedOpenTotal = Number(
-      billedTickets
-        .filter((ticket) => ticket.billing?.financialStatus === "FATURADO")
-        .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0)
+      periodReceivables
+        .filter((receivable) => receivable.status === "FATURADO")
+        .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
         .toFixed(2)
     );
     const averageTicketValue =
-      report.financial.totalTicketsWithBilling > 0
-        ? Number((report.financial.total / report.financial.totalTicketsWithBilling).toFixed(2))
+      report.financial.totalReceivables > 0
+        ? Number((report.financial.total / report.financial.totalReceivables).toFixed(2))
         : 0;
-    const ticketPaidAmount = Number(
-      allTickets
-        .filter((ticket) => ticket.billing?.paidAt)
-        .filter((ticket) => {
-          const paidAt = ticket.billing?.paidAt ? new Date(ticket.billing.paidAt) : null;
-          if (!paidAt) return false;
-          const { fromDate, toDate } = buildRange(filters.from, filters.to);
-          if (fromDate && paidAt < fromDate) return false;
-          if (toDate && paidAt > toDate) return false;
-          return true;
-        })
-        .reduce((sum, ticket) => sum + (ticket.billing?.totalAmount ?? 0), 0)
-        .toFixed(2)
-    );
     const { fromDate, toDate } = buildRange(filters.from, filters.to);
-    const salesPaidAmount = Number(
-      allSales
-        .filter((sale) => sale.financialStatus === "PAGO" && sale.paidAt)
-        .filter((sale) => {
-          const paidAt = sale.paidAt ? new Date(sale.paidAt) : null;
+    const receivablesPaidAmount = Number(
+      cashReceivables
+        .filter((receivable) => receivable.status === "PAGO" && receivable.paidAt)
+        .filter((receivable) => {
+          const paidAt = receivable.paidAt ? new Date(receivable.paidAt) : null;
           if (!paidAt) return false;
           if (fromDate && paidAt < fromDate) return false;
           if (toDate && paidAt > toDate) return false;
           return true;
         })
-        .reduce((sum, sale) => sum + sale.totalAmount, 0)
+        .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
         .toFixed(2)
     );
     const expensesPaidAmount = Number(
@@ -482,7 +604,7 @@ export const reportService = {
         amount: Number(value.amount.toFixed(2))
       })
     ).sort((left, right) => right.amount - left.amount);
-    const cashInflow = Number((ticketPaidAmount + salesPaidAmount).toFixed(2));
+    const cashInflow = receivablesPaidAmount;
     const cashOutflow = expensesPaidAmount;
     const cashBalance = Number((cashInflow - cashOutflow).toFixed(2));
 
@@ -490,6 +612,7 @@ export const reportService = {
       filters,
       summary: {
         totalTicketsWithBilling: report.financial.totalTicketsWithBilling,
+        totalReceivables: report.financial.totalReceivables,
         totalAmount: report.financial.total,
         pendingAmount: report.financial.pendingTotal,
         paidAmount: paidTotal,
@@ -505,7 +628,7 @@ export const reportService = {
       byBillingType: report.financial.byBillingType,
       byFinancialStatus: report.financial.byFinancialStatus,
       pendingByClient: report.financial.pendingByClient,
-      trend: buildFinancialTrend(billedTickets),
+      trend: buildReceivableTrend(cashReceivables),
       recentActivity,
       expenses: {
         totalCount: filteredExpenses.length,
@@ -551,27 +674,29 @@ export const reportService = {
     }));
   },
   async getFinancialExport(filters: { from?: string; to?: string }) {
-    const allTickets = await ticketService.listTickets();
-    const tickets = filterTicketsByRange(allTickets, filters.from, filters.to).filter((ticket) => ticket.billing);
+    const [allTickets, allSales, recurringReceivables] = await Promise.all([
+      ticketService.listTickets(),
+      saleService.listSales(),
+      listRecurringReceivables()
+    ]);
+    const receivables = [
+      ...buildTicketReceivables(filterTicketsByRange(allTickets, filters.from, filters.to)),
+      ...filterByCreatedAt(buildSaleReceivables(allSales), filters.from, filters.to),
+      ...filterByCreatedAt(recurringReceivables, filters.from, filters.to)
+    ];
 
-    return tickets.map((ticket) => ({
-      numero: ticket.number,
-      titulo: ticket.title,
-      cliente: ticket.clientName,
-      categoria: ticket.category ?? "",
-      statusChamado: statusLabels[ticket.status],
-      responsavel: ticket.assigneeName ?? "Não atribuído",
-      tipoCobranca: billingTypeLabels[ticket.billing?.billingType ?? "AVULSO"],
-      statusFinanceiro: financialStatusLabels[ticket.billing?.financialStatus ?? "PENDENTE"],
-      subtotal: (ticket.billing?.subtotalAmount ?? 0).toFixed(2),
-      desconto: (ticket.billing?.discountAmount ?? 0).toFixed(2),
-      total: (ticket.billing?.totalAmount ?? 0).toFixed(2),
-      totalLancamentos: String(ticket.billing?.entries.length ?? 0),
-      aprovadoEm: formatDateTime(ticket.billing?.approvedAt),
-      faturadoEm: formatDateTime(ticket.billing?.invoicedAt),
-      pagoEm: formatDateTime(ticket.billing?.paidAt),
-      criadoEm: formatDateTime(ticket.createdAt),
-      atualizadoEm: formatDateTime(ticket.updatedAt)
+    return receivables.map((receivable) => ({
+      tipoRecebivel: receivableTypeLabels[receivable.type],
+      numero: receivable.number,
+      titulo: receivable.title,
+      cliente: receivable.clientName,
+      statusFinanceiro: financialStatusLabels[receivable.status],
+      subtotal: receivable.subtotalAmount.toFixed(2),
+      desconto: receivable.discountAmount.toFixed(2),
+      total: receivable.totalAmount.toFixed(2),
+      criadoEm: formatDateTime(receivable.createdAt),
+      faturadoEm: formatDateTime(receivable.invoicedAt),
+      pagoEm: formatDateTime(receivable.paidAt)
     }));
   },
   async getCashExpensesExport(filters: { from?: string; to?: string }) {

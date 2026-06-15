@@ -20,8 +20,8 @@ const technicalStatusLabels: Record<string, string> = {
 
 const financialStatusLabels: Record<string, string> = {
   PENDENTE: "Pendente",
-  EM_ANALISE: "Em revisão interna",
-  APROVADO: "Pronto para faturar",
+  EM_ANALISE: "Pendente de cobrança",
+  APROVADO: "Pendente de cobrança",
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
@@ -67,7 +67,7 @@ export default async function ReportsPage({
           </div>
         }
       />
-      <form action="/relatórios">
+      <form action="/relatorios">
         <Card>
           <CardContent className="grid gap-4 p-4 md:grid-cols-4">
             <Input name="from" type="date" defaultValue={from} />
@@ -75,7 +75,7 @@ export default async function ReportsPage({
             <Button type="submit" variant="secondary">
               Atualizar relatório
             </Button>
-            <a href="/relatórios" className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
+            <a href="/relatorios" className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50">
               Limpar período
             </a>
           </CardContent>
@@ -139,8 +139,8 @@ export default async function ReportsPage({
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <Card className="border-sky-200 bg-sky-50/60">
             <CardContent className="p-5">
-              <p className="text-sm text-sky-700">Chamados com financeiro</p>
-              <p className="mt-2 text-3xl font-semibold text-sky-950">{report.financial.totalTicketsWithBilling}</p>
+              <p className="text-sm text-sky-700">Recebíveis no período</p>
+              <p className="mt-2 text-3xl font-semibold text-sky-950">{report.financial.totalReceivables}</p>
             </CardContent>
           </Card>
           <Card className="border-emerald-200 bg-emerald-50/60">
@@ -287,7 +287,7 @@ export default async function ReportsPage({
                     <span className="font-medium text-slate-900">{item.clientName}</span>
                     <span className="text-sm font-semibold text-slate-950">{formatCurrency(item.total)}</span>
                   </div>
-                  <p className="mt-1 text-sm text-slate-600">{item.count} chamado(s) pendente(s)</p>
+                  <p className="mt-1 text-sm text-slate-600">{item.count} lançamento(s) pendente(s)</p>
                 </div>
               ))}
             </CardContent>

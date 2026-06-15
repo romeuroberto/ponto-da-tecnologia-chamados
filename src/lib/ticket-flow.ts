@@ -37,8 +37,8 @@ const technicalStatusLabels: Record<Ticket["status"], string> = {
 
 const financialStatusLabels: Record<FinancialStatus, string> = {
   PENDENTE: "Pendente",
-  EM_ANALISE: "Em revisão interna",
-  APROVADO: "Pronto para faturar",
+  EM_ANALISE: "Pendente de cobrança",
+  APROVADO: "Pendente de cobrança",
   FATURADO: "Faturado",
   PAGO: "Pago",
   CANCELADO: "Cancelado"
@@ -144,7 +144,7 @@ export function getTicketFlowSummary(ticket: Ticket): TicketFlowSummary {
       currentStageId = "technical_closure";
     } else if (financialStatus && ["PENDENTE", "EM_ANALISE", "APROVADO"].includes(financialStatus)) {
       overallLabel = "Concluído aguardando financeiro";
-      overallDescription = "O trabalho técnico terminou, mas a definição financeira ainda está em andamento.";
+      overallDescription = "O trabalho técnico terminou, mas a cobrança ainda não foi registrada.";
       nextAction = "Revisar os valores e registrar a cobrança quando estiver tudo pronto.";
       currentStageId = "financial";
     } else if (financialStatus === "FATURADO") {

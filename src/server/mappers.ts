@@ -358,6 +358,8 @@ interface FiscalDocumentLinkRecord {
   id: string;
   ticketId: string | null;
   saleId: string | null;
+  monthlyBillingId: string | null;
+  rentalBillingId: string | null;
   label: string | null;
   createdAt: Date;
 }
@@ -708,6 +710,8 @@ export function mapFiscalDocumentLink(record: FiscalDocumentLinkRecord): FiscalD
     id: record.id,
     ticketId: record.ticketId ?? undefined,
     saleId: record.saleId ?? undefined,
+    monthlyBillingId: record.monthlyBillingId ?? undefined,
+    rentalBillingId: record.rentalBillingId ?? undefined,
     label: record.label ?? undefined,
     createdAt: record.createdAt.toISOString()
   };

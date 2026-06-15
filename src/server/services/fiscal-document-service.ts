@@ -13,6 +13,8 @@ export interface FiscalDocumentInput {
   notes?: string;
   ticketIds: string[];
   saleIds: string[];
+  monthlyBillingIds: string[];
+  rentalBillingIds: string[];
 }
 
 export const fiscalDocumentService = {
@@ -36,7 +38,9 @@ export const fiscalDocumentService = {
       filePath: input.filePath,
       notes: normalizeOptionalString(input.notes),
       ticketIds: input.ticketIds,
-      saleIds: input.saleIds
+      saleIds: input.saleIds,
+      monthlyBillingIds: input.monthlyBillingIds,
+      rentalBillingIds: input.rentalBillingIds
     });
   },
 

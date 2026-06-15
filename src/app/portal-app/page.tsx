@@ -79,16 +79,26 @@ export default async function PortalAppHomePage() {
 
         <div className="mt-4 space-y-3">
           {dashboard.financialRecords.length > 0 ? (
-            dashboard.financialRecords.slice(0, 3).map((record) => (
-              <Link
-                key={`${record.kind}-${record.id}`}
-                href={record.kind === "ticket" ? (`/portal-app/chamados/${record.id}` as Route) : (`/portal-app/vendas/${record.id}` as Route)}
-                className="block rounded-[1.4rem] border border-slate-200 bg-slate-50/60 px-4 py-4 transition hover:border-sky-200 hover:bg-sky-50/50"
-              >
+            dashboard.financialRecords.slice(0, 3).map((record) => {
+              const href =
+                record.kind === "ticket"
+                  ? (`/portal-app/chamados/${record.id}` as Route)
+                  : record.kind === "sale"
+                    ? (`/portal-app/vendas/${record.id}` as Route)
+                    : null;
+              const typeLabel =
+                record.kind === "ticket"
+                  ? "Chamado"
+                  : record.kind === "sale"
+                    ? "Venda"
+                    : record.kind === "monthly-billing"
+                      ? "Mensalidade"
+                      : "Locação";
+              const content = (
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      {record.kind === "ticket" ? "Chamado" : "Venda"} · {record.number}
+                      {typeLabel} · {record.number}
                     </p>
                     <p className="mt-1 truncate font-semibold text-slate-950">{record.title}</p>
                     <p className="mt-1 text-xs text-slate-500">{formatDate(record.createdAt)}</p>
@@ -100,8 +110,26 @@ export default async function PortalAppHomePage() {
                     <p className="mt-2 text-sm font-semibold text-slate-950">{formatCurrency(record.totalAmount)}</p>
                   </div>
                 </div>
-              </Link>
-            ))
+              );
+
+              if (!href) {
+                return (
+                  <div key={`${record.kind}-${record.id}`} className="rounded-[1.4rem] border border-slate-200 bg-slate-50/60 px-4 py-4">
+                    {content}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={`${record.kind}-${record.id}`}
+                  href={href}
+                  className="block rounded-[1.4rem] border border-slate-200 bg-slate-50/60 px-4 py-4 transition hover:border-sky-200 hover:bg-sky-50/50"
+                >
+                  {content}
+                </Link>
+              );
+            })
           ) : (
             <PortalAppEmptyState
               icon={Receipt}
