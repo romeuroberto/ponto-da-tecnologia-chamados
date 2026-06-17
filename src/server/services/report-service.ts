@@ -183,21 +183,24 @@ function filterByCreatedAt<T extends { createdAt: string }>(items: T[], from?: s
 function buildTicketReceivables(tickets: Ticket[]): FinancialReceivable[] {
   return tickets
     .filter((ticket) => ticket.billing)
-    .map((ticket) => ({
-      id: ticket.billing!.id,
-      type: "ticket",
-      number: ticket.number,
-      title: ticket.title,
-      clientId: ticket.clientId,
-      clientName: ticket.clientName,
-      status: ticket.billing!.financialStatus,
-      subtotalAmount: ticket.billing!.subtotalAmount,
-      discountAmount: ticket.billing!.discountAmount,
-      totalAmount: ticket.billing!.totalAmount,
-      createdAt: ticket.createdAt,
-      invoicedAt: ticket.billing!.invoicedAt,
-      paidAt: ticket.billing!.paidAt
-    }));
+    .map((ticket) => {
+      const isNoCharge = ticket.billing!.billingType === "GARANTIA" || ticket.billing!.billingType === "CORTESIA";
+      return {
+        id: ticket.billing!.id,
+        type: "ticket" as const,
+        number: ticket.number,
+        title: ticket.title,
+        clientId: ticket.clientId,
+        clientName: ticket.clientName,
+        status: ticket.billing!.financialStatus,
+        subtotalAmount: isNoCharge ? 0 : ticket.billing!.subtotalAmount,
+        discountAmount: isNoCharge ? 0 : ticket.billing!.discountAmount,
+        totalAmount: isNoCharge ? 0 : ticket.billing!.totalAmount,
+        createdAt: ticket.createdAt,
+        invoicedAt: ticket.billing!.invoicedAt,
+        paidAt: ticket.billing!.paidAt
+      };
+    });
 }
 
 function buildSaleReceivables(sales: Sale[]): FinancialReceivable[] {
@@ -407,9 +410,10 @@ export const reportService = {
       ...filterByCreatedAt(buildSaleReceivables(allSales), filters.from, filters.to),
       ...filterByCreatedAt(recurringReceivables, filters.from, filters.to)
     ];
-    const financialSubtotal = receivables.reduce((sum, receivable) => sum + receivable.subtotalAmount, 0);
-    const financialDiscount = receivables.reduce((sum, receivable) => sum + receivable.discountAmount, 0);
-    const financialTotal = receivables.reduce((sum, receivable) => sum + receivable.totalAmount, 0);
+    const activeReceivables = receivables.filter((r) => r.status !== "CANCELADO");
+    const financialSubtotal = activeReceivables.reduce((sum, receivable) => sum + receivable.subtotalAmount, 0);
+    const financialDiscount = activeReceivables.reduce((sum, receivable) => sum + receivable.discountAmount, 0);
+    const financialTotal = activeReceivables.reduce((sum, receivable) => sum + receivable.totalAmount, 0);
     const pendingFinancialTotal = receivables
       .filter((receivable) => receivable.status !== "PAGO" && receivable.status !== "CANCELADO")
       .reduce((sum, receivable) => sum + receivable.totalAmount, 0);
@@ -417,9 +421,9 @@ export const reportService = {
     const byBillingType = (Object.keys(receivableTypeLabels) as ReceivableType[]).map((type) => ({
       type,
       label: receivableTypeLabels[type],
-      total: receivables.filter((receivable) => receivable.type === type).length,
+      total: activeReceivables.filter((receivable) => receivable.type === type).length,
       amount: Number(
-        receivables
+        activeReceivables
           .filter((receivable) => receivable.type === type)
           .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
           .toFixed(2)
