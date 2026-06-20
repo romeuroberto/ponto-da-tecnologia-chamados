@@ -144,7 +144,15 @@ function getFlowActions(status: FinancialStatus, billingType: BillingType): Flow
         }
       ];
     case "PAGO":
-      return [];
+      return [
+        {
+          targetStatus: "PENDENTE",
+          label: "Reabrir financeiro",
+          variant: "outline",
+          description: "Reinicia o ciclo financeiro. Use apenas para correções ou quando o chamado for reaberto.",
+          tone: "secondary"
+        }
+      ];
   }
 }
 
@@ -693,7 +701,7 @@ export function TicketBillingPanel({
             </div>
           ) : null}
 
-          {canManage && currentStatus !== "PAGO" ? (
+          {canManage ? (
             <div className="space-y-2 border-t border-slate-200 pt-4">
               {pendingTransition ? (
                 <div className="space-y-3 rounded-xl border border-sky-200 bg-sky-50 p-4">
