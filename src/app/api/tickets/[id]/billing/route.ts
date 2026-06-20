@@ -62,7 +62,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const current = await billingService.getTicketBilling(id);
     const nextStatus = result.data.financialStatus;
 
-    if (current?.financialStatus === "PAGO") {
+    if (current?.financialStatus === "PAGO" && nextStatus !== "PENDENTE") {
       return NextResponse.json(
         { success: false, message: "Este financeiro está encerrado e não pode ser alterado." },
         { status: 422 }
