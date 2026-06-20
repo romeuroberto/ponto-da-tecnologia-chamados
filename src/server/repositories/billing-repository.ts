@@ -214,10 +214,15 @@ export const billingRepository = {
     });
   },
 
-  async listAll(input: { financialStatus?: FinancialStatus }): Promise<BillingListItem[]> {
+  async listAll(input: { financialStatus?: FinancialStatus; from?: string; to?: string }): Promise<BillingListItem[]> {
+    const fromDate = input.from ? new Date(`${input.from}T00:00:00`) : undefined;
+    const toDate = input.to ? new Date(`${input.to}T23:59:59`) : undefined;
     const records = await prisma.ticketBilling.findMany({
       where: {
-        financialStatus: input.financialStatus
+        financialStatus: input.financialStatus,
+        ...(fromDate || toDate
+          ? { ticket: { createdAt: { ...(fromDate ? { gte: fromDate } : {}), ...(toDate ? { lte: toDate } : {}) } } }
+          : {})
       },
       include: {
         ticket: { include: { client: true } },

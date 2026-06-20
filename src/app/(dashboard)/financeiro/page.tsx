@@ -37,6 +37,15 @@ export default async function FinancialDashboardPage({
     to: to || undefined
   });
 
+  function extractHref(status?: string): Route {
+    const p = new URLSearchParams();
+    if (status) p.set("status", status);
+    if (from) p.set("from", from);
+    if (to) p.set("to", to);
+    const qs = p.toString();
+    return `/financeiro/cobrancas${qs ? `?${qs}` : ""}` as Route;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -67,24 +76,27 @@ export default async function FinancialDashboardPage({
 
       {/* KPIs principais */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-emerald-200 bg-emerald-50/60">
-          <CardContent className="p-5">
+        <Link href={extractHref()} className="block rounded-xl border border-emerald-200 bg-emerald-50/60 transition-colors hover:bg-emerald-100/60">
+          <div className="p-5">
             <p className="text-sm text-emerald-700">Total faturado</p>
             <p className="mt-2 text-2xl font-semibold text-emerald-950">{formatCurrency(dashboard.summary.totalAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-sky-200 bg-sky-50/60">
-          <CardContent className="p-5">
+            <p className="mt-1 text-xs text-emerald-600">Ver extrato →</p>
+          </div>
+        </Link>
+        <Link href={extractHref("PAGO")} className="block rounded-xl border border-sky-200 bg-sky-50/60 transition-colors hover:bg-sky-100/60">
+          <div className="p-5">
             <p className="text-sm text-sky-700">Recebido</p>
             <p className="mt-2 text-2xl font-semibold text-sky-950">{formatCurrency(dashboard.summary.paidAmount)}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-rose-200 bg-rose-50/60">
-          <CardContent className="p-5">
+            <p className="mt-1 text-xs text-sky-600">Ver extrato →</p>
+          </div>
+        </Link>
+        <Link href={extractHref("FATURADO")} className="block rounded-xl border border-rose-200 bg-rose-50/60 transition-colors hover:bg-rose-100/60">
+          <div className="p-5">
             <p className="text-sm text-rose-700">Pendente de recebimento</p>
             <p className="mt-2 text-2xl font-semibold text-rose-950">{formatCurrency(dashboard.summary.pendingAmount)}</p>
-          </CardContent>
-        </Card>
+            <p className="mt-1 text-xs text-rose-600">Ver extrato →</p>
+          </div>
+        </Link>
         <Card>
           <CardContent className="p-5">
             <p className="text-sm text-slate-600">Média por recebível</p>
@@ -95,24 +107,27 @@ export default async function FinancialDashboardPage({
 
       {/* KPIs secundários */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardContent className="p-5">
+        <Link href={extractHref()} className="block rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50">
+          <div className="p-5">
             <p className="text-sm text-slate-600">Recebíveis no período</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.totalReceivables}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
+            <p className="mt-1 text-xs text-slate-400">Ver extrato →</p>
+          </div>
+        </Link>
+        <Link href={extractHref("PENDENTE")} className="block rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50">
+          <div className="p-5">
             <p className="text-sm text-slate-600">Pendentes de cobrança</p>
             <p className="mt-2 text-3xl font-semibold text-slate-950">{dashboard.summary.pendingCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
+            <p className="mt-1 text-xs text-slate-400">Ver extrato →</p>
+          </div>
+        </Link>
+        <Link href={extractHref("FATURADO")} className="block rounded-xl border border-slate-200 bg-white transition-colors hover:bg-slate-50">
+          <div className="p-5">
             <p className="text-sm text-slate-600">Em aberto já faturado</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">{formatCurrency(dashboard.summary.invoicedOpenAmount)}</p>
-          </CardContent>
-        </Card>
+            <p className="mt-1 text-xs text-slate-400">Ver extrato →</p>
+          </div>
+        </Link>
         <Card>
           <CardContent className="p-5">
             <p className="text-sm text-slate-600">Descontos concedidos</p>

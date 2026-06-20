@@ -4,6 +4,8 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { requireRole } from "@/server/auth/session";
 import { getParam } from "@/server/search-params";
@@ -47,9 +49,13 @@ export default async function CobrancasPage({
   await requireRole(["ADMIN", "ATTENDANT"]);
   const params = await searchParams;
   const statusParam = getParam(params.status) ?? "";
+  const from = getParam(params.from) ?? "";
+  const to = getParam(params.to) ?? "";
 
   const billings = await billingService.listBillings({
-    financialStatus: (statusParam as FinancialStatus) || undefined
+    financialStatus: (statusParam as FinancialStatus) || undefined,
+    from: from || undefined,
+    to: to || undefined
   });
 
   const totalAmount = billings.reduce((sum, b) => sum + b.totalAmount, 0);
@@ -58,12 +64,62 @@ export default async function CobrancasPage({
     (b) => b.financialStatus === "FATURADO" && isOverdue(b.invoiceDueDate)
   ).length;
 
+  const hasPeriodFilter = from || to;
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Cobranças"
         description="Lista de todos os chamados com financeiro registrado."
+        action={
+          hasPeriodFilter ? (
+            <Link href="/financeiro/cobrancas" className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50">
+              Limpar período
+            </Link>
+          ) : null
+        }
       />
+
+      {/* Filtros */}
+      <form action="/financeiro/cobrancas">
+        <Card>
+          <CardContent className="flex flex-wrap items-end gap-3 p-4">
+            <div className="grid gap-1">
+              <label className="text-xs font-semibold text-slate-600">De</label>
+              <Input name="from" type="date" defaultValue={from} className="w-40" />
+            </div>
+            <div className="grid gap-1">
+              <label className="text-xs font-semibold text-slate-600">Até</label>
+              <Input name="to" type="date" defaultValue={to} className="w-40" />
+            </div>
+            {/* Preserva o status ao submeter datas */}
+            {statusParam ? <input type="hidden" name="status" value={statusParam} /> : null}
+            <Button type="submit" variant="secondary">Filtrar período</Button>
+          </CardContent>
+        </Card>
+      </form>
+
+      {/* Filtro por status (pill buttons) */}
+      <form action="/financeiro/cobrancas" className="flex flex-wrap gap-2">
+        {/* Preserva as datas ao trocar status */}
+        {from ? <input type="hidden" name="from" value={from} /> : null}
+        {to ? <input type="hidden" name="to" value={to} /> : null}
+        {STATUS_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="submit"
+            name="status"
+            value={opt.value}
+            className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
+              statusParam === opt.value
+                ? "border-sky-600 bg-sky-600 text-white"
+                : "border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </form>
 
       {/* Métricas rápidas */}
       <section className="grid gap-4 sm:grid-cols-3">
@@ -86,25 +142,6 @@ export default async function CobrancasPage({
           </CardContent>
         </Card>
       </section>
-
-      {/* Filtro por status */}
-      <form action="/financeiro/cobrancas" className="flex flex-wrap gap-2">
-        {STATUS_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            type="submit"
-            name="status"
-            value={opt.value}
-            className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-colors ${
-              statusParam === opt.value
-                ? "border-sky-600 bg-sky-600 text-white"
-                : "border-slate-200 bg-white text-slate-700 hover:border-sky-300 hover:bg-sky-50"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </form>
 
       {/* Lista */}
       {billings.length > 0 ? (

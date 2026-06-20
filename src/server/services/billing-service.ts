@@ -5,7 +5,7 @@ import { ticketRepository } from "@/server/repositories/ticket-repository";
 import { userRepository } from "@/server/repositories/user-repository";
 
 export const billingService = {
-  async listBillings(input: { financialStatus?: FinancialStatus } = {}) {
+  async listBillings(input: { financialStatus?: FinancialStatus; from?: string; to?: string } = {}) {
     if (!isDatabaseConfigured()) {
       throw new Error("DATABASE_URL não configurada.");
     }
