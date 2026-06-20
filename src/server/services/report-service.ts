@@ -548,9 +548,16 @@ export const reportService = {
         .reduce((sum, receivable) => sum + receivable.totalAmount, 0)
         .toFixed(2)
     );
+    const billedReceivables = periodReceivables.filter(
+      (r) => r.status === "FATURADO" || r.status === "PAGO"
+    );
+    const totalBilledAmount = Number(
+      billedReceivables.reduce((sum, r) => sum + r.totalAmount, 0).toFixed(2)
+    );
+    const nonCancelledCount = periodReceivables.filter((r) => r.status !== "CANCELADO").length;
     const averageTicketValue =
-      report.financial.totalReceivables > 0
-        ? Number((report.financial.total / report.financial.totalReceivables).toFixed(2))
+      billedReceivables.length > 0
+        ? Number((totalBilledAmount / billedReceivables.length).toFixed(2))
         : 0;
     const { fromDate, toDate } = buildRange(filters.from, filters.to);
     const receivablesPaidAmount = Number(
@@ -616,9 +623,9 @@ export const reportService = {
       filters,
       summary: {
         totalTicketsWithBilling: report.financial.totalTicketsWithBilling,
-        totalReceivables: report.financial.totalReceivables,
-        totalAmount: report.financial.total,
-        pendingAmount: report.financial.pendingTotal,
+        totalReceivables: nonCancelledCount,
+        totalAmount: totalBilledAmount,
+        pendingAmount: invoicedOpenTotal,
         paidAmount: paidTotal,
         invoicedOpenAmount: invoicedOpenTotal,
         subtotalAmount: report.financial.subtotal,
