@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       ? {
           title: "Equipe",
           description: "Usuários e perfis de acesso",
-          href: "/usuários" as Route,
+          href: "/usuarios" as Route,
           variant: "outline" as const
         }
       : null

@@ -153,6 +153,7 @@ type ReceivableType = keyof typeof receivableTypeLabels;
 
 interface FinancialReceivable {
   id: string;
+  ticketId?: string;
   type: ReceivableType;
   number: string;
   title: string;
@@ -187,6 +188,7 @@ function buildTicketReceivables(tickets: Ticket[]): FinancialReceivable[] {
       const isNoCharge = ticket.billing!.billingType === "GARANTIA" || ticket.billing!.billingType === "CORTESIA";
       return {
         id: ticket.billing!.id,
+        ticketId: ticket.id,
         type: "ticket" as const,
         number: ticket.number,
         title: ticket.title,
@@ -760,5 +762,25 @@ export const reportService = {
     }));
 
     return [...summaryRows, ...expenseRows];
+  },
+  async getReceivablesExtract(filters: { from?: string; to?: string; financialStatus?: FinancialStatus }) {
+    const [allTickets, allSales, recurringReceivables] = await Promise.all([
+      ticketService.listTickets(),
+      saleService.listSales(),
+      listRecurringReceivables()
+    ]);
+
+    const tickets = filterTicketsByRange(allTickets, filters.from, filters.to);
+    const allReceivables = [
+      ...buildTicketReceivables(tickets),
+      ...filterByCreatedAt(buildSaleReceivables(allSales), filters.from, filters.to),
+      ...filterByCreatedAt(recurringReceivables, filters.from, filters.to)
+    ];
+
+    const filtered = filters.financialStatus
+      ? allReceivables.filter((r) => r.status === filters.financialStatus)
+      : allReceivables;
+
+    return filtered.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }
 };

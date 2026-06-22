@@ -43,7 +43,7 @@ export default async function FinancialDashboardPage({
     if (from) p.set("from", from);
     if (to) p.set("to", to);
     const qs = p.toString();
-    return `/financeiro/cobrancas${qs ? `?${qs}` : ""}` as Route;
+    return `/financeiro/extrato${qs ? `?${qs}` : ""}` as Route;
   }
 
   return (
