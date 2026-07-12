@@ -20,6 +20,14 @@ export function canEditClient(role: UserRole) {
   return role === "ADMIN" || role === "ATTENDANT";
 }
 
+export function canViewClientComputers(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT" || role === "TECHNICIAN";
+}
+
+export function canManageClientComputers(role: UserRole) {
+  return role === "ADMIN" || role === "ATTENDANT";
+}
+
 export function canViewTicketsModule(role: UserRole) {
   return role === "ADMIN" || role === "ATTENDANT" || role === "TECHNICIAN";
 }
