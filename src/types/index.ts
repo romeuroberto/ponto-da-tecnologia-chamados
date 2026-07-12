@@ -59,6 +59,13 @@ export type BillingHistoryEventType =
 export type StockMovementType = "ENTRY" | "SALE_EXIT" | "SERVICE_ORDER_EXIT" | "ADJUSTMENT";
 
 export type EquipmentStatus = "DISPONIVEL" | "LOCADO" | "MANUTENCAO" | "BAIXADO";
+export type RemoteAccessTool =
+  | "ANYDESK"
+  | "TEAMVIEWER"
+  | "RUSTDESK"
+  | "CHROME_REMOTE_DESKTOP"
+  | "WINDOWS_RDP"
+  | "OTHER";
 export type RentalContractStatus = "RASCUNHO" | "ATIVO" | "ENCERRADO" | "EXPIRADO";
 
 export type HistoryEventType =
@@ -101,6 +108,21 @@ export interface Client {
   active: boolean;
   ticketCount: number;
   billingProfile?: ClientBillingProfile;
+}
+
+export interface ClientComputer {
+  id: string;
+  clientId: string;
+  name: string;
+  location?: string;
+  responsibleName?: string;
+  remoteTool: RemoteAccessTool;
+  remoteCode?: string;
+  remotePassword?: string;
+  notes?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CompanyProfile {

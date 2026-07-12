@@ -149,6 +149,15 @@ enum EquipmentStatus {
   BAIXADO
 }
 
+enum RemoteAccessTool {
+  ANYDESK
+  TEAMVIEWER
+  RUSTDESK
+  CHROME_REMOTE_DESKTOP
+  WINDOWS_RDP
+  OTHER
+}
+
 enum RentalContractStatus {
   RASCUNHO
   ATIVO
@@ -207,6 +216,25 @@ model Client {
   rentalContracts        RentalContract[]
   rentalBillings         RentalBilling[]
   equipmentLoans         EquipmentLoan[]
+  computers              ClientComputer[]
+}
+
+model ClientComputer {
+  id              String           @id @default(cuid())
+  clientId        String
+  name            String
+  location        String?
+  responsibleName String?
+  remoteTool      RemoteAccessTool
+  remoteCode      String?
+  remotePassword  String?
+  notes           String?
+  active          Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  client          Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, active, name])
 }
 
 model CompanyProfile {

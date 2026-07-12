@@ -4,6 +4,7 @@ import type {
   BillingHistoryItem,
   Client,
   ClientBillingProfile,
+  ClientComputer,
   ClientContract,
   CompanyProfile,
   Equipment,
@@ -62,6 +63,21 @@ interface ClientBillingProfileRecord {
   travelRate: PrismaDecimalLike | null;
   defaultDiscountPercent: PrismaDecimalLike | null;
   billingInstructions: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ClientComputerRecord {
+  id: string;
+  clientId: string;
+  name: string;
+  location: string | null;
+  responsibleName: string | null;
+  remoteTool: ClientComputer["remoteTool"];
+  remoteCode: string | null;
+  remotePassword: string | null;
+  notes: string | null;
+  active: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -403,6 +419,23 @@ export function mapClient(record: ClientRecord): Client {
     active: record.active,
     ticketCount: record._count?.tickets ?? 0,
     billingProfile: record.billingProfile ? mapClientBillingProfile(record.billingProfile) : undefined
+  };
+}
+
+export function mapClientComputer(record: ClientComputerRecord): ClientComputer {
+  return {
+    id: record.id,
+    clientId: record.clientId,
+    name: record.name,
+    location: record.location ?? undefined,
+    responsibleName: record.responsibleName ?? undefined,
+    remoteTool: record.remoteTool,
+    remoteCode: record.remoteCode ?? undefined,
+    remotePassword: record.remotePassword ?? undefined,
+    notes: record.notes ?? undefined,
+    active: record.active,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString()
   };
 }
 
