@@ -4,7 +4,7 @@
 
 Criar um cadastro simples para vincular computadores aos clientes e registrar os dados de acesso remoto de cada computador.
 
-O foco do MVP e consulta rapida, poucos cliques e edicao facil durante o atendimento. Este modulo nao deve virar um inventario completo de patrimonio, nem se misturar com o modulo existente de equipamentos usado para locacao/emprestimo.
+O foco do MVP é consulta rápida, poucos cliques e edição fácil durante o atendimento. Este módulo não deve virar um inventário completo de patrimônio, nem se misturar com o módulo existente de equipamentos usado para locação/empréstimo.
 
 ## Escopo do MVP
 
@@ -13,17 +13,17 @@ O foco do MVP e consulta rapida, poucos cliques e edicao facil durante o atendim
 - editar computador com facilidade
 - inativar computador sem excluir definitivamente
 - consultar computadores do cliente dentro do detalhe do chamado
-- copiar codigo de acesso remoto
-- revelar e copiar senha somente por acao explicita do usuario
-- respeitar permissoes no frontend e no backend
+- copiar código de acesso remoto
+- revelar e copiar senha somente por ação explícita do usuário
+- respeitar permissões no frontend e no backend
 
 ## Fora do MVP
 
 - upload de anexos do computador
-- historico detalhado de alteracoes
+- histórico detalhado de alterações
 - criptografia por campo ou cofre externo de senhas
-- inventario tecnico completo de hardware/software
-- relatorio geral de computadores
+- inventário técnico completo de hardware/software
+- relatório geral de computadores
 - associar um computador diretamente ao chamado
 
 Esses pontos podem entrar depois, sem bloquear a entrega inicial.
@@ -47,7 +47,7 @@ Campos:
 - `createdAt`
 - `updatedAt`
 
-Enums opcionais para evitar texto solto demais:
+Enums para evitar texto solto demais:
 
 - `RemoteAccessTool`
   - `ANYDESK`
@@ -57,16 +57,16 @@ Enums opcionais para evitar texto solto demais:
   - `WINDOWS_RDP`
   - `OTHER`
 
-No MVP, `remoteTool` pode ser enum e `remoteCode`/`remotePassword` podem ser strings opcionais. A senha deve continuar fora das listagens principais e aparecer apenas com botao de revelar/copiar.
+No MVP, `remoteTool` é enum e `remoteCode`/`remotePassword` são strings opcionais. A senha deve continuar fora das listagens principais e aparecer apenas com botão de revelar/copiar.
 
-## Permissoes
+## Permissões
 
-Visualizacao:
+Visualização:
 
 - `ADMIN`: pode visualizar computadores e acessos
 - `ATTENDANT`: pode visualizar computadores e acessos
 - `TECHNICIAN`: pode visualizar computadores e acessos
-- `CLIENT`: nao acessa este modulo interno
+- `CLIENT`: não acessa este módulo interno
 
 Gerenciamento:
 
@@ -75,12 +75,12 @@ Gerenciamento:
 - `TECHNICIAN`: no MVP, somente visualiza
 - `CLIENT`: sem acesso
 
-Funcoes sugeridas em `src/server/auth/permissions.ts`:
+Funções em `src/server/auth/permissions.ts`:
 
 - `canViewClientComputers(role)`
 - `canManageClientComputers(role)`
 
-## Experiencia de uso
+## Experiência de uso
 
 ### No detalhe do cliente
 
@@ -89,19 +89,19 @@ Adicionar um painel chamado `Computadores`.
 Comportamento:
 
 - mostrar lista compacta de computadores ativos
-- mostrar nome, local/setor, ferramenta e codigo
-- senha mascarada por padrao
-- botoes de copiar codigo e copiar senha
-- botao `Novo computador` para `ADMIN` e `ATTENDANT`
-- acao `Editar`
-- acao `Inativar`
+- mostrar nome, local/setor, ferramenta e código
+- senha mascarada por padrão
+- botões de copiar código e copiar senha
+- botão `Novo computador` para `ADMIN` e `ATTENDANT`
+- ação `Editar`
+- ação `Inativar`
 
 Layout esperado:
 
 ```text
 Computadores
 
-Recepcao       AnyDesk     123 456 789     [Copiar] [Senha] [Editar]
+Recepção       AnyDesk     123 456 789     [Copiar] [Senha] [Editar]
 Financeiro     RustDesk    987 654 321     [Copiar] [Senha] [Editar]
 Servidor        RDP        srv-cliente      [Copiar] [Senha] [Editar]
 ```
@@ -115,11 +115,11 @@ Adicionar um painel compacto chamado `Acessos remotos do cliente`.
 Comportamento:
 
 - listar computadores ativos do cliente do chamado
-- permitir copiar codigo/senha
+- permitir copiar código/senha
 - link para abrir o cliente quando for preciso gerenciar
-- nao permitir edicao direta nessa primeira entrega
+- não permitir edição direta nessa primeira entrega
 
-Objetivo: o tecnico encontra o acesso remoto sem sair do chamado.
+Objetivo: o técnico encontra o acesso remoto sem sair do chamado.
 
 ## APIs internas
 
@@ -137,13 +137,9 @@ Rotas sugeridas:
   - edita computador
   - permitido para `ADMIN`, `ATTENDANT`
 
-- `PATCH /api/clients/[id]/computers/[computerId]/status`
-  - ativa/inativa computador
-  - permitido para `ADMIN`, `ATTENDANT`
+Na implementação do MVP, a ativação/inativação é tratada pelo próprio `PUT` via campo `active`, mantendo menos rotas.
 
-Opcionalmente, a inativacao pode ser tratada pelo proprio `PUT` para manter menos rotas no MVP.
-
-## Camadas de codigo
+## Camadas de código
 
 Arquivos previstos:
 
@@ -161,14 +157,14 @@ Arquivos previstos:
 - `src/app/(dashboard)/clientes/[id]/page.tsx`
 - `src/app/(dashboard)/chamados/[id]/page.tsx`
 
-## Validacoes
+## Validações
 
 Regras iniciais:
 
-- `name`: obrigatorio, minimo 2 caracteres
-- `remoteTool`: obrigatorio
-- `remoteCode`: opcional, maximo razoavel
-- `remotePassword`: opcional, maximo razoavel
+- `name`: obrigatório, mínimo 2 caracteres
+- `remoteTool`: obrigatório
+- `remoteCode`: opcional, máximo razoável
+- `remotePassword`: opcional, máximo razoável
 - `location`: opcional
 - `responsibleName`: opcional
 - `notes`: opcional
@@ -177,10 +173,10 @@ Regras iniciais:
 Normalizacoes:
 
 - strings vazias devem virar `null`/`undefined` antes de gravar
-- nao criar computador para cliente inexistente
-- nao permitir editar computador de outro cliente
+- não criar computador para cliente inexistente
+- não permitir editar computador de outro cliente
 
-## Blocos de implementacao
+## Blocos de implementação
 
 ### Bloco 1 - Base de dados e tipos
 
@@ -193,49 +189,49 @@ Entregas:
 - relacionar `Client.clientComputers`
 - criar migration
 - atualizar tipos em `src/types/index.ts`
-- adicionar mapper, se necessario
+- adicionar mapper, se necessário
 - rodar `npm run prisma:generate`
 
-Validacao:
+Validação:
 
 - Prisma Client gera sem erro
 - migration e schema ficam consistentes
 
-### Bloco 2 - Repository, service e permissoes
+### Bloco 2 - Repository, service e permissões
 
-Objetivo: isolar acesso a dados e regra de negocio.
+Objetivo: isolar acesso a dados e regra de negócio.
 
 Entregas:
 
 - criar repository
 - criar service
-- criar schema Zod de validacao
-- criar permissoes `canViewClientComputers` e `canManageClientComputers`
+- criar schema Zod de validação
+- criar permissões `canViewClientComputers` e `canManageClientComputers`
 - garantir checagem de cliente existente
 - garantir que computador editado pertence ao cliente
 
-Validacao:
+Validação:
 
 - TypeScript sem erros
-- funcoes pequenas e coerentes com padrao atual
+- funções pequenas e coerentes com padrão atual
 
 ### Bloco 3 - APIs internas
 
-Objetivo: expor CRUD minimo para a UI.
+Objetivo: expor CRUD mínimo para a UI.
 
 Entregas:
 
 - `GET /api/clients/[id]/computers`
 - `POST /api/clients/[id]/computers`
 - `PUT /api/clients/[id]/computers/[computerId]`
-- tratar inativacao no `PUT` via campo `active`
+- tratar inativação no `PUT` via campo `active`
 - respostas padronizadas com `success`, `data` e `message`
 - backend bloqueando `TECHNICIAN` para escrita
 
-Validacao:
+Validação:
 
 - erros 401/403/404/400 coerentes
-- nao vaza cadastro entre clientes
+- não vaza cadastro entre clientes
 
 ### Bloco 4 - Painel no detalhe do cliente
 
@@ -245,49 +241,49 @@ Entregas:
 
 - componente `ClientComputersSection`
 - lista compacta
-- formulario simples embutido ou em area expansivel
-- criar, editar e inativar sem sair da pagina
-- botao de copiar codigo
-- botao de revelar/copiar senha
-- UI bloqueando edicao para quem nao pode gerenciar
+- formulário simples embutido ou em área expansível
+- criar, editar e inativar sem sair da página
+- botão de copiar código
+- botão de revelar/copiar senha
+- UI bloqueando edição para quem não pode gerenciar
 
-Validacao:
+Validação:
 
 - fluxo com poucos cliques
-- textos em portugues com acentuacao
+- textos em português com acentuação
 - responsivo em telas menores
 
 ### Bloco 5 - Painel no detalhe do chamado
 
-Objetivo: consulta rapida durante atendimento.
+Objetivo: consulta rápida durante atendimento.
 
 Entregas:
 
 - componente `TicketClientComputersPanel`
 - listar computadores ativos do cliente do chamado
-- copiar codigo/senha
+- copiar código/senha
 - link para detalhe do cliente
-- sem edicao direta no MVP
+- sem edição direta no MVP
 
-Validacao:
+Validação:
 
-- tecnico acessa consulta
-- painel nao polui o detalhe do chamado
-- estado vazio claro quando nao houver computadores
+- técnico acessa consulta
+- painel não polui o detalhe do chamado
+- estado vazio claro quando não houver computadores
 
-### Bloco 6 - Acabamento e verificacao
+### Bloco 6 - Acabamento e verificação
 
 Objetivo: garantir qualidade antes de considerar entregue.
 
 Entregas:
 
 - revisar estados vazios, loading e erro
-- revisar permissao frontend/backend
+- revisar permissão frontend/backend
 - rodar `npm run build`
 - corrigir erros de tipo/lint/build
-- atualizar documentacao se algo mudar na implementacao
+- atualizar documentação se algo mudar na implementação
 
-Validacao:
+Validação:
 
 - build limpo
 - fluxo manual validado:
@@ -295,10 +291,10 @@ Validacao:
   - editar computador
   - inativar computador
   - consultar no chamado
-  - copiar codigo/senha
+  - copiar código/senha
 
 ## Ordem recomendada
 
-Implementar na sequencia dos blocos acima. Cada bloco deve deixar o projeto em estado coerente antes de avançar.
+Implementar na sequência dos blocos acima. Cada bloco deve deixar o projeto em estado coerente antes de avançar.
 
 O primeiro bloco a implementar deve ser `Bloco 1 - Base de dados e tipos`.
