@@ -86,16 +86,16 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
           )}
         </div>
 
-        <div>
-          <ClientPortalAccessSection clientId={client.id} portalUser={portalUser} canEdit={canEdit} />
-        </div>
+        <div className="space-y-6 xl:col-span-2">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ClientPortalAccessSection clientId={client.id} portalUser={portalUser} canEdit={canEdit} />
 
-        <div>
-          <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} nextContractNumber={nextContractNumber} categories={categories} />
+            <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} nextContractNumber={nextContractNumber} categories={categories} />
+          </div>
+
+          <ClientComputersSection clientId={client.id} initialComputers={computers} canManage={canManageComputers} />
         </div>
       </div>
-
-      <ClientComputersSection clientId={client.id} initialComputers={computers} canManage={canManageComputers} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
