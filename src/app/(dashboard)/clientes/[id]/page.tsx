@@ -7,13 +7,15 @@ import { ClientForm } from "@/components/forms/client-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { ClientComputersSection } from "@/components/clients/client-computers-section";
 import { ClientPortalAccessSection } from "@/components/clients/client-portal-access-section";
 import { ContractList } from "@/components/contracts/contract-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
-import { canEditClient } from "@/server/auth/permissions";
+import { canEditClient, canManageClientComputers } from "@/server/auth/permissions";
 import { clientService } from "@/server/services/client-service";
+import { clientComputerService } from "@/server/services/client-computer-service";
 import { contractRepository } from "@/server/repositories/contract-repository";
 import { ticketCategoryService } from "@/server/services/ticket-category-service";
 import { ticketService } from "@/server/services/ticket-service";
@@ -28,15 +30,18 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const [tickets, portalUser, contracts, nextContractNumber, categories] = await Promise.all([
+  const canEdit = session?.user ? canEditClient(session.user.role) : false;
+  const canManageComputers = session?.user ? canManageClientComputers(session.user.role) : false;
+
+  const [tickets, portalUser, contracts, nextContractNumber, categories, computers] = await Promise.all([
     ticketService.listTickets(),
     userService.getPortalUserByClientId(id),
     contractRepository.findByClientId(id),
     contractRepository.nextNumber(),
-    ticketCategoryService.listCategories(true)
+    ticketCategoryService.listCategories(true),
+    clientComputerService.listClientComputers(id, { includeInactive: canManageComputers })
   ]);
   const clientTickets = tickets.filter((ticket) => ticket.clientId === client.id);
-  const canEdit = session?.user ? canEditClient(session.user.role) : false;
 
   const recentTickets = clientTickets.slice(0, 5);
 
@@ -89,6 +94,8 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
           <ContractList clientId={client.id} initialContracts={contracts} canEdit={canEdit} nextContractNumber={nextContractNumber} categories={categories} />
         </div>
       </div>
+
+      <ClientComputersSection clientId={client.id} initialComputers={computers} canManage={canManageComputers} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-3">
