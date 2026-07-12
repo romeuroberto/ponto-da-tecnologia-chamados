@@ -13,6 +13,7 @@ O foco do MVP é consulta rápida, poucos cliques e edição fácil durante o at
 - editar computador com facilidade
 - inativar computador sem excluir definitivamente
 - consultar computadores do cliente dentro do detalhe do chamado
+- consultar todos os acessos em uma tela direta pelo menu `Acessos remotos`
 - copiar código de acesso remoto
 - revelar e copiar senha somente por ação explícita do usuário
 - respeitar permissões no frontend e no backend
@@ -121,6 +122,20 @@ Comportamento:
 
 Objetivo: o técnico encontra o acesso remoto sem sair do chamado.
 
+### Tela direta de acessos remotos
+
+Adicionar um item de menu chamado `Acessos remotos`.
+
+Comportamento:
+
+- listar todos os computadores ativos dos clientes ativos
+- buscar por cliente, computador, setor, ferramenta, código ou observações
+- copiar código/senha diretamente na lista
+- manter senha oculta até ação explícita de revelar
+- abrir o cliente para edição quando necessário
+
+Objetivo: permitir consulta operacional em um clique a partir do menu.
+
 ## APIs internas
 
 Rotas sugeridas:
@@ -153,7 +168,9 @@ Arquivos previstos:
 - `src/app/api/clients/[id]/computers/route.ts`
 - `src/app/api/clients/[id]/computers/[computerId]/route.ts`
 - `src/components/clients/client-computers-section.tsx`
+- `src/components/clients/remote-access-directory.tsx`
 - `src/components/tickets/ticket-client-computers-panel.tsx`
+- `src/app/(dashboard)/acessos-remotos/page.tsx`
 - `src/app/(dashboard)/clientes/[id]/page.tsx`
 - `src/app/(dashboard)/chamados/[id]/page.tsx`
 
@@ -270,6 +287,24 @@ Validação:
 - técnico acessa consulta
 - painel não polui o detalhe do chamado
 - estado vazio claro quando não houver computadores
+
+### Correção de UX - Tela direta de acessos remotos
+
+Objetivo: reduzir o caminho operacional para um clique no menu.
+
+Entregas:
+
+- item `Acessos remotos` no menu principal
+- página `/acessos-remotos`
+- busca instantânea em todos os acessos ativos
+- copiar código/senha sem abrir o cliente
+- link para edição no detalhe do cliente
+
+Validação:
+
+- operador acessa pelo menu principal
+- busca e cópia funcionam sem navegar por múltiplas páginas
+- permissões continuam usando `canViewClientComputers`
 
 ### Bloco 6 - Acabamento e verificação
 

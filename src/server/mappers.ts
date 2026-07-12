@@ -4,6 +4,7 @@ import type {
   BillingHistoryItem,
   Client,
   ClientBillingProfile,
+  ClientComputerAccess,
   ClientComputer,
   ClientContract,
   CompanyProfile,
@@ -80,6 +81,12 @@ interface ClientComputerRecord {
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface ClientComputerAccessRecord extends ClientComputerRecord {
+  client: {
+    name: string;
+  };
 }
 
 interface CompanyProfileRecord {
@@ -436,6 +443,13 @@ export function mapClientComputer(record: ClientComputerRecord): ClientComputer 
     active: record.active,
     createdAt: record.createdAt.toISOString(),
     updatedAt: record.updatedAt.toISOString()
+  };
+}
+
+export function mapClientComputerAccess(record: ClientComputerAccessRecord): ClientComputerAccess {
+  return {
+    ...mapClientComputer(record),
+    clientName: record.client.name
   };
 }
 

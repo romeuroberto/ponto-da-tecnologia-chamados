@@ -125,6 +125,10 @@ export interface ClientComputer {
   updatedAt: string;
 }
 
+export interface ClientComputerAccess extends ClientComputer {
+  clientName: string;
+}
+
 export interface CompanyProfile {
   id: string;
   legalName: string;

@@ -2,6 +2,7 @@ import type { Route } from "next";
 
 import {
   canViewCatalogModule,
+  canViewClientComputers,
   canViewClientsModule,
   canViewFinancialModule,
   canViewSalesModule,
@@ -24,6 +25,7 @@ export interface NavigationItem {
 export const appNavigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/chamados", label: "Chamados" },
+  { href: "/acessos-remotos" as Route, label: "Acessos remotos" },
   {
     href: "/clientes",
     label: "Clientes",
@@ -81,6 +83,7 @@ export function filterNavigationByRole(items: NavigationItem[], role?: AppUser["
 
   return items.filter((item) => {
     if (item.href === "/chamados") return canViewTicketsModule(role);
+    if (item.href === ("/acessos-remotos" as Route)) return canViewClientComputers(role);
     if (item.href === "/clientes") return canViewClientsModule(role);
     if (item.href === "/usuarios") return canViewUsersModule(role);
     if (item.href === "/financeiro") return canViewFinancialModule(role);

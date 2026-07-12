@@ -8,6 +8,7 @@ import {
   Boxes,
   Building2,
   LayoutDashboard,
+  KeyRound,
   Printer,
   Receipt,
   Settings2,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 const iconMap: Record<string, LucideIcon> = {
   "/dashboard": LayoutDashboard,
   "/chamados": Ticket,
+  "/acessos-remotos": KeyRound,
   "/relatorios": BarChart3,
   "/clientes": Building2,
   "/empresa": Settings2,

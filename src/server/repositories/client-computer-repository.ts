@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
-import type { ClientComputer, RemoteAccessTool } from "@/types";
-import { mapClientComputer } from "@/server/mappers";
+import type { ClientComputer, ClientComputerAccess, RemoteAccessTool } from "@/types";
+import { mapClientComputer, mapClientComputerAccess } from "@/server/mappers";
 
 export interface UpsertClientComputerInput {
   name: string;
@@ -14,6 +14,27 @@ export interface UpsertClientComputerInput {
 }
 
 export const clientComputerRepository = {
+  async listAll(input: { includeInactive?: boolean } = {}): Promise<ClientComputerAccess[]> {
+    const records = await prisma.clientComputer.findMany({
+      where: {
+        ...(input.includeInactive ? {} : { active: true }),
+        client: {
+          active: true
+        }
+      },
+      include: {
+        client: {
+          select: {
+            name: true
+          }
+        }
+      },
+      orderBy: [{ client: { name: "asc" } }, { name: "asc" }]
+    });
+
+    return records.map(mapClientComputerAccess);
+  },
+
   async listByClient(clientId: string, input: { includeInactive?: boolean } = {}): Promise<ClientComputer[]> {
     const records = await prisma.clientComputer.findMany({
       where: {

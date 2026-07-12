@@ -37,6 +37,14 @@ async function ensureComputerBelongsToClient(clientId: string, computerId: strin
 }
 
 export const clientComputerService = {
+  async listRemoteAccessDirectory(input: { includeInactive?: boolean } = {}) {
+    if (!isDatabaseConfigured()) {
+      return [];
+    }
+
+    return clientComputerRepository.listAll(input);
+  },
+
   async listClientComputers(clientId: string, input: { includeInactive?: boolean } = {}) {
     if (!isDatabaseConfigured()) {
       return [];
