@@ -11,15 +11,17 @@ import { TicketFlowActions } from "@/components/tickets/ticket-flow-actions";
 import { TicketFlowBar } from "@/components/tickets/ticket-flow-bar";
 import { PriorityBadge } from "@/components/tickets/priority-badge";
 import { StatusBadge } from "@/components/tickets/status-badge";
+import { TicketClientComputersPanel } from "@/components/tickets/ticket-client-computers-panel";
 import { TicketServiceOrdersPanel } from "@/components/tickets/ticket-service-orders-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSafeReturnPath, isSafeReturnPath, withReturnTo } from "@/lib/navigation";
 import { getAttendanceTypeLabel } from "@/lib/ticket-attendance";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { canViewFinancialModule } from "@/server/auth/permissions";
+import { canViewClientComputers, canViewFinancialModule } from "@/server/auth/permissions";
 import { requireUser } from "@/server/auth/session";
 import { catalogService } from "@/server/services/catalog-service";
+import { clientComputerService } from "@/server/services/client-computer-service";
 import { clientService } from "@/server/services/client-service";
 import { contractRepository } from "@/server/repositories/contract-repository";
 import { ticketService } from "@/server/services/ticket-service";
@@ -58,7 +60,13 @@ export default async function TicketDetailsPage({
     notFound();
   }
 
-  const activeContract = await contractRepository.findActiveByClientId(ticket.clientId);
+  const canViewClientComputerAccess = canViewClientComputers(currentUser.role);
+  const [activeContract, clientComputers] = await Promise.all([
+    contractRepository.findActiveByClientId(ticket.clientId),
+    canViewClientComputerAccess
+      ? clientComputerService.listClientComputers(ticket.clientId)
+      : Promise.resolve([])
+  ]);
   const canViewFinancial = canViewFinancialModule(currentUser.role);
   const contractCoversCategory = !!(
     activeContract &&
@@ -221,6 +229,10 @@ export default async function TicketDetailsPage({
               </Card>
             ) : null}
           </div>
+
+          {canViewClientComputerAccess ? (
+            <TicketClientComputersPanel clientId={ticket.clientId} computers={clientComputers} />
+          ) : null}
 
           <TicketServiceOrdersPanel
             ticket={ticket}
