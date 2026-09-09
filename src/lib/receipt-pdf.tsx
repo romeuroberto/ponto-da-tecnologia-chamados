@@ -65,6 +65,18 @@ const s = StyleSheet.create({
   refLabel: { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.dark, marginBottom: 1 },
   refDesc: { fontSize: 7.5, color: C.mid, lineHeight: 1.5 },
 
+  // ── Blocos de texto (descrição / execução) ───────────────────────
+  blockSection: { marginBottom: 10 },
+  blockText: { fontSize: 7.5, color: C.mid, lineHeight: 1.5 },
+
+  // ── Ordens de serviço ────────────────────────────────────────────
+  osItem: { marginBottom: 6 },
+  osHeadRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  osTitle: { fontSize: 8, fontFamily: "Helvetica-Bold", color: C.dark, flex: 1, paddingRight: 8 },
+  osDate: { fontSize: 7, color: C.light, flexShrink: 0 },
+  osMeta: { fontSize: 7, color: C.light, marginTop: 1 },
+  osNotes: { fontSize: 7.5, color: C.mid, lineHeight: 1.5, marginTop: 2 },
+
   // ── Tabela de itens ──────────────────────────────────────────────
   tableLabel: {
     fontSize: 6.5,
@@ -163,6 +175,15 @@ export interface ReceiptItem {
   totalPrice: number;
 }
 
+export interface ReceiptServiceOrder {
+  number: string;
+  serviceType?: string;
+  technicianName?: string;
+  finishedAt?: string;
+  executionNotes?: string;
+  customerApprovalName?: string;
+}
+
 export interface ReceiptData {
   documentType: FiscalDocumentType;
   receiptNumber: string;
@@ -178,6 +199,8 @@ export interface ReceiptData {
   };
   referenceLabel?: string;
   referenceDescription?: string;
+  referenceDetail?: string;
+  serviceOrders?: ReceiptServiceOrder[];
   items: ReceiptItem[];
   subtotalAmount: number;
   discountAmount: number;
@@ -255,6 +278,41 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
 
         <View style={s.ruleThin} />
 
+        {/* ── Descrição do chamado ─────────────────────── */}
+        {data.referenceDetail ? (
+          <View style={s.blockSection}>
+            <Text style={s.sectionLabel}>Descrição do chamado</Text>
+            <Text style={s.blockText}>{data.referenceDetail}</Text>
+          </View>
+        ) : null}
+
+        {/* ── Ordens de serviço executadas ─────────────── */}
+        {data.serviceOrders && data.serviceOrders.length > 0 ? (
+          <View style={s.blockSection}>
+            <Text style={s.sectionLabel}>Serviços executados</Text>
+            {data.serviceOrders.map((os) => {
+              const osMeta = [
+                os.technicianName ? `Técnico: ${os.technicianName}` : null,
+                os.customerApprovalName ? `Aprovado por: ${os.customerApprovalName}` : null
+              ].filter(Boolean).join("   ·   ");
+
+              return (
+                <View key={os.number} style={s.osItem} wrap={false}>
+                  <View style={s.osHeadRow}>
+                    <Text style={s.osTitle}>
+                      {os.number}
+                      {os.serviceType ? `  ·  ${os.serviceType}` : ""}
+                    </Text>
+                    {os.finishedAt ? <Text style={s.osDate}>Concluída em {fmtDate(os.finishedAt)}</Text> : null}
+                  </View>
+                  {osMeta ? <Text style={s.osMeta}>{osMeta}</Text> : null}
+                  {os.executionNotes ? <Text style={s.osNotes}>{os.executionNotes}</Text> : null}
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
+
         {/* ── Itens ────────────────────────────────────── */}
         {data.items.length > 0 ? (
           <>
@@ -279,7 +337,7 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
         ) : null}
 
         {/* ── Totais ───────────────────────────────────── */}
-        <View style={s.totalsBlock}>
+        <View style={s.totalsBlock} wrap={false}>
           {(data.discountAmount > 0 || (data.deliveryFee ?? 0) > 0) ? (
             <>
               <View style={s.subRow}>
@@ -348,7 +406,7 @@ export function ReceiptDocument({ data }: { data: ReceiptData }) {
 
         {/* ── Assinatura ───────────────────────────────── */}
         {data.signatureDataUri ? (
-          <View style={s.sigBlock}>
+          <View style={s.sigBlock} wrap={false}>
             <Image src={data.signatureDataUri} style={s.sigImage} />
             <View style={s.sigLine}>
               <Text style={s.sigLabel}>{data.company.tradeName ?? data.company.legalName}</Text>

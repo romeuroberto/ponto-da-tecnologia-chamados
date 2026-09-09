@@ -87,6 +87,55 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
       REMOTE_SUPPORT: "Suporte Remoto"
     };
 
+    // Camada 1: ordens de serviço concluídas que compõem o total do chamado
+    const contributingOsIds = new Set(billing.osContributions.map((c) => c.osId));
+    const contributingOrders = ticket.serviceOrders.filter((os) => contributingOsIds.has(os.id));
+    const showOsReference = contributingOrders.length > 1;
+
+    const osItems = contributingOrders.flatMap((os) => {
+      const suffix = showOsReference ? `  ·  ${os.number}` : "";
+      const rows: {
+        description: string;
+        typeLabel: string;
+        quantity: number;
+        unitPrice: number;
+        totalPrice: number;
+      }[] = [];
+
+      if (os.servicePrice && os.servicePrice > 0) {
+        rows.push({
+          description: `${os.serviceType?.trim() || "Serviço técnico"}${suffix}`,
+          typeLabel: entryTypeLabel.LABOR,
+          quantity: 1,
+          unitPrice: os.servicePrice,
+          totalPrice: os.servicePrice
+        });
+      }
+
+      for (const part of os.parts) {
+        rows.push({
+          description: `${part.partName}${part.partCode ? ` (${part.partCode})` : ""}${suffix}`,
+          typeLabel: entryTypeLabel.PART,
+          quantity: part.quantity,
+          unitPrice: part.unitPrice,
+          totalPrice: Number((part.quantity * part.unitPrice).toFixed(2))
+        });
+      }
+
+      return rows;
+    });
+
+    // Camada 2: lançamentos avulsos faturáveis
+    const entryItems = billing.entries
+      .filter((e) => e.billable)
+      .map((e) => ({
+        description: e.description,
+        typeLabel: entryTypeLabel[e.entryType] ?? e.entryType,
+        quantity: e.quantity,
+        unitPrice: e.unitPrice,
+        totalPrice: e.totalPrice
+      }));
+
     const receiptData = {
       documentType: "RECIBO" as const,
       receiptNumber,
@@ -102,16 +151,17 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
       },
       referenceLabel: ticket.number ? `Chamado #${String(ticket.number).padStart(4, "0")}` : "Chamado",
       referenceDescription: ticket.title,
-      items: billing.entries
-        .filter((e) => e.billable)
-        .map((e) => ({
-          description: e.description,
-          typeLabel: entryTypeLabel[e.entryType] ?? e.entryType,
-          quantity: e.quantity,
-          unitPrice: e.unitPrice,
-          totalPrice: e.totalPrice
-        })),
-      subtotalAmount: billing.subtotalAmount,
+      referenceDetail: ticket.description?.trim() || undefined,
+      serviceOrders: contributingOrders.map((os) => ({
+        number: os.number,
+        serviceType: os.serviceType?.trim() || undefined,
+        technicianName: os.assignedTechnicianName,
+        finishedAt: os.finishedAt,
+        executionNotes: os.executionNotes?.trim() || undefined,
+        customerApprovalName: os.customerApprovalName?.trim() || undefined
+      })),
+      items: [...osItems, ...entryItems],
+      subtotalAmount: Number((billing.osContributionsTotal + billing.subtotalAmount).toFixed(2)),
       discountAmount: billing.discountAmount,
       totalAmount: billing.totalAmount,
       isCortesia: billing.billingType === "CORTESIA",

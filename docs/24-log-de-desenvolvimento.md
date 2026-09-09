@@ -5,6 +5,36 @@ Atualizar este arquivo a cada nova sessão de desenvolvimento.
 
 ---
 
+## 2026-09-09 — Recibo de chamado: discriminação completa dos serviços
+
+### Contexto
+O recibo em PDF gerado a partir de um chamado saía praticamente vazio: só mostrava o cliente, o número do chamado, o título e o valor total. Não trazia a descrição do chamado, os serviços executados, as ordens de serviço nem as peças aplicadas.
+
+### Causa
+`src/app/api/tickets/[id]/recibo/route.ts` montava a lista de itens apenas a partir de `billing.entries` (camada 2 — lançamentos avulsos faturáveis) e ignorava por completo `billing.osContributions` (camada 1 — mão de obra e materiais das OSs concluídas). Como o valor da maioria dos chamados vem das OSs, a tabela "Discriminação dos serviços" ficava vazia e o PDF exibia só o total. O `subtotalAmount` enviado ao PDF também estava incompleto pelo mesmo motivo.
+
+### Implementado
+
+**Rota do recibo do chamado** (`src/app/api/tickets/[id]/recibo/route.ts`)
+- Itens agora combinam as duas camadas: mão de obra (`servicePrice`) e cada peça (`parts`) das OSs concluídas que compõem o total, seguidas dos lançamentos avulsos faturáveis
+- Quando há mais de uma OS contribuindo, cada linha da tabela recebe o número da OS como referência
+- `subtotalAmount` corrigido para `osContributionsTotal + subtotalAmount` (antes o subtotal desconsiderava as OSs, distorcendo a linha de desconto)
+- Passa a enviar a descrição do chamado e os dados de execução das OSs (tipo de serviço, técnico, data de conclusão, notas de execução, aprovação do cliente)
+
+**Template do PDF** (`src/lib/receipt-pdf.tsx`)
+- Novo bloco "Descrição do chamado"
+- Novo bloco "Serviços executados", listando cada OS com número, tipo de serviço, técnico, data de conclusão, notas de execução e nome de quem aprovou
+- Novos campos em `ReceiptData`: `referenceDetail` e `serviceOrders` (interface `ReceiptServiceOrder`) — ambos opcionais, então o recibo de venda continua igual
+- Bloco de totais e bloco de assinatura marcados com `wrap={false}` para não quebrarem no meio quando o recibo passa para a segunda página
+
+### Verificação
+Renderização de PDF de exemplo (chamado com uma OS, mão de obra e peça) conferida visualmente; `tsc --noEmit` sem erros.
+
+### Pendência conhecida
+O recibo continua imprimindo `billing.internalNotes` no bloco "Observações" — são notas internas indo para um documento entregue ao cliente. Avaliar trocar por um campo de observações públicas.
+
+---
+
 ## 2026-05-22 — Módulo de Locações (novo módulo completo)
 
 ### Contexto

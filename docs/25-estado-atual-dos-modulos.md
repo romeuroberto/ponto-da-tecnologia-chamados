@@ -1,7 +1,7 @@
 # Estado Atual dos Módulos
 
 Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
-Última atualização: 2026-06-15 (revisão de maturidade financeira)
+Última atualização: 2026-09-09 (recibo de chamado com discriminação completa)
 
 ---
 
@@ -124,6 +124,7 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 | Dashboard financeiro | ✅ | Recebíveis consolidados, despesas, caixa, status e CSV |
 | Extrato por cliente | ✅ | Ações rápidas, pagamento em lote e vínculo fiscal |
 | Relatórios avançados | ✅ | Relatórios operacional/financeiro com exportação CSV |
+| Recibo PDF de chamado | ✅ | Discrimina mão de obra e peças das OSs concluídas + lançamentos avulsos, com descrição do chamado e notas de execução |
 
 ---
 
