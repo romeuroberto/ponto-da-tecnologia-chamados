@@ -644,7 +644,7 @@ async function main() {
       document: "12.345.678/0001-90",
       stateRegistration: "123.456.789.000",
       municipalRegistration: "987654321",
-      financialEmail: "financeiro@pontodatecnologia.com.br",
+      financialEmail: "financeiro@example.com",
       phone: "(11) 4000-1234",
       website: "https://pontodatecnologia.com.br",
       addressLine1: "Rua das Soluções, 120",
@@ -697,7 +697,7 @@ async function main() {
       {
         title: "Pix principal",
         paymentChannel: "Pix",
-        pixKey: "financeiro@pontodatecnologia.com.br",
+        pixKey: "financeiro@example.com",
         pixCopyPaste: "00020126360014BR.GOV.BCB.PIX0114financeiro@ponto5204000053039865406100.005802BR5920PONTO DA TECNOLOGIA6009SAO PAULO62070503***6304ABCD",
         notes: "Após o pagamento, envie o comprovante se a cobrança ainda não tiver baixa automática.",
         active: true,
