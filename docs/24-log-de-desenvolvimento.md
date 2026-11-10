@@ -5,6 +5,31 @@ Atualizar este arquivo a cada nova sessão de desenvolvimento.
 
 ---
 
+## 2026-11-10 — Testes, CI e apresentação do repositório
+
+### Contexto
+O repositório é usado como portfólio. Faltavam testes automatizados, um workflow de CI e prints da aplicação no README; além disso, o `tsconfig.tsbuildinfo` estava versionado.
+
+### Implementado
+
+**Lint**
+- `npm run lint` estava quebrado: o `eslint-config-next` 16 já exporta flat config e o `FlatCompat` gerava erro de estrutura circular. `eslint.config.mjs` agora importa `eslint-config-next/core-web-vitals` e `eslint-config-next/typescript` diretamente
+- Erros corrigidos: interfaces vazias em `input`, `select` e `textarea` viraram `type`; aspas em `portal/chamados/page.tsx`; `require` liberado só em `prisma/**/*.js`
+- `react-hooks/set-state-in-effect` rebaixada para aviso (6 componentes usam o padrão; revisar aos poucos)
+
+**Testes (Vitest)**
+- `vitest.config.mts` com alias `@` → `src`; scripts `test`, `test:watch` e `typecheck`
+- Testes ao lado do código: `src/lib/sla.test.ts`, `ticket-flow.test.ts`, `billing-rules.test.ts`, `utils.test.ts`, `validations/validations.test.ts` e `src/server/auth/permissions.test.ts` (matriz de permissões do AGENTS.md)
+- Vitest instalado com `--legacy-peer-deps` por conflito de peer opcional (`jsdom` × `@napi-rs/canvas` do `pdf-parse`); `npm ci` funciona normalmente com o lockfile
+
+**CI**
+- `.github/workflows/ci.yml`: Node 22, `npm ci`, `prisma generate`, lint, checagem de tipos e testes em push na `main` e em pull requests
+
+**README e limpeza**
+- Prints de dashboard, lista de chamados, detalhe do chamado e portal do cliente em `docs/screenshots/`, capturados com os dados do seed de desenvolvimento
+- Badge de CI, stack atualizada para Next.js 16 e seção “Qualidade” com os comandos
+- `tsconfig.tsbuildinfo` removido do repositório e `*.tsbuildinfo` adicionado ao `.gitignore`
+
 ## 2026-09-09 — Recibo de chamado: discriminação completa dos serviços
 
 ### Contexto

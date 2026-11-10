@@ -11,7 +11,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
-    "prisma:seed:dev": "node prisma/seed.dev.js"
+    "prisma:seed:dev": "node prisma/seed.dev.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -43,6 +46,7 @@
     "eslint-config-next": "^16.0.0",
     "prisma": "^6.7.0",
     "tailwindcss": "^4.1.5",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.12"
   }
 }

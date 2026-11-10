@@ -1,8 +1,20 @@
 # Central de Chamados — Ponto da Tecnologia
 
+[![CI](https://github.com/romeuroberto/ponto-da-tecnologia-chamados/actions/workflows/ci.yml/badge.svg)](https://github.com/romeuroberto/ponto-da-tecnologia-chamados/actions/workflows/ci.yml)
+
 Sistema web interno para registro, acompanhamento e encerramento de chamados de suporte técnico, com módulo financeiro, vendas, controle de estoque e portal do cliente.
 
-**Stack:** Next.js 15 · TypeScript · Prisma · PostgreSQL · Auth.js · Tailwind CSS · Docker
+**Stack:** Next.js 16 · TypeScript · Prisma · PostgreSQL · Auth.js · Tailwind CSS · Docker · Vitest · GitHub Actions
+
+## Telas
+
+> Capturas feitas com os dados fictícios do seed de desenvolvimento.
+
+| Painel da operação | Lista de chamados |
+| --- | --- |
+| ![Dashboard com indicadores de chamados por status, críticos e sem responsável](docs/screenshots/dashboard.png) | ![Lista de chamados com filtros, prioridade, status e SLA](docs/screenshots/chamados.png) |
+| **Detalhe do chamado** | **Portal do cliente** |
+| ![Detalhe do chamado com etapas do fluxo, ações rápidas, resumo e financeiro](docs/screenshots/chamado.png) | ![Portal do cliente com pendências financeiras e chamados recentes](docs/screenshots/portal.png) |
 
 ---
 
@@ -233,6 +245,16 @@ npx prisma migrate dev --name descricao_da_mudanca
 # Abrir o Prisma Studio (interface visual do banco)
 npx prisma studio
 ```
+
+### Qualidade
+
+```bash
+npm run lint       # ESLint (regras do Next.js)
+npm run typecheck  # checagem de tipos com tsc
+npm test           # testes unitários com Vitest
+```
+
+Os testes ficam ao lado do código (`*.test.ts`) e cobrem as regras de negócio puras: SLA, fluxo do chamado, matriz de permissões, travas do financeiro, formatação e validações. O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda lint, checagem de tipos e testes em cada push e pull request.
 
 ---
 

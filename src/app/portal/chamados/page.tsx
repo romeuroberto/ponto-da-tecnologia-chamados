@@ -85,7 +85,7 @@ export default async function PortalTicketsPage() {
         <Card className="shadow-sm">
           <CardContent className="py-12 text-center">
             <p className="font-semibold text-slate-700">Nenhum chamado ainda</p>
-            <p className="mt-1 text-sm text-slate-500">Clique em "Novo chamado" para abrir sua primeira solicitação.</p>
+            <p className="mt-1 text-sm text-slate-500">Clique em “Novo chamado” para abrir sua primeira solicitação.</p>
           </CardContent>
         </Card>
       )}

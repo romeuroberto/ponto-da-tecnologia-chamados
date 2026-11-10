@@ -1,7 +1,7 @@
 # Estado Atual dos Módulos
 
 Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
-Última atualização: 2026-09-09 (recibo de chamado com discriminação completa)
+Última atualização: 2026-11-10 (testes com Vitest, CI no GitHub Actions e prints no README)
 
 ---
 
@@ -203,6 +203,9 @@ Snapshot da situação de cada módulo do sistema. Atualizar após cada sessão.
 | Prisma Migrate | ✅ | Migrações versionadas em `prisma/migrations/` |
 | Seed de desenvolvimento | ✅ | `prisma/seed.dev.js` |
 | Deploy em produção | 🔧 | `docker-compose.prod.yml` existe; validar ambiente |
+| Lint (ESLint) | ✅ | Flat config nativo do `eslint-config-next` 16; 0 erros, avisos pendentes (ex.: `react-hooks/set-state-in-effect` rebaixada para aviso) |
+| Testes unitários (Vitest) | 🔧 | 97 testes cobrindo SLA, fluxo do chamado, permissões, travas do financeiro, formatação e validações; services e APIs ainda sem testes |
+| CI (GitHub Actions) | ✅ | `.github/workflows/ci.yml`: lint, `tsc --noEmit` e testes em push/PR |
 
 ---
 

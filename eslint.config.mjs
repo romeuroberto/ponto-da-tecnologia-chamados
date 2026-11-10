@@ -1,13 +1,22 @@
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname
-});
-
-export default [...compat.extends("next/core-web-vitals", "next/typescript")];
-
+export default defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  {
+    // Scripts Node em CommonJS (seed do Prisma).
+    files: ["prisma/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off"
+    }
+  },
+  {
+    rules: {
+      // Regra nova do React Compiler; os usos atuais são intencionais e serão revistos aos poucos.
+      "react-hooks/set-state-in-effect": "warn"
+    }
+  },
+  globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"])
+]);
